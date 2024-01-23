@@ -84,6 +84,12 @@ namespace RandomShop.Data
                 .HasKey(x => new { x.Id, x.ParentCategoryId });
 
 
+            //Determine the relation
+            builder.Entity<ShopOrder>()
+                .HasOne(x => x.PaymentMethod)
+                .WithOne(x => x.ShopOrder).HasForeignKey<ShopOrder>();
+
+
             //builder.Entity<PromotionCategory>().
             //    HasOptional(e => e.ParentCategory).
             //    WithMany().
