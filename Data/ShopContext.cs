@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RandomShop.Data.Models;
+using System.Reflection.Emit;
 
 namespace RandomShop.Data
 {
-    public class ShopContext : IdentityDbContext
+    public class ShopContext : IdentityDbContext<User>
     {
         public ShopContext(DbContextOptions<ShopContext> options)
             : base(options)
@@ -33,7 +34,7 @@ namespace RandomShop.Data
 
         public virtual DbSet<Promotion> Promotions { get; init; }
 
-        public virtual DbSet<PromotionCategory> PromotionCategories { get; init; }
+        public virtual DbSet<ProductPromotion> ProductPromotions { get; init; }
 
         public virtual DbSet<ShippingMethod> ShippingMethods { get; init; }
 
@@ -71,29 +72,52 @@ namespace RandomShop.Data
                 .Property(x => x.OrderTotal)
                 .HasColumnType("decimal");
 
+            builder.Entity<OrderLine>()
+                .Property(x => x.Price)
+                .HasColumnType("decimal");
+
             builder.Entity<UserAddress>()
                 .HasKey(x => new { x.UserId, x.AddressId });
 
             builder.Entity<ProductConfiguration>()
                 .HasKey(x => new { x.ProductItemId, x.VariationOptionId });
 
-            builder.Entity<PromotionCategory>()
-                .HasKey(x => new { x.PromotionId, x.ProductCategoryId });
+            builder.Entity<ProductPromotion>()
+                .HasKey(x => new { x.ProductId, x.PromotionId });
+
+            builder.Entity<ShopOrder>()
+                .HasMany(x => x.UserPaymentMethods)
+                .WithOne(x => x.ShopOrder)
+                .HasForeignKey(x => x.ShopOrderId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
+
+            builder.Entity<UserReview>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.UserReviews)
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
             builder.Entity<ProductCategory>()
-                .HasKey(x => new { x.Id, x.ParentCategoryId });
+                .HasMany(x => x.Products)
+                .WithOne(s => s.ProductCategory)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
+            builder.Entity<ProductCategory>()
+                .HasMany(x => x.Variations)
+                .WithOne(s => s.ProductCategory)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
-            //Determine the relation
             builder.Entity<ShopOrder>()
-                .HasOne(x => x.PaymentMethod)
-                .WithOne(x => x.ShopOrder).HasForeignKey<ShopOrder>();
+                .HasOne(so => so.ShippingAddress)
+                .WithMany(a => a.ShopOrders)
+                .HasForeignKey(ol => ol.ShippingAddressId)
+                .OnDelete(DeleteBehavior.ClientSetNull);
 
+            builder.Entity<User>()
+            .HasOne(u => u.ShoppingCart)
+            .WithOne(sc => sc.User)
+             .HasForeignKey<ShoppingCart>(sc => sc.UserId);
 
-            //builder.Entity<PromotionCategory>().
-            //    HasOptional(e => e.ParentCategory).
-            //    WithMany().
-            //    HasForeignKey(m => m.ParentCategoryID);
         }
     }
 }

@@ -17,5 +17,7 @@ namespace RandomShop.Data.Models
         public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
 
         public ICollection<ProductItem> ProductItems { get; set; } = new List<ProductItem>();
+
+        public ICollection<ProductPromotion> ProductPromotions { get; set; } = new List<ProductPromotion>();
     }
 }

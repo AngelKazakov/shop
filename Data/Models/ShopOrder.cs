@@ -4,17 +4,13 @@
     {
         public int Id { get; set; }
 
-        public int UserId { get; set; }
+        public string UserId { get; set; }
 
         public User User { get; set; }
 
         public DateTime OrderDate { get; set; }
 
-        public int UserPaymentMethodId { get; set; }
-
-        public UserPaymentMethod PaymentMethod { get; set; }
-
-        public int AddressId { get; set; }
+        public int ShippingAddressId { get; set; }
 
         public Address ShippingAddress { get; set; }
 

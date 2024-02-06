@@ -14,6 +14,6 @@
 
         public DateTime EndDate { get; set; }
 
-        public ICollection<PromotionCategory> PromotionCategories { get; set; } = new List<PromotionCategory>();
+        public ICollection<ProductPromotion> ProductPromotions { get; set; } = new List<ProductPromotion>();
     }
 }

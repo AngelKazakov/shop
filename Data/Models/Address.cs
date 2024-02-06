@@ -17,5 +17,7 @@
         public int PostalCode { get; set; }
 
         public ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
+
+        public ICollection<ShopOrder> ShopOrders { get; set; } = new LinkedList<ShopOrder>();
     }
 }

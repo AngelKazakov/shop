@@ -9,12 +9,15 @@ namespace RandomShop.Data.Models
 
         public string LastName { get; set; }
 
-        public ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
+        public int ShoppingCartId { get; set; }
 
-        public ICollection<ShoppingCart> ShoppingCarts { get; set; } = new List<ShoppingCart>();
+        public ShoppingCart ShoppingCart { get; set; }
+
+        public ICollection<UserAddress> UserAddresses { get; set; } = new List<UserAddress>();
 
         public ICollection<UserReview> UserReviews { get; set; } = new List<UserReview>();
 
         public ICollection<UserPaymentMethod> UserPaymentMethods { get; set; } = new List<UserPaymentMethod>();
+
     }
 }
