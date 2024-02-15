@@ -6,10 +6,15 @@ namespace RandomShop.Data.Models
     {
         public int Id { get; init; }
 
+        [Required]
+        [StringLength(DataConstants.Product.nameMaxLength, MinimumLength = DataConstants.Product.nameMinLength)]
         public string Name { get; set; }
 
+        [Required]
+        [StringLength(DataConstants.Product.descriptionMaxLength, MinimumLength = DataConstants.Product.descriptionMinLength)]
         public string Description { get; set; }
 
+        [Required]
         public int ProductCategoryId { get; set; }
 
         public ProductCategory ProductCategory { get; set; }
