@@ -1,14 +1,20 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Identity;
 
 namespace RandomShop.Data.Models
 {
     public class User : IdentityUser
     {
+        [Required]
+        [StringLength(DataConstants.firstAndLastNameMaxLength, MinimumLength = DataConstants.firstAndLastNameMinLength)]
         public string FirstName { get; set; }
 
+        [Required]
+        [StringLength(DataConstants.firstAndLastNameMaxLength, MinimumLength = DataConstants.firstAndLastNameMinLength)]
         public string LastName { get; set; }
 
+        [Required]
         public int ShoppingCartId { get; set; }
 
         public ShoppingCart ShoppingCart { get; set; }

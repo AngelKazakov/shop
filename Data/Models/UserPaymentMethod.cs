@@ -1,13 +1,17 @@
-﻿namespace RandomShop.Data.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace RandomShop.Data.Models
 {
     public class UserPaymentMethod
     {
         public int Id { get; set; }
 
+        [Required]
         public string UserId { get; set; }
 
         public User User { get; set; }
 
+        [Required]
         public int PaymentTypeId { get; set; }
 
         public PaymentType PaymentType { get; set; }

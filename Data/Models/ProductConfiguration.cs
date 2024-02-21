@@ -1,4 +1,6 @@
-﻿namespace RandomShop.Data.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace RandomShop.Data.Models
 {
     public class ProductConfiguration
     {

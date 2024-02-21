@@ -45,5 +45,47 @@
             public const double priceMin = 0;
             public const double priceMax = double.MaxValue;
         }
+
+        public const int productCategoryMinLength = 1;
+        public const int productCategoryMaxLength = 64;
+
+        public static class ProductImage
+        {
+            public const int nameMinLength = 1;
+            public const int nameMaxLength = 256;
+
+        }
+
+        public static class Promotion
+        {
+            public const int nameMinLength = 1;
+            public const int nameMaxLength = 256;
+            public const int descriptionMinLength = 1;
+            public const int descriptionMaxLength = int.MaxValue;
+            public const int discountMinRate = 0;
+            public const int discountMaxRate = 100;
+        }
+
+        public const int shippingMethodNameMinLength = 1;
+        public const int shippingMethodNameMaxLength = 64;
+        public const int shippingMethodMinPrice = 0;
+        public const double shippingMethodMaxPrice = 1024 * 2;
+
+        public const double orderlTotalMinValue = 0;
+        public const double orderTotalMaxValue = double.MaxValue;
+
+        public const int shoppingCartItemQuantityMinValue = 1;
+        public const int shoppingCartItemQuantityMaxValue = int.MaxValue;
+
+        public const int firstAndLastNameMinLength = 1;
+        public const int firstAndLastNameMaxLength = 64;
+
+        public const double ratingValueMin = 1;
+        public const double ratingValueMax = 5;
+        public const int commentMinLength = 1;
+        public const int commentMaxLength = 4096;
+
+        public const int variationOptionValueMinLength = 1;
+        public const int variationOptionValueMaxLength = 512;
     }
 }
