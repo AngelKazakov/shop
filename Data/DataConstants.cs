@@ -44,7 +44,15 @@
 
             public const double priceMin = 0;
             public const double priceMax = double.MaxValue;
+
+            public const string productNameErrorMessage = "Product name require length between 1 and 1024.";
+            public const string productDescriptionErrorMessage = $"Product description require length between 1 and 2147483647 symbols.";
+            public const string productPriceErrorMessage = "Price should be between 0 and 2147483647";
+            public const string productSKUErrorMessage = $"SKU length should be between 1 and 64";
+            public const string productQuantityErrorMessage = "Product quantity should be between 0 and 2147483647";
         }
+
+
 
         public const int productCategoryMinLength = 1;
         public const int productCategoryMaxLength = 64;

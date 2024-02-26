@@ -16,7 +16,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RandomShop")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+7e3941a07f2c225113c80a27cffb6505b4c66a71")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e78348042df748184ede74bdf784bdc832ec799a")]
 [assembly: System.Reflection.AssemblyProductAttribute("RandomShop")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RandomShop")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
