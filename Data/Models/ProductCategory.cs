@@ -1,25 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace RandomShop.Data.Models
+﻿namespace RandomShop.Data.Models
 {
     public class ProductCategory
     {
-        public int Id { get; set; }
+        public int ProductId { get; set; }
 
-        [Required]
-        [StringLength(DataConstants.productCategoryMaxLength, MinimumLength = DataConstants.productCategoryMinLength)]
-        public string Name { get; set; }
+        public Product Product { get; set; }
 
-        [Required]
-        public int? ParentCategoryId { get; set; }
+        public int CategoryId { get; set; }
 
-        public ProductCategory ParentCategory { get; set; }
-
-        public ICollection<Variation> Variations { get; set; } = new List<Variation>();
-
-        public ICollection<Product> Products { get; set; } = new List<Product>();
-
+        public Category Category { get; set; }
     }
 }

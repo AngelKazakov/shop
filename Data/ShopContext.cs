@@ -24,7 +24,7 @@ namespace RandomShop.Data
 
         public virtual DbSet<Product> Products { get; init; }
 
-        public virtual DbSet<ProductCategory> ProductCategories { get; init; }
+        public virtual DbSet<Category> Categories { get; init; }
 
         public virtual DbSet<ProductConfiguration> ProductConfigurations { get; init; }
 
@@ -55,6 +55,8 @@ namespace RandomShop.Data
         public virtual DbSet<Variation> Variations { get; init; }
 
         public virtual DbSet<VariationOption> VariationOptions { get; init; }
+
+        public virtual DbSet<ProductCategory> ProductCategories { get; init; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -97,27 +99,28 @@ namespace RandomShop.Data
                 .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
-            builder.Entity<ProductCategory>()
-                .HasMany(x => x.Products)
-                .WithOne(s => s.ProductCategory)
+            builder.Entity<Category>()
+                .HasMany(x => x.ProductCategories)
+                .WithOne(s => s.Category)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
-            builder.Entity<ProductCategory>()
+            builder.Entity<Category>()
                 .HasMany(x => x.Variations)
-                .WithOne(s => s.ProductCategory)
+                .WithOne(s => s.Category)
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
-            builder.Entity<ShopOrder>()
-                .HasOne(so => so.ShippingAddress)
-                .WithMany(a => a.ShopOrders)
-                .HasForeignKey(ol => ol.ShippingAddressId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
+            builder.Entity<Category>()
+                    .HasOne(x => x.ParentCategory)
+                    .WithMany(x => x.Subcategories)
+                    .HasForeignKey(x => x.ParentCategoryId)
+                    .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<User>()
             .HasOne(u => u.ShoppingCart)
             .WithOne(sc => sc.User)
              .HasForeignKey<ShoppingCart>(sc => sc.UserId);
 
+            builder.Entity<ProductCategory>().HasKey(x => new { x.ProductId, x.CategoryId });
         }
     }
 }

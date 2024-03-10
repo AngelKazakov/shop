@@ -74,6 +74,8 @@
             public const int discountMaxRate = 100;
         }
 
+        public const int statusMaxLength = 64;
+
         public const int shippingMethodNameMinLength = 1;
         public const int shippingMethodNameMaxLength = 64;
         public const int shippingMethodMinPrice = 0;

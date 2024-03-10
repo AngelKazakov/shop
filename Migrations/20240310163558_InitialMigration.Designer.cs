@@ -12,8 +12,8 @@ using RandomShop.Data;
 namespace RandomShop.Migrations
 {
     [DbContext(typeof(ShopContext))]
-    [Migration("20240131164444_FixedRelations")]
-    partial class FixedRelations
+    [Migration("20240310163558_InitialMigration")]
+    partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -171,11 +171,13 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("AddressLine1")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<string>("AddressLine2")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.Property<int>("CountryId")
                         .HasColumnType("int");
@@ -193,6 +195,30 @@ namespace RandomShop.Migrations
                     b.ToTable("Addresses");
                 });
 
+            modelBuilder.Entity("RandomShop.Data.Models.Category", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<int?>("ParentCategoryId")
+                        .IsRequired()
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ParentCategoryId");
+
+                    b.ToTable("Categories");
+                });
+
             modelBuilder.Entity("RandomShop.Data.Models.Country", b =>
                 {
                     b.Property<int>("Id")
@@ -203,7 +229,8 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
 
                     b.HasKey("Id");
 
@@ -249,7 +276,8 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.HasKey("Id");
 
@@ -266,7 +294,8 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(16)
+                        .HasColumnType("nvarchar(16)");
 
                     b.HasKey("Id");
 
@@ -283,40 +312,30 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasMaxLength(2147483647)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductCategoryId")
-                        .HasColumnType("int");
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ProductCategoryId");
 
                     b.ToTable("Products");
                 });
 
             modelBuilder.Entity("RandomShop.Data.Models.ProductCategory", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ParentCategoryId")
+                    b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("ProductId", "CategoryId");
 
-                    b.HasIndex("ParentCategoryId");
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("ProductCategories");
                 });
@@ -350,13 +369,10 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
-                    b.Property<string>("ProductId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductId1")
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int?>("ProductItemId")
@@ -364,11 +380,12 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("UniqueName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId1");
+                    b.HasIndex("ProductId");
 
                     b.HasIndex("ProductItemId");
 
@@ -394,7 +411,8 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("SKU")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.HasKey("Id");
 
@@ -428,6 +446,7 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
+                        .HasMaxLength(2147483647)
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("DiscountRate")
@@ -438,7 +457,8 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -458,7 +478,8 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal");
@@ -476,7 +497,17 @@ namespace RandomShop.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("AddressId")
+                    b.Property<string>("AddressLine1")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("AddressLine2")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<int>("CountryId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("OrderDate")
@@ -488,7 +519,13 @@ namespace RandomShop.Migrations
                     b.Property<decimal>("OrderTotal")
                         .HasColumnType("decimal");
 
+                    b.Property<int>("PostalCode")
+                        .HasColumnType("int");
+
                     b.Property<int>("ShippingMethodId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StreetNumber")
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")
@@ -497,7 +534,7 @@ namespace RandomShop.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AddressId");
+                    b.HasIndex("CountryId");
 
                     b.HasIndex("OrderStatusId");
 
@@ -517,12 +554,13 @@ namespace RandomShop.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("ShoppingCarts");
                 });
@@ -574,11 +612,13 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -605,6 +645,9 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ShoppingCartId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -725,16 +768,16 @@ namespace RandomShop.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
+                    b.Property<int>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ProductCategoryId")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductCategoryId");
+                    b.HasIndex("CategoryId");
 
                     b.ToTable("Variations");
                 });
@@ -749,7 +792,8 @@ namespace RandomShop.Migrations
 
                     b.Property<string>("Value")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(512)
+                        .HasColumnType("nvarchar(512)");
 
                     b.Property<int>("VariationId")
                         .HasColumnType("int");
@@ -823,6 +867,17 @@ namespace RandomShop.Migrations
                     b.Navigation("Country");
                 });
 
+            modelBuilder.Entity("RandomShop.Data.Models.Category", b =>
+                {
+                    b.HasOne("RandomShop.Data.Models.Category", "ParentCategory")
+                        .WithMany("Subcategories")
+                        .HasForeignKey("ParentCategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ParentCategory");
+                });
+
             modelBuilder.Entity("RandomShop.Data.Models.OrderLine", b =>
                 {
                     b.HasOne("RandomShop.Data.Models.ProductItem", "ProductItem")
@@ -842,23 +897,22 @@ namespace RandomShop.Migrations
                     b.Navigation("ShopOrder");
                 });
 
-            modelBuilder.Entity("RandomShop.Data.Models.Product", b =>
-                {
-                    b.HasOne("RandomShop.Data.Models.ProductCategory", "ProductCategory")
-                        .WithMany("Products")
-                        .HasForeignKey("ProductCategoryId")
-                        .IsRequired();
-
-                    b.Navigation("ProductCategory");
-                });
-
             modelBuilder.Entity("RandomShop.Data.Models.ProductCategory", b =>
                 {
-                    b.HasOne("RandomShop.Data.Models.ProductCategory", "ParentCategory")
-                        .WithMany()
-                        .HasForeignKey("ParentCategoryId");
+                    b.HasOne("RandomShop.Data.Models.Category", "Category")
+                        .WithMany("ProductCategories")
+                        .HasForeignKey("CategoryId")
+                        .IsRequired();
 
-                    b.Navigation("ParentCategory");
+                    b.HasOne("RandomShop.Data.Models.Product", "Product")
+                        .WithMany("ProductCategories")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Category");
+
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("RandomShop.Data.Models.ProductConfiguration", b =>
@@ -884,7 +938,7 @@ namespace RandomShop.Migrations
                 {
                     b.HasOne("RandomShop.Data.Models.Product", "Product")
                         .WithMany("ProductImages")
-                        .HasForeignKey("ProductId1")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -927,9 +981,9 @@ namespace RandomShop.Migrations
 
             modelBuilder.Entity("RandomShop.Data.Models.ShopOrder", b =>
                 {
-                    b.HasOne("RandomShop.Data.Models.Address", "ShippingAddress")
+                    b.HasOne("RandomShop.Data.Models.Country", "Country")
                         .WithMany()
-                        .HasForeignKey("AddressId")
+                        .HasForeignKey("CountryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -951,9 +1005,9 @@ namespace RandomShop.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("OrderStatus");
+                    b.Navigation("Country");
 
-                    b.Navigation("ShippingAddress");
+                    b.Navigation("OrderStatus");
 
                     b.Navigation("ShippingMethod");
 
@@ -963,10 +1017,8 @@ namespace RandomShop.Migrations
             modelBuilder.Entity("RandomShop.Data.Models.ShoppingCart", b =>
                 {
                     b.HasOne("RandomShop.Data.Models.User", "User")
-                        .WithMany("ShoppingCarts")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .WithOne("ShoppingCart")
+                        .HasForeignKey("RandomShop.Data.Models.ShoppingCart", "UserId");
 
                     b.Navigation("User");
                 });
@@ -1055,12 +1107,12 @@ namespace RandomShop.Migrations
 
             modelBuilder.Entity("RandomShop.Data.Models.Variation", b =>
                 {
-                    b.HasOne("RandomShop.Data.Models.ProductCategory", "ProductCategory")
+                    b.HasOne("RandomShop.Data.Models.Category", "Category")
                         .WithMany("Variations")
-                        .HasForeignKey("ProductCategoryId")
+                        .HasForeignKey("CategoryId")
                         .IsRequired();
 
-                    b.Navigation("ProductCategory");
+                    b.Navigation("Category");
                 });
 
             modelBuilder.Entity("RandomShop.Data.Models.VariationOption", b =>
@@ -1077,6 +1129,15 @@ namespace RandomShop.Migrations
             modelBuilder.Entity("RandomShop.Data.Models.Address", b =>
                 {
                     b.Navigation("UserAddresses");
+                });
+
+            modelBuilder.Entity("RandomShop.Data.Models.Category", b =>
+                {
+                    b.Navigation("ProductCategories");
+
+                    b.Navigation("Subcategories");
+
+                    b.Navigation("Variations");
                 });
 
             modelBuilder.Entity("RandomShop.Data.Models.Country", b =>
@@ -1101,18 +1162,13 @@ namespace RandomShop.Migrations
 
             modelBuilder.Entity("RandomShop.Data.Models.Product", b =>
                 {
+                    b.Navigation("ProductCategories");
+
                     b.Navigation("ProductImages");
 
                     b.Navigation("ProductItems");
 
                     b.Navigation("ProductPromotions");
-                });
-
-            modelBuilder.Entity("RandomShop.Data.Models.ProductCategory", b =>
-                {
-                    b.Navigation("Products");
-
-                    b.Navigation("Variations");
                 });
 
             modelBuilder.Entity("RandomShop.Data.Models.ProductItem", b =>
@@ -1143,7 +1199,8 @@ namespace RandomShop.Migrations
 
             modelBuilder.Entity("RandomShop.Data.Models.User", b =>
                 {
-                    b.Navigation("ShoppingCarts");
+                    b.Navigation("ShoppingCart")
+                        .IsRequired();
 
                     b.Navigation("UserAddresses");
 

@@ -14,9 +14,24 @@ namespace RandomShop.Data.Models
         public DateTime OrderDate { get; set; }
 
         [Required]
-        public int ShippingAddressId { get; set; }
+        [Range(DataConstants.Address.StreetNumberMin, DataConstants.Address.StreetNumberMax)]
+        public int StreetNumber { get; set; }
 
-        public Address ShippingAddress { get; set; }
+        [Required]
+        [StringLength(DataConstants.Address.addressLineMaxLength, ErrorMessage = "Make sure you entered correctly your address.")]
+        public string AddressLine1 { get; set; }
+
+        [StringLength(DataConstants.Address.addressLineMaxLength, ErrorMessage = "Make sure you entered correctly your address.")]
+        public string AddressLine2 { get; set; }
+
+        [Required]
+        public int CountryId { get; set; }
+
+        public Country Country { get; set; }
+
+        [Required]
+        [Range(DataConstants.Address.postalCodeMin, DataConstants.Address.postalCodeMax)]
+        public int PostalCode { get; set; }
 
         [Required]
         public int ShippingMethodId { get; set; }

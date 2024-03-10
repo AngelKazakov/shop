@@ -14,15 +14,12 @@ namespace RandomShop.Data.Models
         [StringLength(DataConstants.Product.descriptionMaxLength, MinimumLength = DataConstants.Product.descriptionMinLength)]
         public string Description { get; set; }
 
-        [Required]
-        public int ProductCategoryId { get; set; }
-
-        public ProductCategory ProductCategory { get; set; }
-
         public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
 
         public ICollection<ProductItem> ProductItems { get; set; } = new List<ProductItem>();
 
         public ICollection<ProductPromotion> ProductPromotions { get; set; } = new List<ProductPromotion>();
+
+        public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
     }
 }

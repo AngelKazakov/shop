@@ -10,9 +10,9 @@ namespace RandomShop.Data.Models
         public string Name { get; set; }
 
         [Required]
-        public int ProductCategoryId { get; set; }
+        public int CategoryId { get; set; }
 
-        public ProductCategory ProductCategory { get; set; }
+        public Category Category { get; set; }
 
         public ICollection<VariationOption> VariationOptions { get; set; } = new List<VariationOption>();
     }
