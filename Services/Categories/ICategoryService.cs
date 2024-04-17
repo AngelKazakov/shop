@@ -6,6 +6,8 @@ namespace RandomShop.Services.Categories
     {
         public Task<CategoryViewModel> CreateCategory(CategoryFormModel model);
 
+        public Task<bool> DeleteCategory(int id);
+
         public Task<CategoryFormViewModel> InitCategoryFormViewModel();
     }
 }

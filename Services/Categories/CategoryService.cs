@@ -40,6 +40,22 @@ namespace RandomShop.Services.Categories
             return this.mapper.Map<CategoryViewModel>(category);
         }
 
+        public async Task<bool> DeleteCategory(int id)
+        {
+            try
+            {
+                Category? category = await this.context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
+                this.context.Categories.Remove(category);
+                await this.context.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
+
+            return true;
+        }
+
         public async Task<CategoryFormViewModel> InitCategoryFormViewModel()
         {
             List<MainCategoryViewModel> categories = await this.context.Categories.Select(x => new MainCategoryViewModel { Id = x.Id, Name = x.Name, }).ToListAsync();
