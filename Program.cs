@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Infrastructure;
+using RandomShop.Services.Categories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,7 +17,8 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.Requ
     .AddEntityFrameworkStores<ShopContext>();
 builder.Services.AddControllersWithViews();
 
-//builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddAutoMapper(typeof(Program));
+builder.Services.AddTransient<ICategoryService, CategoryService>();
 
 var app = builder.Build();
 

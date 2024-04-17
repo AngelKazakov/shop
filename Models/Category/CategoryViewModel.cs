@@ -8,5 +8,7 @@ namespace RandomShop.Models.Category
         public int Id { get; set; }
 
         public string Name { get; set; }
+
+        //public ICollection<string> MainCategories = new List<string>();
     }
 }

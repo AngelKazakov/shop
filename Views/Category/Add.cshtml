@@ -1,0 +1,31 @@
+﻿@model CategoryFormViewModel
+@{
+    ViewData["Title"] = "Add";
+}
+
+<h1>Create Category</h1>
+<form asp-controller="Category" asp-action="/Add" method="post">
+    @Html.ValidationSummary(true)
+    <div class="form-group">
+        <label asp-for="CategoryFormModel.Name">Category Name</label>
+        <input asp-for="CategoryFormModel.Name" type="text" class="form-control" id="categoryId" placeholder="Enter name" required />
+        <span asp-validation-for="CategoryFormModel.Name" class="text-danger"></span>
+    </div>
+    @*     <div class="form-group">
+    <label asp-for="CategoryFormModel.ParentCategoryId">Subcategory Name</label>
+    <input asp-for="CategoryFormModel.ParentCategoryId" type="text" class="form-control" id="subCategoryId" placeholder="Enter name" />
+    <span asp-validation-for="CategoryFormModel.ParentCategoryId" class="text-danger"></span>
+    </div> *@
+    <div>
+        <select asp-for="CategoryFormModel.SelectedCategoryFromDropDown" class="form-control">
+            <option value="" selected>--None--</option>
+            @foreach (var category in Model.MainCategories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </select>
+    </div>
+    <button type="submit" id="submitOnCreateCategory" class="btn btn-primary" asp-action="Add" asp-controller="Category">Submit</button>
+</form>
+
+

@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace RandomShop.Data.Models
 {
@@ -12,7 +10,6 @@ namespace RandomShop.Data.Models
         [StringLength(DataConstants.productCategoryMaxLength, MinimumLength = DataConstants.productCategoryMinLength)]
         public string Name { get; set; }
 
-        [Required]
         public int? ParentCategoryId { get; set; }
 
         public Category ParentCategory { get; set; }

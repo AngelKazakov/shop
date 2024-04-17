@@ -12,7 +12,7 @@ using RandomShop.Data;
 namespace RandomShop.Migrations
 {
     [DbContext(typeof(ShopContext))]
-    [Migration("20240310163558_InitialMigration")]
+    [Migration("20240311101301_InitialMigration")]
     partial class InitialMigration
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
