@@ -1,4 +1,4 @@
-﻿@model CategoryFormViewModel
+﻿@* @model CategoryFormViewModel
 @{
     ViewData["Title"] = "Add";
 }
@@ -11,11 +11,6 @@
         <input asp-for="CategoryFormModel.Name" type="text" class="form-control" id="categoryId" placeholder="Enter name" required />
         <span asp-validation-for="CategoryFormModel.Name" class="text-danger"></span>
     </div>
-    @*     <div class="form-group">
-    <label asp-for="CategoryFormModel.ParentCategoryId">Subcategory Name</label>
-    <input asp-for="CategoryFormModel.ParentCategoryId" type="text" class="form-control" id="subCategoryId" placeholder="Enter name" />
-    <span asp-validation-for="CategoryFormModel.ParentCategoryId" class="text-danger"></span>
-    </div> *@
     <div>
         <select asp-for="CategoryFormModel.SelectedCategoryFromDropDown" class="form-control">
             <option value="" selected>--None--</option>
@@ -28,4 +23,92 @@
     <button type="submit" id="submitOnCreateCategory" class="btn btn-primary" asp-action="Add" asp-controller="Category">Submit</button>
 </form>
 
+
+ *@
+
+@model CategoryFormViewModel
+@{
+    ViewData["Title"] = "Add";
+}
+
+<style>
+    /* Style for form container */
+    .form-container {
+        max-width: 400px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    /* Style for form inputs */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    /* Style for form labels */
+    label {
+        font-weight: bold;
+    }
+
+    /* Style for form input fields */
+    .form-control {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    /* Style for error messages */
+    .text-danger {
+        color: red;
+    }
+
+    /* Style for submit button */
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    /* Center header text */
+    .header-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="header-container">
+    <h1>Create Category</h1>
+</div>
+
+<div class="form-container">
+    <form asp-controller="Category" asp-action="Add" method="post">
+        @Html.ValidationSummary(true)
+
+        <div class="form-group">
+            <label asp-for="CategoryFormModel.Name">Category Name</label>
+            <input asp-for="CategoryFormModel.Name" type="text" class="form-control" placeholder="Enter name" required />
+            <span asp-validation-for="CategoryFormModel.Name" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="CategoryFormModel.SelectedCategoryFromDropDown">Parent Category</label>
+            <select asp-for="CategoryFormModel.SelectedCategoryFromDropDown" class="form-control">
+                <option value="" selected>--None--</option>
+                @foreach (var category in Model.MainCategories)
+                {
+                    <option value="@category.Id">@category.Name</option>
+                }
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
 

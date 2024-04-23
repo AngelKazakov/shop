@@ -50,6 +50,9 @@ namespace RandomShop.Services.Categories
             }
             catch (Exception ex)
             {
+                // Handle exceptions here, including the case where the category is not found
+                // Log the exception or perform any necessary cleanup
+                // Rethrow the exception or handle it based on your application's requirements
                 throw;
             }
 
