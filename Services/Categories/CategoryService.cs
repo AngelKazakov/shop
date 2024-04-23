@@ -20,6 +20,11 @@ namespace RandomShop.Services.Categories
 
         public async Task<CategoryViewModel> CreateCategory(CategoryFormModel model)
         {
+            if (await this.CheckIfCategoryAlreadyExists(model.Name))
+            {
+                throw new DuplicateNameException("Category with given name already exists.");
+            }
+
             Category category = new Category()
             {
                 Name = model.Name,
@@ -59,9 +64,44 @@ namespace RandomShop.Services.Categories
             return true;
         }
 
+        public async Task<ICollection<CategoryViewModel>> GetAllCategories()
+        {
+            return await this.context.Categories
+                .AsNoTracking()
+                .Select(x => new CategoryViewModel()
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                }).ToListAsync();
+        }
+
+        public async Task<ICollection<MainCategoryViewModel>> GetMainCategories()
+        {
+            List<MainCategoryViewModel> mainCategories = await this.context.Categories
+                //  .Where(x => x.ParentCategoryId != null) Where statement is not working properly here...
+                .Select(x => new MainCategoryViewModel()
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                })
+                .AsNoTracking()
+               .ToListAsync();
+
+            return mainCategories;
+        }
+
+        public async Task<ICollection<SubCategoryModel>> GetSubCategories(int parentCategoryId)
+        {
+            return await this.context.Categories
+                .AsNoTracking()
+                .Where(x => x.ParentCategoryId == parentCategoryId)
+                .Select(x => this.mapper.Map<SubCategoryModel>(x))
+                .ToListAsync();
+        }
+
         public async Task<CategoryFormViewModel> InitCategoryFormViewModel()
         {
-            List<MainCategoryViewModel> categories = await this.context.Categories.Select(x => new MainCategoryViewModel { Id = x.Id, Name = x.Name, }).ToListAsync();
+            ICollection<MainCategoryViewModel> categories = await this.GetMainCategories(); //this.context.Categories.Select(x => new MainCategoryViewModel { Id = x.Id, Name = x.Name, }).ToListAsync();
 
             CategoryFormViewModel initModel = new CategoryFormViewModel()
             {
@@ -70,6 +110,11 @@ namespace RandomShop.Services.Categories
 
 
             return initModel;
+        }
+
+        private async Task<bool> CheckIfCategoryAlreadyExists(string categoryName)
+        {
+            return await this.context.Categories.AsNoTracking().AnyAsync(x => x.Name == categoryName);
         }
     }
 }

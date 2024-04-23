@@ -9,5 +9,11 @@ namespace RandomShop.Services.Categories
         public Task<bool> DeleteCategory(int id);
 
         public Task<CategoryFormViewModel> InitCategoryFormViewModel();
+
+        public Task<ICollection<CategoryViewModel>> GetAllCategories();
+
+        public Task<ICollection<MainCategoryViewModel>> GetMainCategories();
+
+        public Task<ICollection<SubCategoryModel>> GetSubCategories(int parentCategoryId);
     }
 }
