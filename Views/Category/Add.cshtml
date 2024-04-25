@@ -1,32 +1,4 @@
-﻿@* @model CategoryFormViewModel
-@{
-    ViewData["Title"] = "Add";
-}
-
-<h1>Create Category</h1>
-<form asp-controller="Category" asp-action="/Add" method="post">
-    @Html.ValidationSummary(true)
-    <div class="form-group">
-        <label asp-for="CategoryFormModel.Name">Category Name</label>
-        <input asp-for="CategoryFormModel.Name" type="text" class="form-control" id="categoryId" placeholder="Enter name" required />
-        <span asp-validation-for="CategoryFormModel.Name" class="text-danger"></span>
-    </div>
-    <div>
-        <select asp-for="CategoryFormModel.SelectedCategoryFromDropDown" class="form-control">
-            <option value="" selected>--None--</option>
-            @foreach (var category in Model.MainCategories)
-            {
-                <option value="@category.Id">@category.Name</option>
-            }
-        </select>
-    </div>
-    <button type="submit" id="submitOnCreateCategory" class="btn btn-primary" asp-action="Add" asp-controller="Category">Submit</button>
-</form>
-
-
- *@
-
-@model CategoryFormViewModel
+﻿@model CategoryFormViewModel
 @{
     ViewData["Title"] = "Add";
 }
@@ -81,6 +53,11 @@
         text-align: center;
         margin-bottom: 20px;
     }
+
+    #deleteBtn {
+        color: antiquewhite;
+        background: red;
+    }
 </style>
 
 <div class="header-container">
@@ -99,7 +76,7 @@
 
         <div class="form-group">
             <label asp-for="CategoryFormModel.SelectedCategoryFromDropDown">Parent Category</label>
-            <select asp-for="CategoryFormModel.SelectedCategoryFromDropDown" class="form-control">
+            <select id="selectedCategoryId" asp-for="CategoryFormModel.SelectedCategoryFromDropDown" class="form-control">
                 <option value="" selected>--None--</option>
                 @foreach (var category in Model.MainCategories)
                 {
@@ -108,7 +85,83 @@
             </select>
         </div>
 
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <button id="submitBtn" type="submit" class="btn btn-primary">Submit</button>
+        <button id="deleteBtn" class="btn btn-primary">Delete</button>
+        @* <button id="deleteBtn" type="submit" class="btn btn-primary" asp-controller="Category" asp-action="Delete">Delete</button> *@
     </form>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- JavaScript code to handle the delete button click -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var categorySelect = document.getElementById('selectedCategoryId');
+        var deleteButton = document.getElementById('deleteBtn');
+
+        // Add event listener to delete button
+        deleteButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            var selectedCategoryId = parseInt(categorySelect.value, 10);
+            if (selectedCategoryId) {
+                deleteCategory(selectedCategoryId);
+            } else {
+                alert('Please select a category to delete.');
+            }
+        });
+
+        // Function to populate the category select with options
+        async function populateCategorySelect() {
+            // Simulated category data (replace with actual data retrieval)
+            try {
+                const response = await fetch('/Category/GetCategories');
+                console.log('response :' + response);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                const categories = await response.json();
+
+                const categorySelect = document.getElementById('selectedCategoryId');
+                categorySelect.innerHTML = ''; // Clear existing options
+
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
+        // Function to simulate category deletion (replace with actual deletion logic)
+        function deleteCategory(categoryId) {
+            if (confirm('Are you sure you want to delete Category ' + categoryId + '?')) {
+                console.log('Deleting Category ' + categoryId + '...');
+
+                // Perform AJAX request to delete category
+                // Example:
+                $.ajax({
+                    url: '/Category/Delete/',
+                    type: 'POST',
+                    data: { categoryId: categoryId },
+                    success: function (response) {
+                        console.log('Category deleted successfully.');
+                        //populateCategorySelect();
+
+                        $("#selectedCategoryId option[value='" + categoryId + "']").each(function () {
+                            $(this).remove();
+                        });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error deleting category:', error);
+                    }
+                });
+            }
+        }
+        // Call the populateCategorySelect function to initialize the category select
+        //populateCategorySelect();
+    });
+</script>
 

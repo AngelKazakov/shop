@@ -50,15 +50,20 @@ namespace RandomShop.Services.Categories
             try
             {
                 Category? category = await this.context.Categories.AsNoTracking().FirstOrDefaultAsync(x => x.Id == id);
-                this.context.Categories.Remove(category);
-                await this.context.SaveChangesAsync();
+                if (category != null)
+                {
+                    this.context.Categories.Remove(category);
+                    await this.context.SaveChangesAsync();
+                }
+
+
             }
             catch (Exception ex)
             {
                 // Handle exceptions here, including the case where the category is not found
                 // Log the exception or perform any necessary cleanup
                 // Rethrow the exception or handle it based on your application's requirements
-                throw;
+                throw new Exception("Something went wrong. Please try again.", ex);
             }
 
             return true;
@@ -78,7 +83,7 @@ namespace RandomShop.Services.Categories
         public async Task<ICollection<MainCategoryViewModel>> GetMainCategories()
         {
             List<MainCategoryViewModel> mainCategories = await this.context.Categories
-                //  .Where(x => x.ParentCategoryId != null) Where statement is not working properly here...
+                // .Where(x => x.ParentCategoryId == null)  Where statement is not working properly here...
                 .Select(x => new MainCategoryViewModel()
                 {
                     Id = x.Id,
@@ -101,7 +106,7 @@ namespace RandomShop.Services.Categories
 
         public async Task<CategoryFormViewModel> InitCategoryFormViewModel()
         {
-            ICollection<MainCategoryViewModel> categories = await this.GetMainCategories(); //this.context.Categories.Select(x => new MainCategoryViewModel { Id = x.Id, Name = x.Name, }).ToListAsync();
+            ICollection<MainCategoryViewModel> categories = await this.context.Categories.Select(x => new MainCategoryViewModel { Id = x.Id, Name = x.Name, }).ToListAsync();
 
             CategoryFormViewModel initModel = new CategoryFormViewModel()
             {

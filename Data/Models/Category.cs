@@ -12,7 +12,7 @@ namespace RandomShop.Data.Models
 
         public int? ParentCategoryId { get; set; }
 
-        public Category ParentCategory { get; set; }
+        public Category? ParentCategory { get; set; }
 
         public ICollection<Variation> Variations { get; set; } = new List<Variation>();
 

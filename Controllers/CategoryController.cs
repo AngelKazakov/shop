@@ -35,5 +35,26 @@ namespace RandomShop.Controllers
             }
             return RedirectToAction("Index", "Home");
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int categoryId)
+        {
+            bool statement = await this.categoryService.DeleteCategory(categoryId);
+
+            if (!statement)
+            {
+                return RedirectToAction("Error", "Home");
+
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public async Task<ICollection<CategoryViewModel>> GetCategories()
+        {
+            var categories = await this.categoryService.GetAllCategories();
+
+            return categories;
+        }
     }
 }
