@@ -1,6 +1,6 @@
 ﻿using RandomShop.Data;
 using RandomShop.Data.Models;
-using RandomShop.Models.Product;
+using RandomShop.Exceptions;
 
 namespace RandomShop.Services.Products
 {
@@ -17,7 +17,7 @@ namespace RandomShop.Services.Products
         {
             Product product = await this.context.Products.FindAsync(productId);
 
-            return product ?? throw new NullReferenceException("Product not found.");
+            return product ?? throw new NotFoundException("Product not found.");
         }
     }
 }
