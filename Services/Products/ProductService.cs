@@ -15,9 +15,37 @@ namespace RandomShop.Services.Products
 
         public async Task<Product> GetProductById(int productId)
         {
-            Product product = await this.context.Products.FindAsync(productId);
+            Product product = await CheckIfProductExistsOrIsNull(productId);
 
             return product ?? throw new NotFoundException("Product not found.");
+        }
+        public async Task<bool> DeleteProduct(int productId)
+        {
+            Product product = await CheckIfProductExistsOrIsNull(productId);
+
+            if (product == null)
+            {
+                throw new NotFoundException("Product not found.");
+            }
+
+            try
+            {
+                this.context.Products.Remove(product);
+                await this.context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while deleting the product.", ex);
+            }
+
+        }
+
+        private async Task<Product> CheckIfProductExistsOrIsNull(int productId)
+        {
+            Product product = await this.context.Products.FindAsync(productId);
+
+            return product;
         }
     }
 }

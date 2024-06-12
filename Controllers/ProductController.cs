@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RandomShop.Data.Models;
 using RandomShop.Exceptions;
 using RandomShop.Services.Products;
@@ -31,6 +32,22 @@ namespace RandomShop.Controllers
             {
                 ViewData["ErrorMessage"] = "An unexpected error occurred.";
                 return View("Error");
+            }
+        }
+
+        [HttpPost]
+        [Authorize]
+        public async Task<IActionResult> Delete(int productId)
+        {
+            bool isProductDeleted = await this.productService.DeleteProduct(productId);
+
+            if (isProductDeleted)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            else
+            {
+                return RedirectToAction("Error", "Home");
             }
         }
     }
