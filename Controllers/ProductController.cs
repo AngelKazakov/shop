@@ -36,6 +36,33 @@ namespace RandomShop.Controllers
         }
 
         [HttpPost]
+        public async Task<IActionResult> Details(string productName)
+        {
+            var product = await this.productService.GetProductByName(productName);
+
+            if (product == null)
+            {
+                return View("Error");
+            }
+
+            return View(product);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> GetProducts(string productName)
+        {
+            var products = await this.productService.GetProductsByGivenName(productName);
+
+            if (!products.Any())
+            {
+                return View("Home", "Error");
+            }
+
+            return View(products);
+
+        }
+
+        [HttpPost]
         [Authorize]
         public async Task<IActionResult> Delete(int productId)
         {

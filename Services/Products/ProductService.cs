@@ -1,4 +1,5 @@
-﻿using RandomShop.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Exceptions;
 
@@ -9,9 +10,7 @@ namespace RandomShop.Services.Products
         private readonly ShopContext context;
 
         public ProductService(ShopContext context)
-        {
-            this.context = context;
-        }
+         => this.context = context;
 
         public async Task<Product> GetProductById(int productId)
         {
@@ -19,6 +18,26 @@ namespace RandomShop.Services.Products
 
             return product ?? throw new NotFoundException("Product not found.");
         }
+
+        public async Task<Product> GetProductByName(string productName)
+        {
+            var product = await this.context.Products.Where(x => x.Name.Contains(productName)).FirstOrDefaultAsync();
+
+            return product;
+        }
+
+        public async Task<ICollection<Product>> GetProductsByName(string productName)
+        {
+            string lowerProductName = $"%{productName.ToLower()}%";
+
+            List<Product> products = await this.context.Products
+                                    .Where(x => EF.Functions.Like(x.Name.ToLower(), lowerProductName))
+                                    .Include(p => p.ProductItems)
+                                    .ToListAsync();
+
+            return products;
+        }
+
         public async Task<bool> DeleteProduct(int productId)
         {
             Product product = await CheckIfProductExistsOrIsNull(productId);

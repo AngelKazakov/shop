@@ -7,5 +7,9 @@ namespace RandomShop.Services.Products
         public Task<Product> GetProductById(int productId);
 
         public Task<bool> DeleteProduct(int productId);
+
+        public Task<Product> GetProductByName(string productName);
+
+        public Task<ICollection<Product>> GetProductsByName(string productName);
     }
 }
