@@ -49,9 +49,9 @@ namespace RandomShop.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetProducts(string productName)
+        public async Task<IActionResult> SearchProducts(string productName)
         {
-            var products = await this.productService.GetProductsByGivenName(productName);
+            var products = await this.productService.GetProductsByName(productName);
 
             if (!products.Any())
             {
@@ -60,6 +60,14 @@ namespace RandomShop.Controllers
 
             return View(products);
 
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AllProducts()
+        {
+            var products = await this.productService.GetAllProducts();
+
+            return View(products);
         }
 
         [HttpPost]

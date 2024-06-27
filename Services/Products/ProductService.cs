@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualBasic;
 using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Exceptions;
+using System.Collections.ObjectModel;
 
 namespace RandomShop.Services.Products
 {
@@ -31,11 +33,24 @@ namespace RandomShop.Services.Products
             string lowerProductName = $"%{productName.ToLower()}%";
 
             List<Product> products = await this.context.Products
-                                    .Where(x => EF.Functions.Like(x.Name.ToLower(), lowerProductName))
-                                    .Include(p => p.ProductItems)
-                                    .ToListAsync();
+                .Where(x => EF.Functions.Like(x.Name.ToLower(), lowerProductName))
+                .Include(p => p.ProductItems)
+                .ToListAsync();
 
             return products;
+        }
+
+        public async Task<ICollection<Product>> GetAllProducts()
+        {
+            List<Product>? prodcuts = await this.context.Products
+                .AsNoTracking()
+                .Include(p => p.ProductItems)
+                .Include(p => p.ProductImages)
+                .Include(p => p.ProductPromotions)
+                //.Include(p => p.ProductCategories)
+                .ToListAsync();
+
+            return prodcuts;
         }
 
         public async Task<bool> DeleteProduct(int productId)
