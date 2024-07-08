@@ -50,6 +50,7 @@ namespace RandomShop.Services.Products
               .Include(p => p.ProductImages)
               .Include(p => p.ProductPromotions)
               .Include(p => p.ProductCategories)
+              .ThenInclude(x => x.Category)
               .ToListAsync();
 
                 return prodcuts;
@@ -68,9 +69,24 @@ namespace RandomShop.Services.Products
                 .Include(x => x.Product)
                 .ThenInclude(x => x.ProductItems)
                 .ThenInclude(x => x.ProductItemImages)
+                .Include(x => x.Category)
                 .Select(p => p.Product)
                 .ToListAsync();
 
+
+            return products;
+        }
+
+        public async Task<ICollection<Product>> GetProductsByPriceRange(int minPrice, int maxPrice)
+        {
+            List<Product>? products = await this.context.ProductItems
+                 .AsNoTracking()
+                  .Where(x => x.Price >= minPrice && x.Price <= maxPrice)
+                 .Include(x => x.Product)
+                 .ThenInclude(x => x.ProductItems)
+                 .ThenInclude(x => x.ProductItemImages)
+                 .Select(x => x.Product)
+                 .ToListAsync();
 
             return products;
         }

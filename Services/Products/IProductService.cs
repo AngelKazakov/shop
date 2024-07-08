@@ -16,5 +16,7 @@ namespace RandomShop.Services.Products
         public Task<ICollection<Product>> GetAllProducts();
 
         public Task<ICollection<Product>> GetProductsByCategory(int categoryId);
+
+        public Task<ICollection<Product>> GetProductsByPriceRange(int minPrice, int maxPrice);
     }
 }
