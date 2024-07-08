@@ -1,4 +1,5 @@
 ﻿using RandomShop.Data.Models;
+using System.Security.Cryptography.X509Certificates;
 
 namespace RandomShop.Services.Products
 {
@@ -13,5 +14,7 @@ namespace RandomShop.Services.Products
         public Task<ICollection<Product>> GetProductsByName(string productName);
 
         public Task<ICollection<Product>> GetAllProducts();
+
+        public Task<ICollection<Product>> GetProductsByCategory(int categoryId);
     }
 }

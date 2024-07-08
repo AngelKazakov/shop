@@ -42,15 +42,37 @@ namespace RandomShop.Services.Products
 
         public async Task<ICollection<Product>> GetAllProducts()
         {
-            List<Product>? prodcuts = await this.context.Products
+            try
+            {
+                List<Product>? prodcuts = await this.context.Products
+              .AsNoTracking()
+              .Include(p => p.ProductItems)
+              .Include(p => p.ProductImages)
+              .Include(p => p.ProductPromotions)
+              .Include(p => p.ProductCategories)
+              .ToListAsync();
+
+                return prodcuts;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while fetching all products.", ex);
+            }
+        }
+
+        public async Task<ICollection<Product>> GetProductsByCategory(int categoryId)
+        {
+            List<Product>? products = await this.context.ProductCategories
                 .AsNoTracking()
-                .Include(p => p.ProductItems)
-                .Include(p => p.ProductImages)
-                .Include(p => p.ProductPromotions)
-                //.Include(p => p.ProductCategories)
+                .Where(x => x.CategoryId == categoryId)
+                .Include(x => x.Product)
+                .ThenInclude(x => x.ProductItems)
+                .ThenInclude(x => x.ProductItemImages)
+                .Select(p => p.Product)
                 .ToListAsync();
 
-            return prodcuts;
+
+            return products;
         }
 
         public async Task<bool> DeleteProduct(int productId)
