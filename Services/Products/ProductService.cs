@@ -1,8 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Exceptions;
+using RandomShop.Models.Product;
 using System.Collections.ObjectModel;
 
 namespace RandomShop.Services.Products
@@ -10,9 +12,13 @@ namespace RandomShop.Services.Products
     public class ProductService : IProductService
     {
         private readonly ShopContext context;
+        private readonly IMapper mapper;
 
-        public ProductService(ShopContext context)
-         => this.context = context;
+        public ProductService(IMapper mapper, ShopContext context)
+        {
+            this.mapper = mapper;
+            this.context = context;
+        }
 
         public async Task<Product> GetProductById(int productId)
         {
@@ -23,7 +29,7 @@ namespace RandomShop.Services.Products
 
         public async Task<Product> GetProductByName(string productName)
         {
-            var product = await this.context.Products.Where(x => x.Name.Contains(productName)).FirstOrDefaultAsync();
+            Product? product = await this.context.Products.Where(x => x.Name.Contains(productName)).FirstOrDefaultAsync();
 
             return product;
         }
@@ -89,6 +95,22 @@ namespace RandomShop.Services.Products
                  .ToListAsync();
 
             return products;
+        }
+
+        public async Task<ProductViewModel> UpdateStock(int productId, int quantity)
+        {
+            ProductItem? productItem = await this.context.ProductItems.FindAsync(productId);
+
+            if (productItem == null)
+            {
+                throw new NotFoundException("Product not found.");
+            }
+
+            productItem.QuantityInStock = quantity;
+            await this.context.SaveChangesAsync();
+
+
+            return this.mapper.Map<ProductViewModel>(productItem);
         }
 
         public async Task<bool> DeleteProduct(int productId)

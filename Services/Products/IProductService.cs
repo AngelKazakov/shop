@@ -1,4 +1,5 @@
 ﻿using RandomShop.Data.Models;
+using RandomShop.Models.Product;
 using System.Security.Cryptography.X509Certificates;
 
 namespace RandomShop.Services.Products
@@ -18,5 +19,7 @@ namespace RandomShop.Services.Products
         public Task<ICollection<Product>> GetProductsByCategory(int categoryId);
 
         public Task<ICollection<Product>> GetProductsByPriceRange(int minPrice, int maxPrice);
+
+        public Task<ProductViewModel> UpdateStock(int productId, int quantity);
     }
 }
