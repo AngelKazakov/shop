@@ -6,6 +6,8 @@ using RandomShop.Data.Models;
 using RandomShop.Exceptions;
 using RandomShop.Models.Product;
 using System.Collections.ObjectModel;
+using System.Linq.Dynamic.Core;
+using System.Reflection;
 
 namespace RandomShop.Services.Products
 {
@@ -111,6 +113,38 @@ namespace RandomShop.Services.Products
 
 
             return this.mapper.Map<ProductViewModel>(productItem);
+        }
+
+        public async Task<ICollection<ProductListViewModel>> SortProducts(string criteria)
+        {
+            if (string.IsNullOrWhiteSpace(criteria))
+            {
+                throw new NotFoundException("Criteria not found.");
+            }
+
+            var productItemProperties = typeof(ProductItem)
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Select(p => p.Name)
+                .ToList();
+
+            // Validate criteria
+            if (!productItemProperties.Contains(criteria, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException($"Invalid sorting criteria: {criteria}");
+            }
+
+            List<ProductListViewModel>? sortedProducts = await this.context.ProductItems
+                .AsNoTracking()
+                .Include(x => x.Product)
+                .Include(x => x.ProductItemImages)
+                .OrderBy(criteria)
+                .Select(x => new ProductListViewModel
+                {
+                    // Add properties as needed
+                })
+                .ToListAsync();
+
+            return sortedProducts;
         }
 
         public async Task<bool> DeleteProduct(int productId)
