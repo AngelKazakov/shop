@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.Build.Evaluation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualBasic;
 using RandomShop.Data;
@@ -109,6 +110,22 @@ namespace RandomShop.Services.Products
             }
 
             productItem.QuantityInStock = quantity;
+            await this.context.SaveChangesAsync();
+
+
+            return this.mapper.Map<ProductViewModel>(productItem);
+        }
+
+        public async Task<ProductViewModel> UpdatePrice(int productId, decimal price)
+        {
+            ProductItem? productItem = await this.context.ProductItems.FindAsync(productId);
+
+            if (productItem == null)
+            {
+                throw new NotFoundException("Product not found.");
+            }
+
+            productItem.Price = price;
             await this.context.SaveChangesAsync();
 
 

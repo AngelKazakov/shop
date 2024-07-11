@@ -22,6 +22,8 @@ namespace RandomShop.Services.Products
 
         public Task<ProductViewModel> UpdateStock(int productId, int quantity);
 
+        public Task<ProductViewModel> UpdatePrice(int productId, decimal price);
+
         public Task<ICollection<ProductListViewModel>> SortProducts(string criteria);
 
         public Task<bool> BulkDeleteProducts(List<int> productIds);
