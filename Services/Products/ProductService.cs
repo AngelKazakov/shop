@@ -169,6 +169,36 @@ namespace RandomShop.Services.Products
 
         }
 
+        public async Task<bool> BulkDeleteProducts(List<int> productIds)
+        {
+            using (var transaction = await this.context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    List<Product>? productsForDeletion = await this.context.Products
+                        .Where(x => productIds.Contains(x.Id))
+                        .ToListAsync();
+
+                    if (productsForDeletion.Count() != productIds.Count())
+                    {
+                        throw new NotFoundException("One or more products are not found.");
+                    }
+
+                    this.context.Products.RemoveRange(productsForDeletion);
+                    await this.context.SaveChangesAsync();
+
+                    await transaction.CommitAsync();
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    throw new ApplicationException("An error occurred while deleting products.", ex);
+                }
+            }
+        }
+
         private async Task<Product> CheckIfProductExistsOrIsNull(int productId)
         {
             Product product = await this.context.Products.FindAsync(productId);
