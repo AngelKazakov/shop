@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Infrastructure;
 using RandomShop.Services.Categories;
+using RandomShop.Services.Products;
+using RandomShop.Services.Promotions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +21,8 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddTransient<ICategoryService, CategoryService>();
+builder.Services.AddTransient<IProductService, ProductService>();
+builder.Services.AddTransient<IPromotionService, PromotionService>();
 
 var app = builder.Build();
 

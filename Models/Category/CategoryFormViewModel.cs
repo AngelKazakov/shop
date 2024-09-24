@@ -8,7 +8,6 @@
 
         public MainCategoryViewModel? MainCategoryViewModel { get; set; }
 
-
         public ICollection<MainCategoryViewModel> MainCategories { get; set; } = new List<MainCategoryViewModel>();
     }
 }

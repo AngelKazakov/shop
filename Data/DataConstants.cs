@@ -97,5 +97,6 @@
 
         public const int variationOptionValueMinLength = 1;
         public const int variationOptionValueMaxLength = 512;
+
     }
 }

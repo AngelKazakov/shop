@@ -1,0 +1,116 @@
+﻿@model PromotionAddFormModel
+@{
+    ViewData["Title"] = "Add";
+}
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f7f6;
+        margin: 0;
+        padding: 20px;
+    }
+
+    .header-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+        .header-container h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin: 0;
+        }
+
+    .form-container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #ffffff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+            color: #555;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #007bff;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+        }
+
+    .text-danger {
+        color: #dc3545;
+        font-size: 0.875rem;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: #ffffff;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+</style>
+
+<div class="header-container">
+    <h1>Add Product</h1>
+</div>
+
+<div class="form-container">
+    <form asp-asp-controller="Promotion" asp-action="Add" method="post">
+        @Html.ValidationSummary(true)
+
+        <div class="form-group">
+            <label asp-for="Name">Promotion Name</label>
+            <input asp-for="Name" type="text" class="form-control" placeholder="Enter name" required />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="DiscountRate">Discount Rate</label>
+            <input asp-for="DiscountRate" type="text" class="form-control" placeholder="Enter price" required />
+            <span asp-validation-for="DiscountRate" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Description">Description</label>
+            <textarea asp-for="Description" type="text" class="form-control" placeholder="Enter description" required> </textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <div class="form-group">
+                <label for="startDate">Start Date</label>
+                <input type="date" class="form-control" id="startDate" name="StartDate" asp-for="StartDate" />
+            </div>
+            <div class="form-group">
+                <label for="endDate">End Date</label>
+                <input type="date" class="form-control" id="endDate" name="EndDate" asp-for="EndDate" />
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
