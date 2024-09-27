@@ -31,5 +31,13 @@ namespace RandomShop.Controllers
 
             return RedirectToAction("Details", "PromotionController", promotionId);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int promotionId)
+        {
+            PromotionViewModel? model = await this.promotionService.GetPromotionById(promotionId);
+
+            return View(model);
+        }
     }
 }

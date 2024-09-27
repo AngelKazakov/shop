@@ -31,5 +31,23 @@ namespace RandomShop.Services.Promotions
 
             return promotion.Id;
         }
+
+        public async Task<PromotionViewModel> GetPromotionById(int id)
+        {
+            Promotion? promotion = await this.shopContext.Promotions.FindAsync(id);
+
+            if (promotion == null)
+            {
+                return null;
+            }
+
+            PromotionViewModel promotionViewModel = new PromotionViewModel
+            {
+                Id = promotion.Id,
+                Name = promotion.Name
+            };
+
+            return promotionViewModel;
+        }
     }
 }

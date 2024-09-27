@@ -1,0 +1,44 @@
+﻿@model PromotionViewModel
+
+@{
+    ViewData["Title"] = "Promotion Details";
+}
+
+<div class="promotion-details-container">
+    <h2>Promotion Details</h2>
+
+    <div class="detail-group">
+        <strong>Promotion ID:</strong>
+        <p>@Model.Id</p>
+    </div>
+
+    <div class="detail-group">
+        <strong>Promotion Name:</strong>
+        <p>@Model.Name</p>
+    </div>
+
+    <a class="btn btn-primary" asp-action="Index">Back to List</a>
+</div>
+
+<style>
+    .promotion-details-container {
+        margin: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .detail-group {
+        margin-bottom: 15px;
+    }
+
+        .detail-group p {
+            font-size: 1.2rem;
+            color: #333;
+        }
+
+    .btn-primary {
+        margin-top: 20px;
+    }
+</style>
