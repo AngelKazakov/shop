@@ -7,5 +7,7 @@ namespace RandomShop.Services.Promotions
         public Task<int> CreatePromotion(PromotionAddFormModel model);
 
         public Task<PromotionViewModel> GetPromotionById(int id);
+
+        public Task<ICollection<PromotionViewModel>> GetAllPromotions();
     }
 }

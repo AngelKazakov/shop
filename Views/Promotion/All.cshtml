@@ -1,0 +1,59 @@
+﻿@model IEnumerable<PromotionViewModel>
+
+@{
+    ViewData["Title"] = "All Promotions";
+}
+
+<div class="promotions-list-container">
+    <h2>All Promotions</h2>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Promotion ID</th>
+                <th scope="col">Promotion Name</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var promotion in Model)
+            {
+                <tr>
+                    <td>@promotion.Id</td>
+                    <td>@promotion.Name</td>
+                    <td>
+                        <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@promotion.Id">Details</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <a class="btn btn-primary" asp-action="Add">Add New Promotion</a>
+</div>
+
+<style>
+    .promotions-list-container {
+        margin: 20px;
+        padding: 20px;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .table {
+        width: 100%;
+        margin-top: 20px;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f2f2f2;
+    }
+
+    .btn-info {
+        margin-right: 10px;
+    }
+
+    .btn-primary {
+        margin-top: 20px;
+    }
+</style>

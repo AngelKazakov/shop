@@ -1,4 +1,5 @@
-﻿using RandomShop.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Models.Promotion;
 
@@ -30,6 +31,14 @@ namespace RandomShop.Services.Promotions
             }
 
             return promotion.Id;
+        }
+
+        public async Task<ICollection<PromotionViewModel>> GetAllPromotions()
+        {
+            return await this.shopContext.Promotions
+            .AsNoTracking()
+            .Select(x => new PromotionViewModel { Id = x.Id, Name = x.Name })
+            .ToListAsync();
         }
 
         public async Task<PromotionViewModel> GetPromotionById(int id)

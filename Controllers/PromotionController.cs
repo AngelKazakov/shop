@@ -33,11 +33,17 @@ namespace RandomShop.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Details(int promotionId)
+        public async Task<IActionResult> Details(int Id)
         {
-            PromotionViewModel? model = await this.promotionService.GetPromotionById(promotionId);
+            PromotionViewModel? model = await this.promotionService.GetPromotionById(Id);
 
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> All()
+        {
+            return View(await this.promotionService.GetAllPromotions());
         }
     }
 }
