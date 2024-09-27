@@ -45,5 +45,18 @@ namespace RandomShop.Controllers
         {
             return View(await this.promotionService.GetAllPromotions());
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Delete(int Id)
+        {
+            bool isDeleted = await this.promotionService.DeletePromotion(Id);
+
+            if (!isDeleted)
+            {
+                return RedirectToAction("Error", "HomeController");
+            }
+
+            return RedirectToAction("Index", "HomeController");
+        }
     }
 }

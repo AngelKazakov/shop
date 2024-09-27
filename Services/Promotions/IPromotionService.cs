@@ -9,5 +9,7 @@ namespace RandomShop.Services.Promotions
         public Task<PromotionViewModel> GetPromotionById(int id);
 
         public Task<ICollection<PromotionViewModel>> GetAllPromotions();
+
+        public Task<bool> DeletePromotion(int id);
     }
 }

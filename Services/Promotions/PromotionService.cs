@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
+using RandomShop.Exceptions;
 using RandomShop.Models.Promotion;
 
 namespace RandomShop.Services.Promotions
@@ -31,6 +32,29 @@ namespace RandomShop.Services.Promotions
             }
 
             return promotion.Id;
+        }
+
+        public async Task<bool> DeletePromotion(int id)
+        {
+            Promotion? promotionForDeletion = await this.shopContext.Promotions.FindAsync(id);
+
+            if (promotionForDeletion == null)
+            {
+                throw new NotFoundException($"Promotion with ID {id} not found.");
+            }
+
+            try
+            {
+                this.shopContext.Promotions.Remove(promotionForDeletion);
+                await this.shopContext.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log the exception if necessary
+                throw new ApplicationException($"An error occurred while deleting the promotion: {ex.Message}");
+            }
         }
 
         public async Task<ICollection<PromotionViewModel>> GetAllPromotions()
