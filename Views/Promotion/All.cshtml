@@ -24,6 +24,12 @@
                     <td>
                         <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@promotion.Id">Details</a>
                     </td>
+                    <td>
+                        <form asp-action="Delete" asp-route-id="@promotion.Id" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>
@@ -51,6 +57,11 @@
 
     .btn-info {
         margin-right: 10px;
+    }
+
+    .btn-delete {
+        margin-right: 10px;
+        color: red;
     }
 
     .btn-primary {
