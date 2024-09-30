@@ -27,15 +27,20 @@ namespace RandomShop.Controllers
                 return View(model);
             }
 
-            int promotionId = await this.promotionService.CreatePromotion(model);
+            int createdPromotionId = await this.promotionService.CreatePromotion(model);
 
-            return RedirectToAction("Details", "PromotionController", promotionId);
+            return RedirectToAction("Details", "Promotion", new { Id = createdPromotionId });
         }
 
         [HttpGet]
         public async Task<IActionResult> Details(int Id)
         {
             PromotionViewModel? model = await this.promotionService.GetPromotionById(Id);
+
+            if (model == null)
+            {
+                return RedirectToAction("Error", "Home");
+            }
 
             return View(model);
         }
@@ -53,10 +58,10 @@ namespace RandomShop.Controllers
 
             if (!isDeleted)
             {
-                return RedirectToAction("Error", "HomeController");
+                return RedirectToAction("Error", "Home");
             }
 
-            return RedirectToAction("Index", "HomeController");
+            return RedirectToAction("Index", "Home");
         }
     }
 }
