@@ -30,6 +30,12 @@
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                         </form>
                     </td>
+                    <td>
+                        <form asp-action="Update" asp-route-id="@promotion.Id" method="get" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger btn-sm">Update</button>
+                        </form>
+                    </td>
                 </tr>
             }
         </tbody>

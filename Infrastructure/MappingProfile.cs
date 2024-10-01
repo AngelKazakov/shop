@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using RandomShop.Data.Models;
 using RandomShop.Models.Category;
+using RandomShop.Models.Promotion;
 
 namespace RandomShop.Infrastructure
 {
@@ -12,6 +13,8 @@ namespace RandomShop.Infrastructure
             this.CreateMap<Category, CategoryFormModel>();
             this.CreateMap<Category, CategoryViewModel>();
             this.CreateMap<Category, SubCategoryModel>();
+
+            this.CreateMap<PromotionViewModel, PromotionAddEditFormModel>();
         }
     }
 }

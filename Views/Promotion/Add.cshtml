@@ -1,7 +1,8 @@
-﻿@model PromotionAddFormModel
-@{
+﻿@model PromotionAddEditFormModel
+
+@* @{
     ViewData["Title"] = "Add";
-}
+} *@
 
 <style>
     body {
@@ -78,39 +79,54 @@
         }
 </style>
 
+
+@{
+    ViewData["Title"] = Model.Id == null ? "Add Promotion" : "Edit Promotion";
+}
+
 <div class="header-container">
-    <h1>Add Promotion</h1>
+    <h1>@ViewData["Title"]</h1>
 </div>
 
 <div class="form-container">
-    <form asp-asp-controller="Promotion" asp-action="Add" method="post">
+    <form asp-controller="Promotion" asp-action="@(Model.Id == null ? "Add" : "Update")" method="post">
         @Html.ValidationSummary(true)
+
+        @if (Model.Id != null)
+        {
+            <input type="hidden" asp-for="Id" />
+        }
 
         <div class="form-group">
             <label asp-for="Name">Promotion Name</label>
             <input asp-for="Name" type="text" class="form-control" placeholder="Enter name" required />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
+
         <div class="form-group">
             <label asp-for="DiscountRate">Discount Rate</label>
-            <input asp-for="DiscountRate" type="text" class="form-control" placeholder="Enter % rate" required />
+            <input asp-for="DiscountRate" type="text" class="form-control" placeholder="Enter discount rate" required />
             <span asp-validation-for="DiscountRate" class="text-danger"></span>
         </div>
+
         <div class="form-group">
             <label asp-for="Description">Description</label>
-            <textarea asp-for="Description" type="text" class="form-control" placeholder="Enter description" required> </textarea>
+            <textarea asp-for="Description" class="form-control" placeholder="Enter description" required></textarea>
             <span asp-validation-for="Description" class="text-danger"></span>
         </div>
+
         <div class="form-group">
-            <div class="form-group">
-                <label for="startDate">Start Date</label>
-                <input type="date" class="form-control" id="startDate" name="StartDate" asp-for="StartDate" />
-            </div>
-            <div class="form-group">
-                <label for="endDate">End Date</label>
-                <input type="date" class="form-control" id="endDate" name="EndDate" asp-for="EndDate" />
-            </div>
+            <label for="startDate">Start Date</label>
+            <input type="date" class="form-control" asp-for="StartDate" />
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+
+        <div class="form-group">
+            <label for="endDate">End Date</label>
+            <input type="date" class="form-control" asp-for="EndDate" />
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            @(Model.Id == null ? "Add Promotion" : "Save Changes")
+        </button>
     </form>
 </div>

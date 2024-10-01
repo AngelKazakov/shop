@@ -15,7 +15,7 @@ namespace RandomShop.Services.Promotions
             this.shopContext = shopContext;
         }
 
-        public async Task<int> CreatePromotion(PromotionAddFormModel model)
+        public async Task<int> CreatePromotion(PromotionAddEditFormModel model)
         {
             Promotion? promotion = new Promotion();
 
@@ -32,6 +32,23 @@ namespace RandomShop.Services.Promotions
             }
 
             return promotion.Id;
+        }
+
+        public async Task<PromotionViewModel> UpdatePromotion(PromotionAddEditFormModel model)
+        {
+            Promotion? promotionToUpdate = await this.shopContext.Promotions.FindAsync(model.Id);
+
+            if (promotionToUpdate == null) throw new ArgumentNullException(nameof(promotionToUpdate));
+
+            promotionToUpdate.Name = model.Name;
+            promotionToUpdate.Description = model.Description;
+            promotionToUpdate.DiscountRate = model.DiscountRate;
+            promotionToUpdate.StartDate = model.StartDate;
+            promotionToUpdate.EndDate = model.EndDate;
+
+            await this.shopContext.SaveChangesAsync();
+
+            return new PromotionViewModel { Id = promotionToUpdate.Id, Name = promotionToUpdate.Name };
         }
 
         public async Task<bool> DeletePromotion(int id)
@@ -77,7 +94,11 @@ namespace RandomShop.Services.Promotions
             PromotionViewModel promotionViewModel = new PromotionViewModel
             {
                 Id = promotion.Id,
-                Name = promotion.Name
+                Name = promotion.Name,
+                Description = promotion.Description,
+                DiscountRate = promotion.DiscountRate,
+                EndDate = promotion.EndDate,
+                StartDate = promotion.StartDate,
             };
 
             return promotionViewModel;
