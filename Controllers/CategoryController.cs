@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using RandomShop.Data.Models;
 using RandomShop.Models.Category;
 using RandomShop.Services.Categories;
 
@@ -33,6 +34,32 @@ namespace RandomShop.Controllers
             {
                 return RedirectToAction("Error", "HomeController", ex);
             }
+            return RedirectToAction("Index", "Home");
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit()
+        {
+
+            return View(await this.categoryService.InitUpdateCategoryModel());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(UpdateCategoryModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+
+            }
+
+            bool isCategoryUpdatedSuccessfully = await this.categoryService.UpdateCategory(model);
+
+            if (!isCategoryUpdatedSuccessfully)
+            {
+                return RedirectToAction("Error", "Home");
+            }
+
             return RedirectToAction("Index", "Home");
         }
 

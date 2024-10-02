@@ -4,6 +4,8 @@ using RandomShop.Models.Category;
 using System.Data;
 using RandomShop.Data.Models;
 using Microsoft.EntityFrameworkCore;
+using RandomShop.Exceptions;
+using Microsoft.IdentityModel.Tokens;
 
 namespace RandomShop.Services.Categories
 {
@@ -45,6 +47,31 @@ namespace RandomShop.Services.Categories
             return this.mapper.Map<CategoryViewModel>(category);
         }
 
+        public async Task<bool> UpdateCategory(UpdateCategoryModel model)
+        {
+            Category? categoryToUpdate = await this.context.Categories.FindAsync(model.Id);
+
+            if (categoryToUpdate is not null)
+            {
+                if (model.NewParrentCategoryId.HasValue)
+                {
+                    categoryToUpdate.ParentCategoryId = model.NewParrentCategoryId;
+                }
+                else
+                {
+                    categoryToUpdate.ParentCategoryId = categoryToUpdate.ParentCategoryId;
+                }
+
+                categoryToUpdate.Name = model.NewName;
+
+                await this.context.SaveChangesAsync();
+
+                return true;
+            }
+
+            return false;
+        }
+
         public async Task<bool> DeleteCategory(int id)
         {
             try
@@ -69,6 +96,11 @@ namespace RandomShop.Services.Categories
             return true;
         }
 
+        public async Task<CategoryViewModel> GetCategory(int id)
+        {
+            return this.mapper.Map<CategoryViewModel>(await this.context.Categories.FindAsync(id));
+        }
+
         public async Task<ICollection<CategoryViewModel>> GetAllCategories()
         {
             return await this.context.Categories
@@ -83,13 +115,13 @@ namespace RandomShop.Services.Categories
         public async Task<ICollection<MainCategoryViewModel>> GetMainCategories()
         {
             List<MainCategoryViewModel> mainCategories = await this.context.Categories
+                .AsNoTracking()
                 // .Where(x => x.ParentCategoryId == null)  Where statement is not working properly here...
                 .Select(x => new MainCategoryViewModel()
                 {
                     Id = x.Id,
                     Name = x.Name,
                 })
-                .AsNoTracking()
                .ToListAsync();
 
             return mainCategories;
@@ -106,7 +138,7 @@ namespace RandomShop.Services.Categories
 
         public async Task<CategoryFormViewModel> InitCategoryFormViewModel()
         {
-            ICollection<MainCategoryViewModel> categories = await this.context.Categories.Select(x => new MainCategoryViewModel { Id = x.Id, Name = x.Name, }).ToListAsync();
+            ICollection<MainCategoryViewModel> categories = await MainCategoryViewModels();
 
             CategoryFormViewModel initModel = new CategoryFormViewModel()
             {
@@ -117,9 +149,27 @@ namespace RandomShop.Services.Categories
             return initModel;
         }
 
+        public async Task<UpdateCategoryModel> InitUpdateCategoryModel()
+        {
+            UpdateCategoryModel? initModel = new UpdateCategoryModel()
+            {
+                MainCategories = await MainCategoryViewModels(),
+            };
+
+            return initModel;
+        }
+
         private async Task<bool> CheckIfCategoryAlreadyExists(string categoryName)
         {
             return await this.context.Categories.AsNoTracking().AnyAsync(x => x.Name == categoryName);
+        }
+
+        private async Task<ICollection<MainCategoryViewModel>> MainCategoryViewModels()
+        {
+            return await this.context.Categories
+                .AsNoTracking()
+                .Select(x => new MainCategoryViewModel { Id = x.Id, Name = x.Name })
+                .ToListAsync();
         }
     }
 }

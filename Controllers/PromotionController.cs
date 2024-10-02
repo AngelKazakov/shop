@@ -22,6 +22,17 @@ namespace RandomShop.Controllers
             return View(model);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Update(int Id)
+        {
+            PromotionViewModel? promotionForUpdate = await this.promotionService.GetPromotionById(Id);
+
+            //Fill the input fields with correct data.
+            var model = this.mapper.Map<PromotionAddEditFormModel>(promotionForUpdate);
+
+            return View("Add", model);
+        }
+
         [HttpPost]
         public async Task<IActionResult> Add(PromotionAddEditFormModel model)
         {
@@ -33,17 +44,6 @@ namespace RandomShop.Controllers
             int createdPromotionId = await this.promotionService.CreatePromotion(model);
 
             return RedirectToAction("Details", "Promotion", new { Id = createdPromotionId });
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> Update(int Id)
-        {
-            PromotionViewModel? promotionForUpdate = await this.promotionService.GetPromotionById(Id);
-
-            //Fill the input fields with correct data.
-            var model = this.mapper.Map<PromotionAddEditFormModel>(promotionForUpdate);
-
-            return View("Add", model);
         }
 
         [HttpPost]

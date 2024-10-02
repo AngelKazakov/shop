@@ -6,9 +6,15 @@ namespace RandomShop.Services.Categories
     {
         public Task<CategoryViewModel> CreateCategory(CategoryFormModel model);
 
+        public Task<bool> UpdateCategory(UpdateCategoryModel model);
+
         public Task<bool> DeleteCategory(int id);
 
         public Task<CategoryFormViewModel> InitCategoryFormViewModel();
+
+        public Task<UpdateCategoryModel> InitUpdateCategoryModel();
+
+        public Task<CategoryViewModel> GetCategory(int id);
 
         public Task<ICollection<CategoryViewModel>> GetAllCategories();
 
