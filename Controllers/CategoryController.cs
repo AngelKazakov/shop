@@ -10,7 +10,9 @@ namespace RandomShop.Controllers
         private readonly ICategoryService categoryService;
 
         public CategoryController(ICategoryService categoryService)
-         => this.categoryService = categoryService;
+        {
+            this.categoryService = categoryService;
+        }
 
         [HttpGet]
         public async Task<IActionResult> Add()
