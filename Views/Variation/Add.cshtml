@@ -71,6 +71,12 @@
         </div>
 
         <div class="form-group">
+            <label asp-for="Name">Variation Value</label>
+            <input asp-for="Value" type="text" class="form-control" placeholder="Enter variation value" required />
+            <span asp-validation-for="Value" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
             <label asp-for="CategoryId">Select Category</label>
             <select asp-for="CategoryId" class="form-control">
                 <option value="" selected disabled>-- Select Category --</option>

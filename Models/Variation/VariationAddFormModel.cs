@@ -8,6 +8,8 @@ namespace RandomShop.Models.Variation
         [Required]
         public string Name { get; set; }
 
+        public string Value { get; set; }
+
         public int CategoryId { get; set; }
 
         public ICollection<CategoryViewModel> Categories { get; set; } = new List<CategoryViewModel>();

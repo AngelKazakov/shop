@@ -6,5 +6,7 @@ namespace RandomShop.Models.Variation
     {
         [Required]
         public string Value { get; set; }
+
+        public int VariationId { get; set; }
     }
 }
