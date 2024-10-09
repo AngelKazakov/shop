@@ -1,0 +1,91 @@
+﻿@model VariationOptionAddFormModel
+
+@{
+    ViewData["Title"] = "Add Variation Option";
+}
+
+<style>
+    /* Style for form container */
+    .form-container {
+        max-width: 500px;
+        margin: 30px auto;
+        padding: 20px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        background-color: #f7f7f7;
+    }
+
+    /* Style for form group (input and label) */
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    /* Style for form labels */
+    label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    /* Style for form input */
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    /* Style for dropdown select */
+    select.form-control {
+        height: 40px;
+    }
+
+    /* Style for submit button */
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+    /* Style for error messages */
+    .text-danger {
+        color: red;
+    }
+
+</style>
+
+<div class="form-container">
+    <h2>Add Value on Variation</h2>
+
+    <form asp-action="AddValue" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label asp-for="Value">Value</label>
+            <input asp-for="Value" class="form-control" placeholder="Enter option value" />
+            <span asp-validation-for="Value" class="text-danger"></span>
+        </div>
+
+        <!-- Dropdown for selecting VariationId -->
+        <div class="form-group">
+            <label asp-for="VariationId">Select Variation</label>
+            <select asp-for="VariationId" class="form-control">
+                <option value="" selected>-- Select a Variation --</option>
+                @foreach (var variation in Model.Variations)
+                {
+                    <option value="@variation.Id">@variation.Name</option>
+                }
+            </select>
+            <span asp-validation-for="VariationId" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>

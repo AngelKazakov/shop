@@ -1,4 +1,5 @@
-﻿using RandomShop.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Models.Variation;
 using RandomShop.Services.Categories;
@@ -18,11 +19,6 @@ namespace RandomShop.Services.Variation
 
         public async Task<VariationViewModel> CreateVariation(VariationAddFormModel model)
         {
-            //if (model is null)
-            //{
-            //    throw new ArgumentNullException(nameof(model));
-            //}
-
             CheckIfModelIsNullAndThrowArgumentNullException(model);
 
             try
@@ -37,9 +33,10 @@ namespace RandomShop.Services.Variation
                 await this.shopContext.Variations.AddAsync(newVariation);
                 await this.shopContext.SaveChangesAsync();
 
-                var newAddedVariation = await CreateVariationOption(newVariation.Id, model.Value);
+                VariationViewModel? newAddedVariation = await CreateVariationOption(newVariation.Id, model.Value);
+                newAddedVariation.Name = newVariation.Name;
 
-                return new VariationViewModel() { Id = newAddedVariation.Id, Name = newAddedVariation.Name, Value = newAddedVariation.Value };
+                return newAddedVariation; //new VariationViewModel() { Id = newAddedVariation.Id, Name = newAddedVariation.Name, Value = newAddedVariation.Value };
             }
             catch (Exception ex)
             {
@@ -70,11 +67,48 @@ namespace RandomShop.Services.Variation
             }
         }
 
+        public async Task<bool> AddValueToVariationOption(VariationOptionAddFormModel model)
+        {
+            CheckIfModelIsNullAndThrowArgumentNullException(model);
+
+            try
+            {
+                VariationOption? existingVarOptionWithSameName = await this.shopContext.VariationOptions
+                    .FirstOrDefaultAsync(x => x.Value == model.Value && x.VariationId == model.VariationId);
+
+                if (existingVarOptionWithSameName is null)
+                {
+                    VariationOption? varOption = new VariationOption() { Value = model.Value, VariationId = model.VariationId };
+                    await this.shopContext.VariationOptions.AddAsync(varOption);
+                    await this.shopContext.SaveChangesAsync();
+
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Error adding value on variation", ex);
+            }
+        }
+
         public async Task<VariationAddFormModel> InitVariationAddFormModel()
         {
             return new VariationAddFormModel()
             {
                 Categories = await this.categoryService.GetAllCategories(),
+            };
+        }
+
+        public async Task<VariationOptionAddFormModel> InitVariationOptionAddFormModel()
+        {
+            List<VariationViewModel>? variationsViewModels = await this.shopContext.Variations
+                .AsNoTracking().Select(x => new VariationViewModel() { Id = x.Id, Name = x.Name }).ToListAsync();
+
+            return new VariationOptionAddFormModel()
+            {
+                Variations = variationsViewModels,
             };
         }
 

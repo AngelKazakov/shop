@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using RandomShop.Models.Variation;
 using RandomShop.Services.Variation;
 
@@ -32,6 +33,30 @@ namespace RandomShop.Controllers
             VariationViewModel? variationViewModel = await this.variationService.CreateVariation(model);
 
             return RedirectToAction("Details", new { Id = variationViewModel.Id });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> AddValue()
+        {
+            return View(await this.variationService.InitVariationOptionAddFormModel());
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddValue(VariationOptionAddFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            bool result = await this.variationService.AddValueToVariationOption(model);
+
+            if (!result)
+            {
+                return RedirectToAction("Error", "Home");
+            }
+
+            return RedirectToAction("Index", "Home");
         }
     }
 }

@@ -8,5 +8,7 @@ namespace RandomShop.Models.Variation
         public string Value { get; set; }
 
         public int VariationId { get; set; }
+
+        public ICollection<VariationViewModel> Variations { get; set; } = new List<VariationViewModel>();
     }
 }
