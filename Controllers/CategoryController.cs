@@ -42,7 +42,6 @@ namespace RandomShop.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit()
         {
-
             return View(await this.categoryService.InitUpdateCategoryModel());
         }
 
@@ -52,7 +51,6 @@ namespace RandomShop.Controllers
             if (!ModelState.IsValid)
             {
                 return View(model);
-
             }
 
             bool isCategoryUpdatedSuccessfully = await this.categoryService.UpdateCategory(model);
@@ -75,6 +73,7 @@ namespace RandomShop.Controllers
                 return RedirectToAction("Error", "Home");
 
             }
+
             return RedirectToAction("Index", "Home");
         }
 

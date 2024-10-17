@@ -13,5 +13,7 @@ namespace RandomShop.Services.Variation
         public Task<VariationViewModel> CreateVariationOption(int variationId, string variationValue);
 
         public Task<bool> AddValueToVariationOption(VariationOptionAddFormModel model);
+
+        public Task<ICollection<VariationOptionViewModel>> GetVariationOptionBySpecifyCategory(int categoryId);
     }
 }

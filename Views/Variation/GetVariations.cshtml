@@ -1,0 +1,112 @@
+﻿@model List<VariationOptionViewModel>
+
+<style>
+    /* Container Styling */
+    .form-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        background-color: #f9f9f9;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Form Group Styling */
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    /* Input and Select Styling */
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 1rem;
+        box-sizing: border-box;
+    }
+
+    /* Button Styling */
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    /* Error Message Styling */
+    .text-danger {
+        color: red;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="form-container">
+    <form asp-action="GetVariations" asp-controller="Variation" method="post">
+        @Html.AntiForgeryToken()
+
+        @foreach (var variationOptionViewModel in Model)
+        {
+            <div class="form-group">
+                <label>Select Variation for @variationOptionViewModel.VariationName</label>
+                <select class="form-control variation-dropdown" data-variation-id="@variationOptionViewModel.VariationName">
+                    <option value="" selected disabled>Select Variation Option</option>
+                    @foreach (var varOption in variationOptionViewModel.VariationOptions)
+                    {
+                        <option value="@varOption.VariationOptionId">@varOption.Value</option>
+                    }
+                </select>
+                <span class="text-danger"></span>
+            </div>
+        }
+
+        <button type="submit" class="btn btn-primary">Make Request</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Handle change event for each variation dropdown
+        $('.variation-dropdown').on('change', function() {
+            var selectedValue = $(this).val();
+            var variationName = $(this).data('variation-id');
+
+            if (selectedValue) {
+                console.log('Selected variation option for ' + variationName + ': ' + selectedValue);
+            }
+        });
+
+        // Form submission handler
+        $('form').on('submit', function(event) {
+            var isValid = true;
+
+            $('.variation-dropdown').each(function() {
+                if (!$(this).val()) {
+                    $(this).next('.text-danger').text('Please select an option.');
+                    isValid = false;
+                } else {
+                    $(this).next('.text-danger').text('');
+                }
+            });
+
+            if (!isValid) {
+                event.preventDefault(); // Stop form submission if validation fails
+            }
+        });
+    });
+</script>

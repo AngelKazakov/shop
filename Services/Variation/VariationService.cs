@@ -3,6 +3,8 @@ using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Models.Variation;
 using RandomShop.Services.Categories;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace RandomShop.Services.Variation
 {
@@ -91,6 +93,85 @@ namespace RandomShop.Services.Variation
             {
                 throw new InvalidOperationException("Error adding value on variation", ex);
             }
+        }
+
+        public async Task<ICollection<VariationOptionViewModel>> GetVariationOptionBySpecifyCategory(int categoryId)
+        {
+            List<VariationOptionViewModel> variationOptionViewModels = new List<VariationOptionViewModel>();
+            List<Data.Models.Variation> variationOptions;
+
+            if (categoryId == 0)
+            {
+                variationOptions = await this.shopContext.Variations
+                    .AsNoTracking()
+                    .Include(x => x.VariationOptions)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+            else
+            {
+                variationOptions = await this.shopContext.Variations
+                    .AsNoTracking()
+                    .Where(x => x.CategoryId == categoryId)
+                    .Include(x => x.VariationOptions)
+                    .AsNoTracking()
+                    .ToListAsync();
+            }
+
+            //List<Data.Models.Variation> variations = await this.shopContext.Variations
+            //    .AsNoTracking()
+            //    .Include(x => x.VariationOptions)
+            //    .AsNoTracking()
+            //    .ToListAsync();
+
+            foreach (var variation in variationOptions)
+            {
+                List<VariationOptionFormViewModel> varOptions = new List<VariationOptionFormViewModel>();
+
+
+                foreach (var variationOption in variation.VariationOptions)
+                {
+                    varOptions.Add(new VariationOptionFormViewModel() { VariationOptionId = variationOption.Id, Value = variationOption.Value });
+                }
+
+                variationOptionViewModels.Add(new VariationOptionViewModel()
+                {
+                    VariationId = variation.Id,
+                    VariationName = variation.Name,
+                    VariationOptions = varOptions,
+                });
+
+                varOptions = new List<VariationOptionFormViewModel>();
+            }
+
+
+            return variationOptionViewModels;
+
+
+
+            //Dictionary<string, List<VariationViewModel>> variation_Options = new Dictionary<string, List<VariationViewModel>>();
+            ////Replace key with variation name and values depends on it.
+            //List<Data.Models.Variation>? variations = await this.shopContext.Variations.Include(x => x.VariationOptions).AsNoTracking().ToListAsync();
+
+            //foreach (var variation in variations)
+            //{
+            //    var optionsViewModelList = new List<VariationViewModel>();
+
+            //    foreach (var varOption in variation.VariationOptions)
+            //    {
+            //        optionsViewModelList.Add(new VariationViewModel()
+            //        {
+            //            Id = varOption.Id,
+            //            Name = variation.Name,
+            //            Value = varOption.Value,
+            //        });
+            //    }
+
+            //    variation_Options.Add(variation.Name, optionsViewModelList);
+            //    optionsViewModelList = new List<VariationViewModel>();
+            //}
+
+            //return variation_Options;
         }
 
         public async Task<VariationAddFormModel> InitVariationAddFormModel()
