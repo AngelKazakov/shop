@@ -2,17 +2,47 @@
 using Microsoft.AspNetCore.Mvc;
 using RandomShop.Data.Models;
 using RandomShop.Exceptions;
+using RandomShop.Models.Product;
 using RandomShop.Services.Products;
+using Newtonsoft.Json;
+using RandomShop.Services.Variation;
 
 namespace RandomShop.Controllers
 {
     public class ProductController : Controller
     {
         private readonly IProductService productService;
-
-        public ProductController(IProductService productService)
+        private readonly IVariationService variationService;
+        public ProductController(IProductService productService, IVariationService variationService)
         {
             this.productService = productService;
+            this.variationService = variationService;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Add(int categoryId)
+        {
+            return View(await this.productService.InitProductAddFormModel(categoryId));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Add(ProductAddFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            int addedProductId = await this.productService.AddProduct(model);
+
+            return Redirect($"Product/Get/{addedProductId}");
+        }
+
+        [HttpGet]
+        public async Task<JsonResult> GetVariationOptionsByCategory(int categoryId)
+        {
+            var variations = await this.variationService.GetVariationOptionBySpecifyCategory(categoryId);
+            return Json(variations);
         }
 
         [HttpGet]
@@ -21,7 +51,9 @@ namespace RandomShop.Controllers
             try
             {
                 Product product = await this.productService.GetProductById(productId);
-                return View(product);
+                // return View(product);
+
+                return null;
             }
             catch (NotFoundException ex)
             {
@@ -45,7 +77,8 @@ namespace RandomShop.Controllers
                 return View("Error");
             }
 
-            return View(product);
+            //return View(product);
+            return null;
         }
 
         [HttpPost]
@@ -58,7 +91,9 @@ namespace RandomShop.Controllers
                 return View("Home", "Error");
             }
 
-            return View(products);
+            //return View(products);
+
+            return null;
 
         }
 
@@ -67,7 +102,8 @@ namespace RandomShop.Controllers
         {
             var products = await this.productService.GetAllProducts();
 
-            return View(products);
+            //return View(products);\
+            return null;
         }
 
         [HttpPost]

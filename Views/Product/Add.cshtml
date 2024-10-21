@@ -125,25 +125,6 @@
 
 
         <div id="variationOptionsContainer" class="form-group">
-
-            @*<select id="variationOptionSelect" asp-for="testVar" class="form-control">
-            @foreach (var variationOptionViewModel in Model.VariationOptions)
-            {
-            <option value="@variationOptionViewModel.VariationId">
-            @variationOptionViewModel.VariationName
-            </option>
-            }
-            </select>
-            <label for="variationOption_@variationOptionViewModel.VariationName">@variationOptionViewModel.VariationName</label>*@
-            @*<select asp-for="@Model.VariationOptionSelectedIds" id="variationOption_@variationOptionViewModel.VariationId" name="VariationOptionId_@variationOptionViewModel.VariationName" class="form-control">
-            <option value="" selected disabled>Select Option</option>
-            @foreach (var option in variationOptionViewModel.VariationOptions)
-            {
-            @* <option asp-for="@option.VariationOptionId" id="@option.VariationOptionId" value="@option.VariationOptionId">@option.Value</option>
-            <option  id="@option.VariationOptionId" value="@option.VariationOptionId">@option.Value</option>
-            }
-            </select>*@
-
         </div>
 
         <button asp-asp-controller="Product" asp-action="Add" type="submit" class="btn btn-primary">Add Product</button>
@@ -195,11 +176,11 @@
 
                         data.forEach(function (variation, index) {
                             var variationDropdown = `
-                                                <div class="form-group">
-                                                    <label for="variation_${variation.variationName}">${variation.variationName}</label>
-                                                    <select class="form-control" id="variation_${variation.variationName}"
-                                                                name="SelectedVariationOptions[${index}].VariationOptionId">
-                                                        <option value="" selected disabled>Select Option</option>`;
+                                                    <div class="form-group">
+                                                        <label for="variation_${variation.variationName}">${variation.variationName}</label>
+                                                        <select class="form-control" id="variation_${variation.variationName}"
+                                                                    name="SelectedVariationOptions[${index}].VariationOptionId">
+                                                            <option value="" selected disabled>Select Option</option>`;
 
                             // Add options for each variation
                             variation.variationOptions.forEach(function (option) {
@@ -207,8 +188,8 @@
                             });
 
                             variationDropdown += `</select>
-                                                        <input type="hidden" name="SelectedVariationOptions[${index}].VariationId" value="${variation.variationId}" />
-                                                </div>`;
+                                                            <input type="hidden" name="SelectedVariationOptions[${index}].VariationId" value="${variation.variationId}" />
+                                                    </div>`;
 
                             // Append the dropdown to the container
                             $('#variationOptionsContainer').append(variationDropdown);

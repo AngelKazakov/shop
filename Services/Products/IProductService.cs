@@ -1,6 +1,5 @@
 ﻿using RandomShop.Data.Models;
 using RandomShop.Models.Product;
-using System.Security.Cryptography.X509Certificates;
 
 namespace RandomShop.Services.Products
 {
@@ -27,5 +26,9 @@ namespace RandomShop.Services.Products
         public Task<ICollection<ProductListViewModel>> SortProducts(string criteria);
 
         public Task<bool> BulkDeleteProducts(List<int> productIds);
+
+        public Task<int> AddProduct(ProductAddFormModel model);
+
+        public Task<ProductAddFormModel> InitProductAddFormModel(int categoryId);
     }
 }

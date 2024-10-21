@@ -26,7 +26,7 @@ namespace RandomShop.Models.Product
 
         public int CategoryId { get; set; }
 
-        public int? PromotionId { get; set; }
+        public int PromotionId { get; set; }
 
         [Required]
         [Range(DataConstants.Product.productItemQuantityMin, DataConstants.Product.productItemQuantityMax)]
