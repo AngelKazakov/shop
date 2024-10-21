@@ -88,7 +88,24 @@ namespace RandomShop.Controllers
         [HttpGet]
         public async Task<IActionResult> All()
         {
-            return View(await this.promotionService.GetAllPromotions());
+            // return View(await this.promotionService.GetAllPromotions());
+
+            ICollection<PromotionViewModel> promotions = await this.promotionService.GetAllPromotions();
+
+            // If the request is an AJAX request, return JSON (for dropdown)
+            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+            {
+                // var promotionViewModels = promotions.Select(p => new PromotionViewModel
+                // {
+                //     Id = p.Id,
+                //     Name = p.Name
+                // }).ToList();
+
+                return Json(promotions);
+            }
+
+            // Otherwise, return the full view (for editing/deleting promotions)
+            return View(promotions); // Assuming your view expects a list of promotions
         }
     }
 }

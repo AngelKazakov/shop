@@ -112,6 +112,17 @@
             </select>
         </div>
 
+        <div class="form-group">
+            <label for="PromotionId">Promotion</label>
+            <select id="promotionSelect" asp-for="PromotionId" class="form-control">
+                <option value="Select Promotion" selected disabled>Select Promotion</option>
+                @foreach (var promotion in Model.Promotions)
+                {
+                    <option id="promotionId" value="@promotion.Id">@promotion.Name</option>
+                }
+            </select>
+        </div>
+
 
         <div id="variationOptionsContainer" class="form-group">
 
@@ -146,6 +157,28 @@
     });
 
     $(document).ready(function () {
+        // Fetch promotions via AJAX for the dropdown
+        $.ajax({
+            url: '@Url.Action("All", "Promotion")',
+            type: 'GET',
+            success: function (data) {
+                var $promotionSelect = $('#promotionSelect');
+                $promotionSelect.empty(); // Clear existing options
+                $promotionSelect.append('<option value="" selected disabled>Select Promotion</option>');
+
+                // Populate the dropdown with promotion options
+                data.forEach(function (promotion) {
+                    $promotionSelect.append('<option value="' + promotion.id + '">' + promotion.name + '</option>');
+                });
+            },
+            error: function () {
+                alert('Error fetching promotions');
+            }
+        });
+    });
+
+
+    $(document).ready(function () {
         // Handle category change
         $('#categorySelect').change(function () {
             var categoryId = $(this).val(); // Get selected category ID
@@ -162,11 +195,11 @@
 
                         data.forEach(function (variation, index) {
                             var variationDropdown = `
-                    <div class="form-group">
-                        <label for="variation_${variation.variationName}">${variation.variationName}</label>
-                        <select class="form-control" id="variation_${variation.variationName}"
-                                    name="SelectedVariationOptions[${index}].VariationOptionId">
-                            <option value="" selected disabled>Select Option</option>`;
+                                                <div class="form-group">
+                                                    <label for="variation_${variation.variationName}">${variation.variationName}</label>
+                                                    <select class="form-control" id="variation_${variation.variationName}"
+                                                                name="SelectedVariationOptions[${index}].VariationOptionId">
+                                                        <option value="" selected disabled>Select Option</option>`;
 
                             // Add options for each variation
                             variation.variationOptions.forEach(function (option) {
@@ -174,8 +207,8 @@
                             });
 
                             variationDropdown += `</select>
-                            <input type="hidden" name="SelectedVariationOptions[${index}].VariationId" value="${variation.variationId}" />
-                    </div>`;
+                                                        <input type="hidden" name="SelectedVariationOptions[${index}].VariationId" value="${variation.variationId}" />
+                                                </div>`;
 
                             // Append the dropdown to the container
                             $('#variationOptionsContainer').append(variationDropdown);

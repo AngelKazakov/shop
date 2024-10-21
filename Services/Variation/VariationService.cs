@@ -95,7 +95,7 @@ namespace RandomShop.Services.Variation
             }
         }
 
-        public async Task<ICollection<VariationOptionViewModel>> GetVariationOptionBySpecifyCategory(int categoryId)
+        public async Task<List<VariationOptionViewModel>> GetVariationOptionBySpecifyCategory(int categoryId)
         {
             List<VariationOptionViewModel> variationOptionViewModels = new List<VariationOptionViewModel>();
             List<Data.Models.Variation> variationOptions;

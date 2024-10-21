@@ -1,8 +1,8 @@
 ﻿using RandomShop.Data;
 using RandomShop.Models.Category;
 using System.ComponentModel.DataAnnotations;
+using RandomShop.Models.Promotion;
 using RandomShop.Models.Variation;
-using Humanizer;
 
 namespace RandomShop.Models.Product
 {
@@ -26,6 +26,8 @@ namespace RandomShop.Models.Product
 
         public int CategoryId { get; set; }
 
+        public int? PromotionId { get; set; }
+
         [Required]
         [Range(DataConstants.Product.productItemQuantityMin, DataConstants.Product.productItemQuantityMax)]
         public int QuantityInStock { get; set; }
@@ -37,6 +39,8 @@ namespace RandomShop.Models.Product
         public List<VariationOptionViewModel> VariationOptions { get; set; } = new List<VariationOptionViewModel>();
 
         public List<VariationOptionFormViewModel> SelectedVariationOptions { get; set; } = new List<VariationOptionFormViewModel>();
+
+        public ICollection<PromotionViewModel> Promotions { get; set; } = new List<PromotionViewModel>();
     }
 
     public class VariationOptionFormViewModel

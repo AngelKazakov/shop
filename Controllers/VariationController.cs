@@ -17,7 +17,7 @@ namespace RandomShop.Controllers
         [HttpGet]
         public async Task<IActionResult> GetVariations()
         {
-            return View(await this.variationService.GetVariationOptionBySpecifyCategory(58));
+            return View(await this.variationService.GetVariationOptionBySpecifyCategory(0));
         }
 
         [HttpGet]
