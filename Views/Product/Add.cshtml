@@ -1,0 +1,194 @@
+﻿@model ProductAddFormModel
+
+@{
+    ViewData["Title"] = "Add Product";
+}
+
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        font-weight: bold;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+    }
+
+    .form-control-file {
+        padding: 5px;
+    }
+
+    .text-danger {
+        color: red;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+    .header-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="header-container">
+    <h2>Add Product</h2>
+</div>
+
+<div class="form-container">
+    <form asp-action="AddProduct" asp-controller="Product" method="post" enctype="multipart/form-data">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label asp-for="Name">Product Name</label>
+            <input asp-for="Name" class="form-control" placeholder="Enter product name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Description">Description</label>
+            <textarea asp-for="Description" class="form-control" placeholder="Enter product description"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Price">Price</label>
+            <input asp-for="Price" type="number" step="0.01" class="form-control" placeholder="Enter product price" />
+            <span asp-validation-for="Price" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SKU">SKU</label>
+            <input asp-for="SKU" class="form-control" placeholder="Enter product SKU" />
+            <span asp-validation-for="SKU" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="QuantityInStock">Quantity In Stock</label>
+            <input asp-for="QuantityInStock" type="number" class="form-control" placeholder="Enter quantity in stock" />
+            <span asp-validation-for="QuantityInStock" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="Images">Images</label>
+            <input asp-for="Images" type="file" class="form-control-file" multiple />
+            <span asp-validation-for="Images" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label for="CategoryId">Category</label>
+            <select id="categorySelect" asp-for="CategoryId" class="form-control">
+                <option value="Select Category" selected disabled>Select Category</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option id="categoryId" value="@category.Id">@category.Name</option>
+                }
+            </select>
+        </div>
+
+
+        <div id="variationOptionsContainer" class="form-group">
+
+            @*<select id="variationOptionSelect" asp-for="testVar" class="form-control">
+            @foreach (var variationOptionViewModel in Model.VariationOptions)
+            {
+            <option value="@variationOptionViewModel.VariationId">
+            @variationOptionViewModel.VariationName
+            </option>
+            }
+            </select>
+            <label for="variationOption_@variationOptionViewModel.VariationName">@variationOptionViewModel.VariationName</label>*@
+            @*<select asp-for="@Model.VariationOptionSelectedIds" id="variationOption_@variationOptionViewModel.VariationId" name="VariationOptionId_@variationOptionViewModel.VariationName" class="form-control">
+            <option value="" selected disabled>Select Option</option>
+            @foreach (var option in variationOptionViewModel.VariationOptions)
+            {
+            @* <option asp-for="@option.VariationOptionId" id="@option.VariationOptionId" value="@option.VariationOptionId">@option.Value</option>
+            <option  id="@option.VariationOptionId" value="@option.VariationOptionId">@option.Value</option>
+            }
+            </select>*@
+
+        </div>
+
+        <button asp-asp-controller="Product" asp-action="Add" type="submit" class="btn btn-primary">Add Product</button>
+    </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // Handle any additional logic, like showing file name when image is uploaded, or category/variation filtering
+    });
+
+    $(document).ready(function () {
+        // Handle category change
+        $('#categorySelect').change(function () {
+            var categoryId = $(this).val(); // Get selected category ID
+            if (categoryId) {
+                // Make an AJAX call to fetch variations based on selected category
+                $.ajax({
+                    url: '/Product/GetVariationOptionsByCategory', // The URL of your backend endpoint
+                    type: 'GET',
+                    data: { categoryId: categoryId },
+                    success: function (data) {
+                        console.log(data);
+                        // Clear the variation options container
+                        $('#variationOptionsContainer').empty();
+
+                        data.forEach(function (variation, index) {
+                            var variationDropdown = `
+                    <div class="form-group">
+                        <label for="variation_${variation.variationName}">${variation.variationName}</label>
+                        <select class="form-control" id="variation_${variation.variationName}"
+                                    name="SelectedVariationOptions[${index}].VariationOptionId">
+                            <option value="" selected disabled>Select Option</option>`;
+
+                            // Add options for each variation
+                            variation.variationOptions.forEach(function (option) {
+                                variationDropdown += `<option value="${option.variationOptionId}">${option.value}</option>`;
+                            });
+
+                            variationDropdown += `</select>
+                            <input type="hidden" name="SelectedVariationOptions[${index}].VariationId" value="${variation.variationId}" />
+                    </div>`;
+
+                            // Append the dropdown to the container
+                            $('#variationOptionsContainer').append(variationDropdown);
+                        });
+                    },
+                    error: function () {
+                        alert('Error fetching variations');
+                    }
+                });
+            } else {
+                // Clear the variation options if no category is selected
+                $('#variationOptionsContainer').empty();
+            }
+        });
+    });
+</script>
