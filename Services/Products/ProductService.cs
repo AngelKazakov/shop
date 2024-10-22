@@ -7,7 +7,6 @@ using RandomShop.Models.Product;
 using RandomShop.Services.Categories;
 using System.Linq.Dynamic.Core;
 using System.Reflection;
-using Microsoft.Identity.Client;
 using RandomShop.Services.Variation;
 
 namespace RandomShop.Services.Products
@@ -39,45 +38,15 @@ namespace RandomShop.Services.Products
 
         public async Task<int> AddProduct(ProductAddFormModel model)
         {
-            Product product = new Product
-            {
-                Name = model.Name,
-                Description = model.Description,
-            };
+            Product product = await CreateProduct(model);
 
-
-            ProductItem productItem = new ProductItem
-            {
-                Price = model.Price,
-                SKU = model.SKU,
-                QuantityInStock = model.QuantityInStock,
-                Product = product,
-            };
-
+            ProductItem productItem = await CreateProductItem(model, product);
 
             await using var transaction = await context.Database.BeginTransactionAsync();
             try
             {
-                await context.Products.AddAsync(product);
-                await context.ProductItems.AddAsync(productItem);
-
-                await this.context.SaveChangesAsync();
-
-                ProductPromotion productPromotion = new ProductPromotion()
-                { ProductId = product.Id, PromotionId = model.PromotionId };
-
-                await this.context.ProductPromotions.AddAsync(productPromotion);
-
-
-
-                List<ProductConfiguration> productConfigurationsList = model.SelectedVariationOptions.Select(
-                    variationOption => new ProductConfiguration
-                    {
-                        ProductItemId = productItem.Id,
-                        VariationOptionId = variationOption.VariationOptionId
-                    }).ToList();
-
-                await context.ProductConfigurations.AddRangeAsync(productConfigurationsList);
+                await AddProductPromotion(product.Id, model.PromotionId);
+                await AddProductConfigurations(model, productItem.Id);
 
                 await context.SaveChangesAsync();
 
@@ -255,12 +224,11 @@ namespace RandomShop.Services.Products
             {
                 throw new ApplicationException("An error occurred while deleting the product.", ex);
             }
-
         }
 
         public async Task<bool> BulkDeleteProducts(List<int> productIds)
         {
-            using (var transaction = await this.context.Database.BeginTransactionAsync())
+            await using (var transaction = await this.context.Database.BeginTransactionAsync())
             {
                 try
                 {
@@ -293,9 +261,60 @@ namespace RandomShop.Services.Products
 
         private async Task<Product> CheckIfProductExistsOrIsNull(int productId)
         {
-            return await this.context.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == productId) ?? null;
+            return await this.context.Products.AsNoTracking().FirstOrDefaultAsync(x => x.Id == productId);
         }
 
+        private async Task<Product> CreateProduct(ProductAddFormModel model)
+        {
+            Product product = new Product()
+            {
+                Name = model.Name,
+                Description = model.Description,
+            };
+
+            await this.context.Products.AddAsync(product);
+
+            return product;
+        }
+
+        private async Task<ProductItem> CreateProductItem(ProductAddFormModel model, Product product)
+        {
+            ProductItem productItem = new ProductItem()
+            {
+                Price = model.Price,
+                SKU = model.SKU,
+                QuantityInStock = model.QuantityInStock,
+                Product = product,
+            };
+
+            await this.context.ProductItems.AddAsync(productItem);
+            await this.context.SaveChangesAsync();
+
+            return productItem;
+        }
+
+        private async Task AddProductConfigurations(ProductAddFormModel model, int productItemId)
+        {
+            List<ProductConfiguration> productConfigurationsList = model.SelectedVariationOptions.Select(
+                variationOption => new ProductConfiguration
+                {
+                    ProductItemId = productItemId,
+                    VariationOptionId = variationOption.VariationOptionId
+                }).ToList();
+
+            await context.ProductConfigurations.AddRangeAsync(productConfigurationsList);
+        }
+
+        private async Task AddProductPromotion(int productId, int promotionId)
+        {
+            ProductPromotion productPromotion = new ProductPromotion()
+            {
+                ProductId = productId,
+                PromotionId = promotionId,
+            };
+
+            await this.context.ProductPromotions.AddAsync(productPromotion);
+        }
 
     }
 }
