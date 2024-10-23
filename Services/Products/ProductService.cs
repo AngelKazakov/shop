@@ -91,20 +91,20 @@ namespace RandomShop.Services.Products
             return products;
         }
 
-        public async Task<ICollection<Product>> GetAllProducts()
+        public async Task<ICollection<ProductListViewModel>> GetAllProducts()
         {
             try
             {
-                List<Product>? products = await this.context.Products
-                    .AsNoTracking()
-                    .Include(p => p.ProductItems)
-                    .Include(p => p.ProductImages)
-                    .Include(p => p.ProductPromotions)
-                    .Include(p => p.ProductCategories)
-                    .ThenInclude(x => x.Category)
+                // Include promotion and set the promotion price if there is any discount.
+                return await this.context.ProductItems.AsNoTracking()
+                    .Include(x => x.Product)
+                    .Select(x => new ProductListViewModel()
+                    {
+                        Id = x.Id,
+                        Name = x.Product.Name,
+                        Price = x.Price
+                    })
                     .ToListAsync();
-
-                return products;
             }
             catch (Exception ex)
             {

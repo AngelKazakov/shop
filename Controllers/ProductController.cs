@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using RandomShop.Data.Models;
 using RandomShop.Exceptions;
 using RandomShop.Models.Product;
 using RandomShop.Services.Products;
 using Newtonsoft.Json;
+using NuGet.Protocol;
 using RandomShop.Services.Variation;
 
 namespace RandomShop.Controllers
@@ -88,7 +90,7 @@ namespace RandomShop.Controllers
 
             if (!products.Any())
             {
-                return View("Home", "Error");
+                return RedirectToAction("Error", "Home");
             }
 
             //return View(products);
@@ -98,12 +100,11 @@ namespace RandomShop.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> AllProducts()
+        public async Task<IActionResult> All()
         {
-            var products = await this.productService.GetAllProducts();
+            ICollection<ProductListViewModel> productList = await this.productService.GetAllProducts();
 
-            //return View(products);\
-            return null;
+            return View(productList);
         }
 
         [HttpPost]

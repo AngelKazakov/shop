@@ -170,17 +170,16 @@
                     type: 'GET',
                     data: { categoryId: categoryId },
                     success: function (data) {
-                        console.log(data);
                         // Clear the variation options container
                         $('#variationOptionsContainer').empty();
 
                         data.forEach(function (variation, index) {
                             var variationDropdown = `
-                                                    <div class="form-group">
-                                                        <label for="variation_${variation.variationName}">${variation.variationName}</label>
-                                                        <select class="form-control" id="variation_${variation.variationName}"
-                                                                    name="SelectedVariationOptions[${index}].VariationOptionId">
-                                                            <option value="" selected disabled>Select Option</option>`;
+                                                            <div class="form-group">
+                                                                <label for="variation_${variation.variationName}">${variation.variationName}</label>
+                                                                <select class="form-control" id="variation_${variation.variationName}"
+                                                                            name="SelectedVariationOptions[${index}].VariationOptionId">
+                                                                    <option value="" selected disabled>Select Option</option>`;
 
                             // Add options for each variation
                             variation.variationOptions.forEach(function (option) {
@@ -188,8 +187,8 @@
                             });
 
                             variationDropdown += `</select>
-                                                            <input type="hidden" name="SelectedVariationOptions[${index}].VariationId" value="${variation.variationId}" />
-                                                    </div>`;
+                                                                    <input type="hidden" name="SelectedVariationOptions[${index}].VariationId" value="${variation.variationId}" />
+                                                            </div>`;
 
                             // Append the dropdown to the container
                             $('#variationOptionsContainer').append(variationDropdown);
