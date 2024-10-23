@@ -1,0 +1,137 @@
+﻿@model ICollection<ProductListViewModel>
+
+@{
+    ViewData["Title"] = "Product List";
+}
+
+<style>
+    .product-list-container {
+        max-width: 900px;
+        margin: auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+    }
+
+    .product-list-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .product-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-bottom: 1px solid #ddd;
+    }
+
+        .product-item:last-child {
+            border-bottom: none;
+        }
+
+    .product-info {
+        flex-grow: 1;
+        margin-left: 20px;
+    }
+
+    .product-name {
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+
+    .product-price {
+        color: #28a745;
+        font-size: 1.1em;
+    }
+
+    .product-image {
+        width: 80px;
+        height: 80px;
+        border-radius: 5px;
+        object-fit: cover;
+        border: 1px solid #ddd;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+    }
+
+    .btn {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        color: white;
+        cursor: pointer;
+        font-size: 0.9em;
+    }
+
+    .btn-buy {
+        background-color: #007bff;
+    }
+
+        .btn-buy:hover {
+            background-color: #0056b3;
+        }
+
+    .btn-edit {
+        background-color: #ffc107;
+        color: black;
+    }
+
+        .btn-edit:hover {
+            background-color: #e0a800;
+        }
+
+    .btn-details {
+        background-color: #17a2b8;
+    }
+
+        .btn-details:hover {
+            background-color: #117a8b;
+        }
+
+    .btn-delete {
+        background-color: #dc3545;
+    }
+
+        .btn-delete:hover {
+            background-color: #c82333;
+        }
+</style>
+
+<div class="product-list-container">
+    <div class="product-list-header">
+        <h2>Products</h2>
+    </div>
+
+    @if (Model.Any())
+    {
+        @foreach (var product in Model)
+        {
+            <div class="product-item">
+                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D" alt="Default Image" class="product-image" />
+
+                <div class="product-info">
+                    <span class="product-name">@product.Name</span><br />
+                    <span class="product-price">$@product.Price.ToString("F2")</span>
+                </div>
+
+                <div class="action-buttons">
+                    <a asp-controller="Product" asp-action="Buy" asp-route-id="@product.Id" class="btn btn-buy">Buy</a>
+                    <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" class="btn btn-details">Details</a>
+                    <a asp-controller="Product" asp-action="Edit" asp-route-id="@product.Id" class="btn btn-edit">Edit</a>
+                    <form asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id" method="post" style="display:inline;">
+                        <button type="submit" class="btn btn-delete">Delete</button>
+                    </form>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p>No products available.</p>
+    }
+</div>
