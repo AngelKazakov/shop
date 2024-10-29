@@ -34,7 +34,7 @@ namespace RandomShop.Controllers
             }
             catch (Exception ex)
             {
-                return RedirectToAction("Error", "HomeController", ex);
+                return RedirectToAction("Error", "Home", ex);
             }
             return RedirectToAction("Index", "Home");
         }

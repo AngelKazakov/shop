@@ -48,55 +48,22 @@ namespace RandomShop.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(int productId)
+        public async Task<IActionResult> Details(int id)
         {
-            try
-            {
-                Product product = await this.productService.GetProductById(productId);
-                // return View(product);
+            ProductViewModel productDetails = await this.productService.GetProductById(id);
 
-                return null;
-            }
-            catch (NotFoundException ex)
+            if (productDetails is null)
             {
-                //Log the exception...
-                return NotFound(new { Message = ex.Message });
-            }
-            catch (Exception ex)
-            {
-                ViewData["ErrorMessage"] = "An unexpected error occurred.";
-                return View("Error");
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Details(string productName)
-        {
-            var product = await this.productService.GetProductByName(productName);
-
-            if (product == null)
-            {
-                return View("Error");
+                return RedirectToAction("Error", "Home");
             }
 
-            //return View(product);
-            return null;
+            return View(productDetails);
         }
 
         [HttpPost]
         public async Task<IActionResult> SearchProducts(string productName)
         {
-            var products = await this.productService.GetProductsByName(productName);
-
-            if (!products.Any())
-            {
-                return RedirectToAction("Error", "Home");
-            }
-
-            //return View(products);
-
             return null;
-
         }
 
         [HttpGet]

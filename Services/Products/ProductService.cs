@@ -7,6 +7,7 @@ using RandomShop.Models.Product;
 using RandomShop.Services.Categories;
 using System.Linq.Dynamic.Core;
 using System.Reflection;
+using RandomShop.Models.Variation;
 using RandomShop.Services.Variation;
 
 namespace RandomShop.Services.Products
@@ -47,6 +48,7 @@ namespace RandomShop.Services.Products
             {
                 await AddProductPromotion(product.Id, model.PromotionId);
                 await AddProductConfigurations(model, productItem.Id);
+                await CreateProductCategory(product.Id, model.CategoryId);
 
                 await context.SaveChangesAsync();
 
@@ -62,12 +64,55 @@ namespace RandomShop.Services.Products
             }
         }
 
-
-        public async Task<Product> GetProductById(int productId)
+        public async Task<ProductViewModel> GetProductById(int productId)
         {
-            Product product = await CheckIfProductExistsOrIsNull(productId);
+            var productItem = await this.context.ProductItems
+                .AsNoTracking()
+                .Include(x => x.Product)
+                .Include(x => x.ProductConfigurations)
+                .ThenInclude(pc => pc.VariationOption)
+                .ThenInclude(vo => vo.Variation)
+                .Where(x => x.Id == productId)
+                .Select(x => new
+                {
+                    x.Id,
+                    ProductName = x.Product.Name,
+                    ProductDescription = x.Product.Description,
+                    x.Price,
+                    x.SKU,
+                    Category = x.Product.ProductCategories.Select(pc => pc.Category.Name).FirstOrDefault(),
+                    Promotion = x.Product.ProductPromotions.Select(pp => pp.Promotion.Name).FirstOrDefault(),
+                    Variations = x.ProductConfigurations.Select(pc => new
+                    {
+                        VariationName = pc.VariationOption.Variation.Name,
+                        OptionValue = pc.VariationOption.Value
+                    }).ToList()
+                })
+                .FirstOrDefaultAsync();
 
-            return product ?? throw new NotFoundException("Product not found.");
+            if (productItem == null)
+            {
+                throw new NotFoundException("Product not found.");
+            }
+
+            Dictionary<string, List<string>> variationsDictionary = productItem.Variations
+                .GroupBy(v => v.VariationName)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(v => v.OptionValue).Distinct().ToList()
+                );
+
+            return new ProductViewModel
+            {
+                Id = productItem.Id,
+                Name = productItem.ProductName,
+                Description = productItem.ProductDescription,
+                Price = productItem.Price,
+                SKU = productItem.SKU,
+                Category = productItem.Category,
+                Promotion = productItem.Promotion,
+                VariationsAndOptions = variationsDictionary
+            };
         }
 
         public async Task<Product> GetProductByName(string productName)
@@ -316,5 +361,10 @@ namespace RandomShop.Services.Products
             await this.context.ProductPromotions.AddAsync(productPromotion);
         }
 
+        private async Task CreateProductCategory(int productId, int categoryId)
+        {
+            await this.context.ProductCategories.AddAsync(new ProductCategory()
+            { ProductId = productId, CategoryId = categoryId });
+        }
     }
 }

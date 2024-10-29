@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using RandomShop.Data.Models;
-using System.Reflection.Emit;
 
 namespace RandomShop.Data
 {
