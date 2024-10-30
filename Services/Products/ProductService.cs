@@ -7,8 +7,10 @@ using RandomShop.Models.Product;
 using RandomShop.Services.Categories;
 using System.Linq.Dynamic.Core;
 using System.Reflection;
-using RandomShop.Models.Variation;
+using NuGet.Packaging;
+using RandomShop.Infrastructure;
 using RandomShop.Services.Variation;
+
 
 namespace RandomShop.Services.Products
 {
@@ -40,7 +42,6 @@ namespace RandomShop.Services.Products
         public async Task<int> AddProduct(ProductAddFormModel model)
         {
             Product product = await CreateProduct(model);
-
             ProductItem productItem = await CreateProductItem(model, product);
 
             await using var transaction = await context.Database.BeginTransactionAsync();
@@ -50,19 +51,23 @@ namespace RandomShop.Services.Products
                 await AddProductConfigurations(model, productItem.Id);
                 await CreateProductCategory(product.Id, model.CategoryId);
 
-                await context.SaveChangesAsync();
+                ICollection<ProductImage> productImages = ImageMapper.CreateProductImages(model.Images, product.Id);
+                AddProductImagesToProduct(productImages, product);
 
+                await context.SaveChangesAsync();
                 await transaction.CommitAsync();
+
+                await SaveImages(model.Images, productImages);
 
                 return productItem.Id;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 await transaction.RollbackAsync();
-
                 throw;
             }
         }
+
 
         public async Task<ProductViewModel> GetProductById(int productId)
         {
@@ -303,6 +308,28 @@ namespace RandomShop.Services.Products
                 }
             }
         }
+        private async Task SaveImages(ICollection<IFormFile> files, ICollection<ProductImage> productImages)
+        {
+            if (files == null || files.Count == 0) return;
+
+            foreach (var formFile in files)
+            {
+                if (formFile.Length > 0)
+                {
+                    var productImage = productImages.FirstOrDefault(pi => pi.Name == formFile.FileName);
+                    if (productImage != null)
+                    {
+                        await using var stream = new FileStream(productImage.FullPath, FileMode.Create, FileAccess.Write);
+                        await formFile.CopyToAsync(stream);
+                    }
+                }
+            }
+        }
+
+        private void AddProductImagesToProduct(ICollection<ProductImage> productImages, Product product)
+        {
+            product.ProductImages.AddRange(productImages);
+        }
 
         private async Task<Product> CheckIfProductExistsOrIsNull(int productId)
         {
@@ -366,5 +393,7 @@ namespace RandomShop.Services.Products
             await this.context.ProductCategories.AddAsync(new ProductCategory()
             { ProductId = productId, CategoryId = categoryId });
         }
+
+
     }
 }

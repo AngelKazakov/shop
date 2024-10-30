@@ -1,12 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using RandomShop.Data.Models;
-using RandomShop.Exceptions;
 using RandomShop.Models.Product;
+using RandomShop.Models.Variation;
 using RandomShop.Services.Products;
-using Newtonsoft.Json;
-using NuGet.Protocol;
 using RandomShop.Services.Variation;
 
 namespace RandomShop.Controllers
@@ -37,13 +33,13 @@ namespace RandomShop.Controllers
 
             int addedProductId = await this.productService.AddProduct(model);
 
-            return Redirect($"Product/Get/{addedProductId}");
+            return Redirect($"Product/Details/{addedProductId}");
         }
 
         [HttpGet]
         public async Task<JsonResult> GetVariationOptionsByCategory(int categoryId)
         {
-            var variations = await this.variationService.GetVariationOptionBySpecifyCategory(categoryId);
+            List<VariationOptionViewModel> variations = await this.variationService.GetVariationOptionBySpecifyCategory(categoryId);
             return Json(variations);
         }
 

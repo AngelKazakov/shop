@@ -52,7 +52,7 @@
             public const string productQuantityErrorMessage = "Product quantity should be between 0 and 2147483647";
         }
 
-
+        public static readonly string ImagesPath = Environment.CurrentDirectory + "\\Images";
 
         public const int productCategoryMinLength = 1;
         public const int productCategoryMaxLength = 64;
