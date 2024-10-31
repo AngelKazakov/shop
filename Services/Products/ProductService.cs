@@ -116,7 +116,8 @@ namespace RandomShop.Services.Products
                 SKU = productItem.SKU,
                 Category = productItem.Category,
                 Promotion = productItem.Promotion,
-                VariationsAndOptions = variationsDictionary
+                VariationsAndOptions = variationsDictionary,
+                Images = ImageMapper.ReadImagesAsByteArray(productId),
             };
         }
 
