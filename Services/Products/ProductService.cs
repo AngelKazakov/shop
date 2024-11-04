@@ -260,10 +260,12 @@ namespace RandomShop.Services.Products
         {
             Product product = await CheckIfProductExistsOrIsNull(productId);
 
-            if (product == null)
+            if (product is null)
             {
-                throw new NotFoundException("Product not found.");
+                return false;
             }
+
+            DeleteImageDirectoryByProductId(productId);
 
             try
             {
@@ -273,7 +275,7 @@ namespace RandomShop.Services.Products
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while deleting the product.", ex);
+                throw new ApplicationException("An error occurred while deleting the product and its images.", ex);
             }
         }
 
@@ -324,6 +326,16 @@ namespace RandomShop.Services.Products
                         await formFile.CopyToAsync(stream);
                     }
                 }
+            }
+        }
+
+        private void DeleteImageDirectoryByProductId(int productId)
+        {
+            string productImagesPath = Path.Combine(DataConstants.ImagesPath, $"Product{productId}");
+
+            if (Directory.Exists(productImagesPath))
+            {
+                Directory.Delete(productImagesPath, recursive: true);
             }
         }
 

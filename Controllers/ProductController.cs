@@ -71,10 +71,9 @@ namespace RandomShop.Controllers
         }
 
         [HttpPost]
-        [Authorize]
-        public async Task<IActionResult> Delete(int productId)
+        public async Task<IActionResult> Delete(int id)
         {
-            bool isProductDeleted = await this.productService.DeleteProduct(productId);
+            bool isProductDeleted = await this.productService.DeleteProduct(id);
 
             if (isProductDeleted)
             {
