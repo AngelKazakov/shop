@@ -1,7 +1,4 @@
-﻿using RandomShop.Models.Category;
-using RandomShop.Models.Promotion;
-
-namespace RandomShop.Models.Product
+﻿namespace RandomShop.Models.Product
 {
     public class ProductViewModel
     {
