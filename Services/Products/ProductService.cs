@@ -57,7 +57,7 @@ namespace RandomShop.Services.Products
                 await context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                await SaveImages(model.Images, productImages);
+                await ImageMapper.SaveImages(model.Images, productImages);
 
                 return productItem.Id;
             }
@@ -67,7 +67,6 @@ namespace RandomShop.Services.Products
                 throw;
             }
         }
-
 
         public async Task<ProductViewModel> GetProductById(int productId)
         {
@@ -265,17 +264,25 @@ namespace RandomShop.Services.Products
                 return false;
             }
 
-            DeleteImageDirectoryByProductId(productId);
+            string tempImagePath = ImageMapper.MoveImagesToTempDirectory(productId);
 
+            await using var transaction = await context.Database.BeginTransactionAsync();
             try
             {
-                this.context.Products.Remove(product);
-                await this.context.SaveChangesAsync();
+                context.Products.Remove(product);
+                await context.SaveChangesAsync();
+
+                await transaction.CommitAsync();
+
+                ImageMapper.PermanentlyDeleteTempImageDirectory(tempImagePath);
                 return true;
             }
             catch (Exception ex)
             {
-                throw new ApplicationException("An error occurred while deleting the product and its images.", ex);
+                await transaction.RollbackAsync();
+
+                ImageMapper.RestoreImagesFromTempDirectory(tempImagePath, productId);
+                throw new ApplicationException("An error occurred while deleting the product.", ex);
             }
         }
 
@@ -311,23 +318,23 @@ namespace RandomShop.Services.Products
                 }
             }
         }
-        private async Task SaveImages(ICollection<IFormFile> files, ICollection<ProductImage> productImages)
-        {
-            if (files == null || files.Count == 0) return;
-
-            foreach (var formFile in files)
-            {
-                if (formFile.Length > 0)
-                {
-                    var productImage = productImages.FirstOrDefault(pi => pi.Name == formFile.FileName);
-                    if (productImage != null)
-                    {
-                        await using var stream = new FileStream(productImage.FullPath, FileMode.Create, FileAccess.Write);
-                        await formFile.CopyToAsync(stream);
-                    }
-                }
-            }
-        }
+        // private async Task SaveImages(ICollection<IFormFile> files, ICollection<ProductImage> productImages)
+        // {
+        //     if (files == null || files.Count == 0) return;
+        //
+        //     foreach (var formFile in files)
+        //     {
+        //         if (formFile.Length > 0)
+        //         {
+        //             var productImage = productImages.FirstOrDefault(pi => pi.Name == formFile.FileName);
+        //             if (productImage != null)
+        //             {
+        //                 await using var stream = new FileStream(productImage.FullPath, FileMode.Create, FileAccess.Write);
+        //                 await formFile.CopyToAsync(stream);
+        //             }
+        //         }
+        //     }
+        // }
 
         private void DeleteImageDirectoryByProductId(int productId)
         {
