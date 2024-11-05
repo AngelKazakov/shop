@@ -5,10 +5,56 @@
 }
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+<style>
+    /* Carousel styling */
+    .carousel-inner img {
+        height: 500px;
+        object-fit: cover;
+    }
+
+    .carousel-indicators li {
+        background-color: #555;
+    }
+
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        filter: invert(100%);
+    }
+
+    /* Product info styling */
+    .product-info h2 {
+        font-size: 2em;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .product-info p {
+        font-size: 1.1em;
+        color: #555;
+    }
+
+        .product-info p strong {
+            color: #000;
+        }
+
+    /* Table styling */
+    .table th, .table td {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        color: #333;
+    }
+
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: #f8f9fa;
+    }
+</style>
 
 <div class="container mt-4">
-    <!-- Image Carousel -->
-    <div id="carouselExampleIndicators" class="carousel slide" data-ride="carousel">
+    <div id="carouselExampleIndicators" class="carousel slide mb-4" data-ride="carousel">
         <ol class="carousel-indicators">
             @for (int i = 0; i < Model.Images.Count; i++)
             {
@@ -19,7 +65,7 @@
             @for (int i = 0; i < Model.Images.Count; i++)
             {
                 <div class="carousel-item @(i == 0 ? "active" : "")">
-                    <img class="d-block w-100" src="data:image/png;base64,@(Convert.ToBase64String(Model.Images[i]))" alt="Product Image @i" style="height: 400px; object-fit: cover;">
+                    <img class="d-block w-100" src="data:image/png;base64,@(Convert.ToBase64String(Model.Images[i]))" alt="Product Image @i">
                 </div>
             }
         </div>
@@ -33,8 +79,7 @@
         </a>
     </div>
 
-    <!-- Product Information -->
-    <div class="product-info mt-4">
+    <div class="product-info p-3 mb-4 bg-light rounded shadow-sm">
         <h2>@Model.Name</h2>
         <p><strong>Price:</strong> $@Model.Price</p>
         <p><strong>Brand:</strong> @Model.Brand</p>
@@ -48,8 +93,8 @@
     </div>
 
     <!-- Variations Table -->
-    <table class="table table-bordered mt-4">
-        <thead>
+    <table class="table table-bordered table-striped mt-4 shadow-sm">
+        <thead class="thead-light">
             <tr>
                 <th>Variation</th>
                 <th>Option</th>
@@ -70,3 +115,10 @@
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+
+<script>
+    $('#carouselExampleIndicators').carousel({
+        interval: 3000,
+        pause: 'hover'
+        });
+</script>

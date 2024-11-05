@@ -270,6 +270,7 @@ namespace RandomShop.Services.Products
             try
             {
                 context.Products.Remove(product);
+
                 await context.SaveChangesAsync();
 
                 await transaction.CommitAsync();
@@ -284,6 +285,26 @@ namespace RandomShop.Services.Products
                 ImageMapper.RestoreImagesFromTempDirectory(tempImagePath, productId);
                 throw new ApplicationException("An error occurred while deleting the product.", ex);
             }
+        }
+
+        public async Task<bool> DeleteSelectedProducts(List<int> productIds)
+        {
+            List<Product> products = await this.context.Products.Where(x => productIds.Contains(x.Id)).ToListAsync();
+
+            if (!products.Any())
+            {
+                return false;
+            }
+
+            this.context.Products.RemoveRange(products);
+
+            foreach (var product in products)
+            {
+                DeleteImageDirectoryByProductId(product.Id);
+            }
+
+            await this.context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<bool> BulkDeleteProducts(List<int> productIds)

@@ -84,5 +84,17 @@ namespace RandomShop.Controllers
                 return RedirectToAction("Error", "Home");
             }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteSelected([FromBody] List<int> selectedProductIds)
+        {
+            if (selectedProductIds != null && selectedProductIds.Any())
+            {
+                await productService.DeleteSelectedProducts(selectedProductIds);
+                return RedirectToAction("All");
+            }
+
+            return BadRequest("No products selected for deletion.");
+        } 
     }
 }

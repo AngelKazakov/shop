@@ -63,6 +63,7 @@ namespace RandomShop.Infrastructure
 
             try
             {
+
                 var directoryInfo = new DirectoryInfo(productImagePath);
 
                 foreach (var imageFile in directoryInfo.GetFiles())

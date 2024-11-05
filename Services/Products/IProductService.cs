@@ -9,6 +9,8 @@ namespace RandomShop.Services.Products
 
         public Task<bool> DeleteProduct(int productId);
 
+        public Task<bool> DeleteSelectedProducts(List<int> productIds);
+
         public Task<Product> GetProductByName(string productName);
 
         public Task<ICollection<Product>> GetProductsByName(string productName);
