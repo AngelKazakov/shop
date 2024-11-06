@@ -13,7 +13,7 @@ namespace RandomShop.Services.Products
 
         public Task<Product> GetProductByName(string productName);
 
-        public Task<ICollection<Product>> GetProductsByName(string productName);
+        public Task<ICollection<ProductListViewModel>> GetProductsByName(string productName);
 
         public Task<ICollection<ProductListViewModel>> GetAllProducts();
 

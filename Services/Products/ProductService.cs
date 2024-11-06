@@ -128,17 +128,27 @@ namespace RandomShop.Services.Products
             return product;
         }
 
-        public async Task<ICollection<Product>> GetProductsByName(string productName)
+        public async Task<ICollection<ProductListViewModel>> GetProductsByName(string productName)
         {
             string lowerProductName = $"%{productName.ToLower()}%";
 
-            List<Product> products = await this.context.Products
-                .AsNoTracking()
-                .Where(x => EF.Functions.Like(x.Name.ToLower(), lowerProductName))
-                .Include(p => p.ProductItems)
-                .ToListAsync();
-
-            return products;
+            try
+            {
+                return await this.context.ProductItems.AsNoTracking()
+                    .Include(x => x.Product)
+                    .Where(x => EF.Functions.Like(x.Product.Name.ToLower(), lowerProductName))
+                    .Select(x => new ProductListViewModel()
+                    {
+                        Id = x.Id,
+                        Name = x.Product.Name,
+                        Price = x.Price
+                    })
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while fetching products by name.", ex);
+            }
         }
 
         public async Task<ICollection<ProductListViewModel>> GetAllProducts()

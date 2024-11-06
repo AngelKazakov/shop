@@ -56,10 +56,12 @@ namespace RandomShop.Controllers
             return View(productDetails);
         }
 
-        [HttpPost]
-        public async Task<IActionResult> SearchProducts(string productName)
+        [HttpGet]
+        public async Task<IActionResult> Search(string productName)
         {
-            return null;
+            ICollection<ProductListViewModel> foundProducts = await this.productService.GetProductsByName(productName);
+
+            return View("All", foundProducts);
         }
 
         [HttpGet]
@@ -95,6 +97,6 @@ namespace RandomShop.Controllers
             }
 
             return BadRequest("No products selected for deletion.");
-        } 
+        }
     }
 }

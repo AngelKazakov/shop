@@ -2,7 +2,67 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+    .home-container {
+        max-width: 700px;
+        margin: auto;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .search-bar-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 20px;
+    }
+
+    .search-input {
+        width: 60%;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px 0 0 4px;
+        font-size: 1em;
+    }
+
+    .search-button {
+        padding: 12px 20px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 0 4px 4px 0;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 1em;
+        transition: background-color 0.3s;
+    }
+
+        .search-button:hover {
+            background-color: #0056b3;
+        }
+
+    .welcome-text {
+        margin-top: 20px;
+        font-size: 1.2em;
+        color: #666;
+    }
+</style>
+
+<div class="home-container">
+    <h1 class="display-4">Welcome To Random Shop</h1>
+
+    <div class="search-bar-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search for a product..." />
+        <button type="button" class="search-button" onclick="searchProducts()">Search</button>
+    </div>
 </div>
+
+<script>
+    function searchProducts() {
+        const query = document.getElementById("searchInput").value;
+        if (query) {
+            window.location.href = `/Product/Search?productName=${encodeURIComponent(query)}`;
+        } else {
+            alert("Please enter a product name to search.");
+        }
+    }
+</script>
