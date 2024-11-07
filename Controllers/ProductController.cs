@@ -33,7 +33,7 @@ namespace RandomShop.Controllers
 
             int addedProductId = await this.productService.AddProduct(model);
 
-            return Redirect($"Product/Details/{addedProductId}");
+            return RedirectToAction("Details", new { id = addedProductId });
         }
 
         [HttpGet]
