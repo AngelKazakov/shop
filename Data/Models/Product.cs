@@ -14,6 +14,9 @@ namespace RandomShop.Data.Models
         [StringLength(DataConstants.Product.descriptionMaxLength, MinimumLength = DataConstants.Product.descriptionMinLength)]
         public string Description { get; set; }
 
+        [Required]
+        public DateTime CreatedOnDate { get; set; }
+
         public ICollection<ProductImage> ProductImages { get; set; } = new List<ProductImage>();
 
         public ICollection<ProductItem> ProductItems { get; set; } = new List<ProductItem>();

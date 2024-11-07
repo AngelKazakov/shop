@@ -23,6 +23,9 @@ namespace RandomShop.Data.Models
         [Range(DataConstants.Product.priceMin, DataConstants.Product.priceMax)]
         public decimal Price { get; set; }
 
+        [Required]
+        public DateTime CreatedOnDate { get; set; }
+
         public ICollection<ProductImage> ProductItemImages { get; set; } = new List<ProductImage>();
 
         public ICollection<ProductConfiguration> ProductConfigurations { get; set; } = new List<ProductConfiguration>();
