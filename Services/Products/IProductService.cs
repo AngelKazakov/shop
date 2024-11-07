@@ -7,6 +7,7 @@ namespace RandomShop.Services.Products
     {
         public Task<ProductViewModel> GetProductById(int productId);
 
+
         public Task<bool> DeleteProduct(int productId);
 
         public Task<bool> DeleteSelectedProducts(List<int> productIds);
@@ -14,6 +15,8 @@ namespace RandomShop.Services.Products
         public Task<Product> GetProductByName(string productName);
 
         public Task<ICollection<ProductListViewModel>> GetProductsByName(string productName);
+
+        public Task<ICollection<ProductListViewModel>> GetLatestAddedProducts();
 
         public Task<ICollection<ProductListViewModel>> GetAllProducts();
 

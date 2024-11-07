@@ -1,10 +1,12 @@
-﻿@{
+﻿@model ICollection<ProductListViewModel>
+
+@{
     ViewData["Title"] = "Home Page";
 }
 
 <style>
     .home-container {
-        max-width: 700px;
+        max-width: 800px;
         margin: auto;
         padding: 30px;
         text-align: center;
@@ -40,11 +42,67 @@
             background-color: #0056b3;
         }
 
-    .welcome-text {
-        margin-top: 20px;
-        font-size: 1.2em;
-        color: #666;
+    .latest-products-container {
+        margin-top: 30px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
     }
+
+    .product-card {
+        width: 200px;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        text-align: center;
+        transition: transform 0.3s;
+    }
+
+        .product-card:hover {
+            transform: scale(1.05);
+        }
+
+    .product-image {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+
+    .product-info {
+        padding: 15px;
+    }
+
+    .product-name {
+        font-weight: bold;
+        font-size: 1.1em;
+        color: #333;
+        margin: 5px 0;
+    }
+
+    .product-price {
+        color: #28a745;
+        font-size: 1.1em;
+        margin-top: 5px;
+    }
+
+    .details-button {
+        margin-top: 10px;
+        padding: 8px 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+
+        .details-button:hover {
+            background-color: #0056b3;
+        }
 </style>
 
 <div class="home-container">
@@ -53,6 +111,36 @@
     <div class="search-bar-container">
         <input type="text" id="searchInput" class="search-input" placeholder="Search for a product..." />
         <button type="button" class="search-button" onclick="searchProducts()">Search</button>
+    </div>
+
+    <!-- Latest Products Section -->
+    <div class="latest-products-container">
+        @if (Model.Any())
+
+        {
+            @foreach (var product in Model)
+
+            {
+                <div class="product-card">
+                    <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D" alt="Default Image" class="product-image" />
+
+                    <div class="product-info">
+                        <span class="product-name">@product.Name</span><br />
+                        <span class="product-price">$@product.Price.ToString("F2")</span>
+
+                        <a href="/Product/Details/@product.Id">
+                            <button class="details-button">Details</button>
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+
+        else
+
+        {
+            <p>No latest products available.</p>
+        }
     </div>
 </div>
 

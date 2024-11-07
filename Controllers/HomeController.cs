@@ -1,21 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RandomShop.Models;
 using System.Diagnostics;
+using RandomShop.Services.Products;
 
 namespace RandomShop.Controllers
 {
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IProductService productService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger, IProductService productService)
         {
             _logger = logger;
+            this.productService = productService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var latestProducts = await this.productService.GetLatestAddedProducts();
+
+            return View(latestProducts);
         }
 
         public IActionResult Privacy()

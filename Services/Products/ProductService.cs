@@ -151,6 +151,30 @@ namespace RandomShop.Services.Products
             }
         }
 
+        public async Task<ICollection<ProductListViewModel>> GetLatestAddedProducts()
+        {
+            try
+            {
+                // Include promotion and set the promotion price if there is any discount.
+                return await this.context.ProductItems.AsNoTracking()
+                    .Include(x => x.Product)
+                    .OrderByDescending(x => x.CreatedOnDate)
+                    .Take(3)
+                    .Select(x => new ProductListViewModel()
+                    {
+                        Id = x.Id,
+                        Name = x.Product.Name,
+                        Price = x.Price
+                    })
+                    .ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while getting latest products.", ex);
+            }
+
+        }
+
         public async Task<ICollection<ProductListViewModel>> GetAllProducts()
         {
             try
@@ -349,23 +373,6 @@ namespace RandomShop.Services.Products
                 }
             }
         }
-        // private async Task SaveImages(ICollection<IFormFile> files, ICollection<ProductImage> productImages)
-        // {
-        //     if (files == null || files.Count == 0) return;
-        //
-        //     foreach (var formFile in files)
-        //     {
-        //         if (formFile.Length > 0)
-        //         {
-        //             var productImage = productImages.FirstOrDefault(pi => pi.Name == formFile.FileName);
-        //             if (productImage != null)
-        //             {
-        //                 await using var stream = new FileStream(productImage.FullPath, FileMode.Create, FileAccess.Write);
-        //                 await formFile.CopyToAsync(stream);
-        //             }
-        //         }
-        //     }
-        // }
 
         private void DeleteImageDirectoryByProductId(int productId)
         {
@@ -393,6 +400,7 @@ namespace RandomShop.Services.Products
             {
                 Name = model.Name,
                 Description = model.Description,
+                CreatedOnDate = DateTime.Now,
             };
 
             await this.context.Products.AddAsync(product);
@@ -408,6 +416,7 @@ namespace RandomShop.Services.Products
                 SKU = model.SKU,
                 QuantityInStock = model.QuantityInStock,
                 Product = product,
+                CreatedOnDate = DateTime.Now,
             };
 
             await this.context.ProductItems.AddAsync(productItem);
