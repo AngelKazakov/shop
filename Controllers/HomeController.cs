@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RandomShop.Models;
 using System.Diagnostics;
+using RandomShop.Services.Categories;
 using RandomShop.Services.Products;
 
 namespace RandomShop.Controllers

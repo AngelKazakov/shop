@@ -72,6 +72,21 @@ namespace RandomShop.Controllers
             return View(productList);
         }
 
+        [HttpGet]
+        [Route("Product/GetByCategory/{categoryId:int}")]
+        public async Task<IActionResult> GetByCategory(int categoryId)
+        {
+            try
+            {
+                var productsByCategoryId = await this.productService.GetProductsByCategory(categoryId);
+                return View("All", productsByCategoryId);
+            }
+            catch (Exception e)
+            {
+                return RedirectToAction("Error", "Home");
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -81,10 +96,8 @@ namespace RandomShop.Controllers
             {
                 return RedirectToAction("Index", "Home");
             }
-            else
-            {
-                return RedirectToAction("Error", "Home");
-            }
+
+            return RedirectToAction("Error", "Home");
         }
 
         [HttpPost]

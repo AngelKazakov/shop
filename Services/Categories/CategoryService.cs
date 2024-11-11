@@ -116,7 +116,7 @@ namespace RandomShop.Services.Categories
         {
             List<MainCategoryViewModel> mainCategories = await this.context.Categories
                 .AsNoTracking()
-                // .Where(x => x.ParentCategoryId == null)  Where statement is not working properly here...
+                .Where(x => x.ParentCategoryId == null)
                 .Select(x => new MainCategoryViewModel()
                 {
                     Id = x.Id,

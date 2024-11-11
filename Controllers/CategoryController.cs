@@ -84,5 +84,12 @@ namespace RandomShop.Controllers
 
             return categories;
         }
+
+        [HttpGet]
+        public async Task<IActionResult> MainCategories()
+        {
+            var mainCategories = await this.categoryService.GetMainCategories();
+            return Json(mainCategories);
+        }
     }
 }
