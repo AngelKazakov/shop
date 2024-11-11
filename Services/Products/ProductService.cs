@@ -196,19 +196,24 @@ namespace RandomShop.Services.Products
             }
         }
 
-        public async Task<ICollection<Product>> GetProductsByCategory(int categoryId)
+        public async Task<ICollection<ProductListViewModel>> GetProductsByCategory(int categoryId)
         {
-            List<Product>? products = await this.context.ProductCategories
-                .AsNoTracking()
-                .Where(x => x.CategoryId == categoryId)
-                .Include(x => x.Product)
-                .ThenInclude(x => x.ProductItems)
-                .ThenInclude(x => x.ProductItemImages)
-                .Include(x => x.Category)
-                .Select(p => p.Product)
-                .ToListAsync();
-
-            return products;
+            try
+            {
+                return await this.context.Products
+                    .AsNoTracking()
+                    .Where(p => p.ProductCategories.Any(pc => pc.CategoryId == categoryId))
+                    .Select(p => new ProductListViewModel()
+                    {
+                        Id = p.Id,
+                        Name = p.Name,
+                        Price = p.ProductItems.FirstOrDefault() != null ? p.ProductItems.FirstOrDefault().Price : 0
+                    }).ToListAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while fetching products by category.", ex);
+            }
         }
 
         public async Task<ICollection<Product>> GetProductsByPriceRange(int minPrice, int maxPrice)
