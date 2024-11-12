@@ -114,27 +114,39 @@ namespace RandomShop.Services.Categories
 
         public async Task<ICollection<MainCategoryViewModel>> GetMainCategories()
         {
-            List<MainCategoryViewModel> mainCategories = await this.context.Categories
+            var mainCategories = await this.context.Categories
                 .AsNoTracking()
                 .Where(x => x.ParentCategoryId == null)
-                .Select(x => new MainCategoryViewModel()
+                .Select(x => new MainCategoryViewModel
                 {
                     Id = x.Id,
                     Name = x.Name,
+                    SubCategories = new List<SubCategoryModel>() // Initialize empty list
                 })
-               .ToListAsync();
+                .ToListAsync();
+
+            foreach (var mainCategory in mainCategories)
+            {
+                mainCategory.SubCategories = await GetSubCategories(mainCategory.Id);
+            }
 
             return mainCategories;
         }
 
-        public async Task<ICollection<SubCategoryModel>> GetSubCategories(int parentCategoryId)
+        public async Task<ICollection<SubCategoryModel>> GetSubCategories(int? parentCategoryId)
         {
             return await this.context.Categories
                 .AsNoTracking()
                 .Where(x => x.ParentCategoryId == parentCategoryId)
-                .Select(x => this.mapper.Map<SubCategoryModel>(x))
+                .Select(x => new SubCategoryModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    ParentCategoryId = x.ParentCategoryId
+                })
                 .ToListAsync();
         }
+
 
         public async Task<CategoryFormViewModel> InitCategoryFormViewModel()
         {

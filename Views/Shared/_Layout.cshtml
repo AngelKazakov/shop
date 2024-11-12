@@ -7,10 +7,22 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/RandomShop.styles.css" asp-append-version="true" />
+    <style>
+        /* Styling for the nested dropdowns */
+        .dropdown-menu .nested-dropdown:hover > .dropdown-menu {
+            display: block;
+        }
+
+        .dropdown-menu .nested-dropdown > .dropdown-menu {
+            margin-left: 80%;
+            top: 0;
+        }
+
+    </style>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RandomShop</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -22,30 +34,12 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Category" asp-action="Add">Add Category</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Category" asp-action="Edit">Edit Category</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Promotion" asp-action="Add">Add Promotion</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Promotion" asp-action="All">All Promotions</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Variation" asp-action="Add">Add Variation</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Variation" asp-action="AddValue">Add Value on Variation</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Product" asp-action="Add">Add Product</a>
-                        </li>
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle" type="button" id="categoriesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Categories
+                            </button>
+                            <div class="dropdown-menu" id="categoriesDropdownContent"></div>
+                        </div>
                     </ul>
                     <partial name="_LoginPartial" />
                 </div>
@@ -66,6 +60,51 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        // Load main categories on hover
+        document.getElementById("categoriesDropdown").addEventListener("mouseenter", function () {
+            fetch('/Category/MainCategories')
+                .then(response => response.json())
+                .then(categories => {
+                    const dropdownContent = document.getElementById("categoriesDropdownContent");
+                    dropdownContent.innerHTML = ''; // Clear existing items
+
+                    // Loop through main categories and add each to the dropdown
+                    categories.forEach(category => {
+                        const mainCategoryItem = document.createElement("a");
+                        mainCategoryItem.className = "dropdown-item nested-dropdown";
+                        mainCategoryItem.href = `/Product/GetByCategory/${category.id}`;
+                        mainCategoryItem.textContent = category.name;
+
+                        // Nested dropdown menu for subcategories
+                        const subCategoryMenu = document.createElement("div");
+                        subCategoryMenu.className = "dropdown-menu";
+                        mainCategoryItem.appendChild(subCategoryMenu);
+
+                        // Fetch and display subcategories on hover
+                        mainCategoryItem.addEventListener("mouseenter", function (e) {
+                            fetch(`/Category/SubCategories/${category.id}`)
+                                .then(response => response.json())
+                                .then(subCategories => {
+                                    subCategoryMenu.innerHTML = ''; // Clear existing subcategories
+
+                                    subCategories.forEach(subCategory => {
+                                        const subCategoryLink = document.createElement("a");
+                                        subCategoryLink.className = "dropdown-item";
+                                        subCategoryLink.href = `/Product/GetByCategory/${subCategory.id}`;
+                                        subCategoryLink.textContent = subCategory.name;
+                                        subCategoryMenu.appendChild(subCategoryLink);
+                                    });
+                                })
+                                .catch(error => console.error('Error loading subcategories:', error));
+                        });
+
+                        dropdownContent.appendChild(mainCategoryItem);
+                    });
+                })
+                .catch(error => console.error('Error loading categories:', error));
+        });
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

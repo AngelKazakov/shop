@@ -20,6 +20,6 @@ namespace RandomShop.Services.Categories
 
         public Task<ICollection<MainCategoryViewModel>> GetMainCategories();
 
-        public Task<ICollection<SubCategoryModel>> GetSubCategories(int parentCategoryId);
+        public Task<ICollection<SubCategoryModel>> GetSubCategories(int? parentCategoryId);
     }
 }

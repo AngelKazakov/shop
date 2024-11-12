@@ -88,8 +88,15 @@ namespace RandomShop.Controllers
         [HttpGet]
         public async Task<IActionResult> MainCategories()
         {
-            var mainCategories = await this.categoryService.GetMainCategories();
+            ICollection<MainCategoryViewModel> mainCategories = await this.categoryService.GetMainCategories();
             return Json(mainCategories);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> SubCategories(int id)
+        {
+            ICollection<SubCategoryModel> subCategories = await this.categoryService.GetSubCategories(id);
+            return Json(subCategories);
         }
     }
 }
