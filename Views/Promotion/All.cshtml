@@ -25,6 +25,9 @@
                         <a class="btn btn-info btn-sm" asp-action="Details" asp-route-id="@promotion.Id">Details</a>
                     </td>
                     <td>
+                        <a class="btn btn-info btn-sm" asp-controller="Product" asp-action="GetByPromotion" asp-route-id="@promotion.Id">See Products</a>
+                    </td>
+                    <td>
                         <form asp-action="Delete" asp-route-id="@promotion.Id" method="post" class="d-inline">
                             @Html.AntiForgeryToken()
                             <button type="submit" class="btn btn-danger btn-sm">Delete</button>

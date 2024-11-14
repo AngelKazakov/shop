@@ -56,6 +56,7 @@ namespace RandomShop.Controllers
             return View(productDetails);
         }
 
+
         [HttpGet]
         public async Task<IActionResult> Search(string productName)
         {
@@ -85,6 +86,27 @@ namespace RandomShop.Controllers
             {
                 return RedirectToAction("Error", "Home");
             }
+        }
+
+        [HttpGet]
+        [Route("Product/GetByPromotion/{promotionId:int}")]
+        public async Task<IActionResult> GetByPromotion(int promotionId)
+        {
+            try
+            {
+                var productsByPromotion = await this.productService.GetProductsByPromotion(promotionId);
+                return View("All", productsByPromotion);
+            }
+            catch (Exception e)
+            {
+                return RedirectToAction("Error", "Home");
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Compare(List<int> productIds)
+        {
+            return View();
         }
 
         [HttpPost]

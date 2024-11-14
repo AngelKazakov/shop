@@ -59,6 +59,7 @@ namespace RandomShop.Controllers
             return RedirectToAction("Details", "Promotion", new { Id = updatedPromotion.Id });
         }
 
+
         [HttpPost]
         public async Task<IActionResult> Delete(int Id)
         {

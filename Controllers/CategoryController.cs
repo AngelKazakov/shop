@@ -23,7 +23,6 @@ namespace RandomShop.Controllers
         [HttpPost]
         public async Task<IActionResult> Add(CategoryFormViewModel model)
         {
-
             if (!ModelState.IsValid)
             {
                 return View(model);

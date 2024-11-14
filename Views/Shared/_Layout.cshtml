@@ -61,49 +61,49 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script>
-        // Load main categories on hover
-        document.getElementById("categoriesDropdown").addEventListener("mouseenter", function () {
-            fetch('/Category/MainCategories')
-                .then(response => response.json())
-                .then(categories => {
-                    const dropdownContent = document.getElementById("categoriesDropdownContent");
-                    dropdownContent.innerHTML = ''; // Clear existing items
+          // Load main categories
+        $(document).ready(function () {
+              fetch('/Category/MainCategories')
+                  .then(response => response.json())
+                  .then(categories => {
+                      const dropdownContent = document.getElementById("categoriesDropdownContent");
+                      dropdownContent.innerHTML = '';
 
-                    // Loop through main categories and add each to the dropdown
-                    categories.forEach(category => {
-                        const mainCategoryItem = document.createElement("a");
-                        mainCategoryItem.className = "dropdown-item nested-dropdown";
-                        mainCategoryItem.href = `/Product/GetByCategory/${category.id}`;
-                        mainCategoryItem.textContent = category.name;
+                      // Loop through main categories and add each to the dropdown
+                      categories.forEach(category => {
+                          const mainCategoryItem = document.createElement("a");
+                          mainCategoryItem.className = "dropdown-item nested-dropdown";
+                          mainCategoryItem.href = `/Product/GetByCategory/${category.id}`;
+                          mainCategoryItem.textContent = category.name;
 
-                        // Nested dropdown menu for subcategories
-                        const subCategoryMenu = document.createElement("div");
-                        subCategoryMenu.className = "dropdown-menu";
-                        mainCategoryItem.appendChild(subCategoryMenu);
+                          // Nested dropdown menu for subcategories
+                          const subCategoryMenu = document.createElement("div");
+                          subCategoryMenu.className = "dropdown-menu";
+                          mainCategoryItem.appendChild(subCategoryMenu);
 
-                        // Fetch and display subcategories on hover
-                        mainCategoryItem.addEventListener("mouseenter", function (e) {
-                            fetch(`/Category/SubCategories/${category.id}`)
-                                .then(response => response.json())
-                                .then(subCategories => {
-                                    subCategoryMenu.innerHTML = ''; // Clear existing subcategories
+                          // Fetch and display subcategories
+                           $(document).ready(function (e) {
+                              fetch(`/Category/SubCategories/${category.id}`)
+                                  .then(response => response.json())
+                                  .then(subCategories => {
+                                      subCategoryMenu.innerHTML = '';
 
-                                    subCategories.forEach(subCategory => {
-                                        const subCategoryLink = document.createElement("a");
-                                        subCategoryLink.className = "dropdown-item";
-                                        subCategoryLink.href = `/Product/GetByCategory/${subCategory.id}`;
-                                        subCategoryLink.textContent = subCategory.name;
-                                        subCategoryMenu.appendChild(subCategoryLink);
-                                    });
-                                })
-                                .catch(error => console.error('Error loading subcategories:', error));
-                        });
+                                      subCategories.forEach(subCategory => {
+                                          const subCategoryLink = document.createElement("a");
+                                          subCategoryLink.className = "dropdown-item";
+                                          subCategoryLink.href = `/Product/GetByCategory/${subCategory.id}`;
+                                          subCategoryLink.textContent = subCategory.name;
+                                          subCategoryMenu.appendChild(subCategoryLink);
+                                      });
+                                  })
+                                  .catch(error => console.error('Error loading subcategories:', error));
+                          });
 
-                        dropdownContent.appendChild(mainCategoryItem);
-                    });
-                })
-                .catch(error => console.error('Error loading categories:', error));
-        });
+                          dropdownContent.appendChild(mainCategoryItem);
+                      });
+                  })
+                  .catch(error => console.error('Error loading categories:', error));
+          });
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

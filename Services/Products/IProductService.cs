@@ -21,6 +21,8 @@ namespace RandomShop.Services.Products
 
         public Task<ICollection<ProductListViewModel>> GetProductsByCategory(int categoryId);
 
+        public Task<ICollection<ProductListViewModel>> GetProductsByPromotion(int promotionId);
+
         public Task<ICollection<Product>> GetProductsByPriceRange(int minPrice, int maxPrice);
 
         public Task<ProductViewModel> UpdateStock(int productId, int quantity);

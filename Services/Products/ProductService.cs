@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Collections;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
@@ -213,6 +214,30 @@ namespace RandomShop.Services.Products
             catch (Exception ex)
             {
                 throw new ApplicationException("An error occurred while fetching products by category.", ex);
+            }
+        }
+
+        public async Task<ICollection<ProductListViewModel>> GetProductsByPromotion(int promotionId)
+        {
+            try
+            {
+                ICollection<ProductListViewModel> productsByPromotion = await this.context.ProductPromotions
+                    .AsNoTracking()
+                    .Where(x => x.PromotionId == promotionId)
+                    .Select(pp => pp.Product)
+                    .Select(pvm => new ProductListViewModel()
+                    {
+                        Id = pvm.Id,
+                        Name = pvm.Name,
+                        Price = pvm.ProductItems.FirstOrDefault() != null ? pvm.ProductItems.FirstOrDefault().Price : 0
+                    })
+                    .ToListAsync();
+
+                return productsByPromotion;
+            }
+            catch (Exception ex)
+            {
+                throw new ApplicationException("An error occurred while fetching products by promotion.", ex);
             }
         }
 
