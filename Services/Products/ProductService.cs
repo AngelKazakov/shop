@@ -107,6 +107,10 @@ namespace RandomShop.Services.Products
                     g => g.Select(v => v.OptionValue).Distinct().ToList()
                 );
 
+            //Make separate method for applying promotion to a product.
+            var promotion = await this.context.ProductPromotions.Where(x => x.ProductId == productId)
+                .Select(x => x.Promotion).FirstOrDefaultAsync();
+
             return new ProductViewModel
             {
                 Id = productItem.Id,
@@ -138,12 +142,7 @@ namespace RandomShop.Services.Products
                 return await this.context.ProductItems.AsNoTracking()
                     .Include(x => x.Product)
                     .Where(x => EF.Functions.Like(x.Product.Name.ToLower(), lowerProductName))
-                    .Select(x => new ProductListViewModel()
-                    {
-                        Id = x.Id,
-                        Name = x.Product.Name,
-                        Price = x.Price
-                    })
+                    .Select(x => CreateProductListViewModel(x.Product, x))
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -161,19 +160,13 @@ namespace RandomShop.Services.Products
                     .Include(x => x.Product)
                     .OrderByDescending(x => x.CreatedOnDate)
                     .Take(3)
-                    .Select(x => new ProductListViewModel()
-                    {
-                        Id = x.Id,
-                        Name = x.Product.Name,
-                        Price = x.Price
-                    })
+                    .Select(x => CreateProductListViewModel(x.Product, x))
                     .ToListAsync();
             }
             catch (Exception ex)
             {
                 throw new ApplicationException("An error occurred while getting latest products.", ex);
             }
-
         }
 
         public async Task<ICollection<ProductListViewModel>> GetAllProducts()
@@ -183,12 +176,7 @@ namespace RandomShop.Services.Products
                 // Include promotion and set the promotion price if there is any discount.
                 return await this.context.ProductItems.AsNoTracking()
                     .Include(x => x.Product)
-                    .Select(x => new ProductListViewModel()
-                    {
-                        Id = x.Id,
-                        Name = x.Product.Name,
-                        Price = x.Price
-                    })
+                    .Select(x => CreateProductListViewModel(x.Product, x))
                     .ToListAsync();
             }
             catch (Exception ex)
@@ -204,12 +192,8 @@ namespace RandomShop.Services.Products
                 return await this.context.Products
                     .AsNoTracking()
                     .Where(p => p.ProductCategories.Any(pc => pc.CategoryId == categoryId))
-                    .Select(p => new ProductListViewModel()
-                    {
-                        Id = p.Id,
-                        Name = p.Name,
-                        Price = p.ProductItems.FirstOrDefault() != null ? p.ProductItems.FirstOrDefault().Price : 0
-                    }).ToListAsync();
+                    .Select(p => CreateProductListViewModel(p, p.ProductItems.FirstOrDefault())
+                    ).ToListAsync();
             }
             catch (Exception ex)
             {
@@ -225,12 +209,7 @@ namespace RandomShop.Services.Products
                     .AsNoTracking()
                     .Where(x => x.PromotionId == promotionId)
                     .Select(pp => pp.Product)
-                    .Select(pvm => new ProductListViewModel()
-                    {
-                        Id = pvm.Id,
-                        Name = pvm.Name,
-                        Price = pvm.ProductItems.FirstOrDefault() != null ? pvm.ProductItems.FirstOrDefault().Price : 0
-                    })
+                    .Select(p => CreateProductListViewModel(p, p.ProductItems.FirstOrDefault()))
                     .ToListAsync();
 
                 return productsByPromotion;
@@ -402,6 +381,16 @@ namespace RandomShop.Services.Products
                     throw new ApplicationException("An error occurred while deleting products.", ex);
                 }
             }
+        }
+
+        private static ProductListViewModel CreateProductListViewModel(Product product, ProductItem? productItem)
+        {
+            return new ProductListViewModel()
+            {
+                Id = product.Id,
+                Name = product.Name,
+                Price = productItem?.Price ?? 0,
+            };
         }
 
         private void DeleteImageDirectoryByProductId(int productId)
