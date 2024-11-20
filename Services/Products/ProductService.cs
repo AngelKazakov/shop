@@ -10,6 +10,7 @@ using System.Linq.Dynamic.Core;
 using System.Reflection;
 using NuGet.Packaging;
 using RandomShop.Infrastructure;
+using RandomShop.Models.Variation;
 using RandomShop.Services.Variation;
 
 
@@ -78,19 +79,19 @@ namespace RandomShop.Services.Products
                 .ThenInclude(pc => pc.VariationOption)
                 .ThenInclude(vo => vo.Variation)
                 .Where(x => x.Id == productId)
-                .Select(x => new
+                .Select(x => new ProductViewModel()
                 {
-                    x.Id,
-                    ProductName = x.Product.Name,
-                    ProductDescription = x.Product.Description,
-                    x.Price,
-                    x.SKU,
+                    Id = x.Id,
+                    Name = x.Product.Name,
+                    Description = x.Product.Description,
+                    Price = x.Price,
+                    SKU = x.SKU,
                     Category = x.Product.ProductCategories.Select(pc => pc.Category.Name).FirstOrDefault(),
                     Promotion = x.Product.ProductPromotions.Select(pp => pp.Promotion.Name).FirstOrDefault(),
-                    Variations = x.ProductConfigurations.Select(pc => new
+                    Variations = x.ProductConfigurations.Select(pc => new VariationViewModel()
                     {
-                        VariationName = pc.VariationOption.Variation.Name,
-                        OptionValue = pc.VariationOption.Value
+                        Name = pc.VariationOption.Variation.Name,
+                        Value = pc.VariationOption.Value
                     }).ToList()
                 })
                 .FirstOrDefaultAsync();
@@ -101,29 +102,41 @@ namespace RandomShop.Services.Products
             }
 
             Dictionary<string, List<string>> variationsDictionary = productItem.Variations
-                .GroupBy(v => v.VariationName)
+                .GroupBy(v => v.Name)
                 .ToDictionary(
                     g => g.Key,
-                    g => g.Select(v => v.OptionValue).Distinct().ToList()
+                    g => g.Select(v => v.Value).Distinct().ToList()
                 );
 
             //Make separate method for applying promotion to a product.
             var promotion = await this.context.ProductPromotions.Where(x => x.ProductId == productId)
                 .Select(x => x.Promotion).FirstOrDefaultAsync();
 
-            return new ProductViewModel
+            var productToReturn = new ProductViewModel
             {
                 Id = productItem.Id,
-                Name = productItem.ProductName,
-                Description = productItem.ProductDescription,
-                Price = productItem.Price,
+                Name = productItem.Name,
+                Description = productItem.Description,
+                Price = ApplyPromotionToProduct(productItem.Price, promotion),
                 SKU = productItem.SKU,
                 Category = productItem.Category,
                 Promotion = productItem.Promotion,
                 VariationsAndOptions = variationsDictionary,
                 Images = ImageMapper.ReadImagesAsByteArray(productId),
             };
+            return productToReturn;
         }
+
+        private decimal ApplyPromotionToProduct(decimal price, Promotion promotion)
+        {
+            if (promotion != null && promotion.DiscountRate > 0)
+            {
+                price = price * (decimal)(1 - (promotion.DiscountRate / 100.0));
+            }
+
+            return price;
+        }
+
 
         public async Task<Product> GetProductByName(string productName)
         {
