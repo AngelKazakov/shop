@@ -1,4 +1,6 @@
-﻿namespace RandomShop.Models.Product
+﻿using RandomShop.Models.Variation;
+
+namespace RandomShop.Models.Product
 {
     public class ProductViewModel
     {
@@ -21,5 +23,7 @@
         public Dictionary<string, List<string>> VariationsAndOptions = new Dictionary<string, List<string>>();
 
         public List<byte[]> Images = new List<byte[]>();
+
+        public ICollection<VariationViewModel> Variations { get; set; } = new List<VariationViewModel>();
     }
 }

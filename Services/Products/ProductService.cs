@@ -11,6 +11,7 @@ using System.Reflection;
 using NuGet.Packaging;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Variation;
+using RandomShop.Services.Promotions;
 using RandomShop.Services.Variation;
 
 
@@ -72,71 +73,75 @@ namespace RandomShop.Services.Products
 
         public async Task<ProductViewModel> GetProductById(int productId)
         {
-            var productItem = await this.context.ProductItems
-                .AsNoTracking()
-                .Include(x => x.Product)
-                .Include(x => x.ProductConfigurations)
-                .ThenInclude(pc => pc.VariationOption)
-                .ThenInclude(vo => vo.Variation)
-                .Where(x => x.Id == productId)
-                .Select(x => new ProductViewModel()
-                {
-                    Id = x.Id,
-                    Name = x.Product.Name,
-                    Description = x.Product.Description,
-                    Price = x.Price,
-                    SKU = x.SKU,
-                    Category = x.Product.ProductCategories.Select(pc => pc.Category.Name).FirstOrDefault(),
-                    Promotion = x.Product.ProductPromotions.Select(pp => pp.Promotion.Name).FirstOrDefault(),
-                    Variations = x.ProductConfigurations.Select(pc => new VariationViewModel()
-                    {
-                        Name = pc.VariationOption.Variation.Name,
-                        Value = pc.VariationOption.Value
-                    }).ToList()
-                })
-                .FirstOrDefaultAsync();
+            ProductItem? productItem = await this.context.ProductItems
+                  .AsNoTracking()
+                 .Include(x => x.Product)
+                 .Include(x => x.ProductConfigurations)
+                 .ThenInclude(pc => pc.VariationOption)
+                 .ThenInclude(vo => vo.Variation)
+                 .Include(x => x.Product.ProductPromotions)
+                  .ThenInclude(p => p.Promotion)
+                 .Where(x => x.Id == productId)
+                 .FirstOrDefaultAsync();
 
             if (productItem == null)
             {
                 throw new NotFoundException("Product not found.");
             }
 
-            Dictionary<string, List<string>> variationsDictionary = productItem.Variations
+            var productViewModel = CreateProductViewModel(productItem);
+
+            return productViewModel;
+        }
+
+        private ProductViewModel CreateProductViewModel(ProductItem productItem)
+        {
+            Promotion? promotion = productItem.Product.ProductPromotions.Select(pp => pp.Promotion).FirstOrDefault();
+
+            ProductViewModel productViewModel = new ProductViewModel()
+            {
+                Id = productItem.Id,
+                Name = productItem.Product.Name,
+                Description = productItem.Product.Description,
+                SKU = productItem.SKU,
+                Price = productItem.Price,
+                Category = productItem.Product.ProductCategories.Select(pc => pc.Category.Name).FirstOrDefault(),
+                Promotion = productItem.Product.ProductPromotions.Select(pp => pp.Promotion.Name).FirstOrDefault(),
+                Variations = productItem.ProductConfigurations.Select(pc => new VariationViewModel()
+                {
+                    Name = pc.VariationOption.Variation.Name,
+                    Value = pc.VariationOption.Value
+                }).ToList(),
+                Images = ImageMapper.ReadImagesAsByteArray(productItem.ProductId),
+            };
+
+            productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);
+
+            productViewModel.Price = ApplyPromotionToProduct(productViewModel.Price, promotion?.DiscountRate);
+
+            return productViewModel;
+        }
+
+        private decimal ApplyPromotionToProduct(decimal price, int? discountRate)
+        {
+            // Ensure valid discount rate
+            if (discountRate.HasValue && discountRate > 0)
+            {
+                // Convert the integer discount rate to decimal for calculation
+                return price * (1 - (discountRate.Value / 100m));
+            }
+            return price;
+        }
+
+        private Dictionary<string, List<string>> CreateVariationsDictionary(IEnumerable<VariationViewModel> variations)
+        {
+            return variations
                 .GroupBy(v => v.Name)
                 .ToDictionary(
                     g => g.Key,
                     g => g.Select(v => v.Value).Distinct().ToList()
                 );
-
-            //Make separate method for applying promotion to a product.
-            var promotion = await this.context.ProductPromotions.Where(x => x.ProductId == productId)
-                .Select(x => x.Promotion).FirstOrDefaultAsync();
-
-            var productToReturn = new ProductViewModel
-            {
-                Id = productItem.Id,
-                Name = productItem.Name,
-                Description = productItem.Description,
-                Price = ApplyPromotionToProduct(productItem.Price, promotion),
-                SKU = productItem.SKU,
-                Category = productItem.Category,
-                Promotion = productItem.Promotion,
-                VariationsAndOptions = variationsDictionary,
-                Images = ImageMapper.ReadImagesAsByteArray(productId),
-            };
-            return productToReturn;
         }
-
-        private decimal ApplyPromotionToProduct(decimal price, Promotion promotion)
-        {
-            if (promotion != null && promotion.DiscountRate > 0)
-            {
-                price = price * (decimal)(1 - (promotion.DiscountRate / 100.0));
-            }
-
-            return price;
-        }
-
 
         public async Task<Product> GetProductByName(string productName)
         {
