@@ -54,6 +54,8 @@
 
         public static readonly string ImagesPath = Environment.CurrentDirectory + "\\Images";
 
+        public const decimal PercentageDivisor = 100m;
+
         public const int productCategoryMinLength = 1;
         public const int productCategoryMaxLength = 64;
 
