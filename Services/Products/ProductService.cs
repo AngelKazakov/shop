@@ -11,7 +11,6 @@ using System.Reflection;
 using NuGet.Packaging;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Variation;
-using RandomShop.Services.Promotions;
 using RandomShop.Services.Variation;
 
 
@@ -91,7 +90,6 @@ namespace RandomShop.Services.Products
             }
 
             ProductViewModel productViewModel = CreateProductViewModel(productItem);
-            ApplyPromotionToProduct(productViewModel);
             return productViewModel;
         }
 
@@ -115,8 +113,6 @@ namespace RandomShop.Services.Products
                       .Select(x => CreateProductListViewModel(x.Product, x))
                       .ToListAsync();
 
-                ApplyPromotionToProduct(products);
-
                 return products;
             }
             catch (Exception ex)
@@ -137,8 +133,6 @@ namespace RandomShop.Services.Products
                      .Take(3)
                      .Select(x => CreateProductListViewModel(x.Product, x))
                      .ToListAsync();
-
-                ApplyPromotionToProduct(products);
 
                 return products;
             }
@@ -161,8 +155,6 @@ namespace RandomShop.Services.Products
                             .Select(x => CreateProductListViewModel(x.Product, x))
                             .ToListAsync();
 
-                ApplyPromotionToProduct(products);
-
                 return products;
             }
             catch (Exception ex)
@@ -184,8 +176,6 @@ namespace RandomShop.Services.Products
                     .Select(x => CreateProductListViewModel(x.Product, x))
                     .ToListAsync();
 
-                ApplyPromotionToProduct(products);
-
                 return products;
             }
             catch (Exception ex)
@@ -205,8 +195,6 @@ namespace RandomShop.Services.Products
                      .Where(x => x.Product.ProductPromotions.Any(pp => pp.PromotionId == promotionId))
                      .Select(x => CreateProductListViewModel(x.Product, x))
                      .ToListAsync();
-
-                ApplyPromotionToProduct(products);
 
                 return products;
 
@@ -412,7 +400,6 @@ namespace RandomShop.Services.Products
                 Id = product.Id,
                 Name = product.Name,
                 Price = productItem?.Price ?? 0,
-                Discount = productItem.Product.ProductPromotions.Select(x => x.Promotion.DiscountRate).FirstOrDefault(),
             };
 
             return productListViewModel;
@@ -428,33 +415,28 @@ namespace RandomShop.Services.Products
                 );
         }
 
-        private static decimal CalculateDiscountedPrice(decimal price, int? discountRate)
+        private decimal CalculateDiscountedPrice(decimal price, int discountRate)
         {
-            return (decimal)(price * (1 - (discountRate / Data.DataConstants.PercentageDivisor)));
+            return price * (1 - (discountRate / (decimal)Data.DataConstants.PercentageDivisor));
         }
 
-        private static void ApplyPromotionToProduct(ProductListViewModel product)
+
+        private async Task<int?> GetPromotionDiscountRateByIdAsync(int promotionId)
         {
-            if (product.Discount.HasValue && product.Discount > 0)
-            {
-                product.Price = CalculateDiscountedPrice(product.Price, product.Discount.Value);
-            }
+            return await this.context.Promotions
+                .Where(p => p.Id == promotionId)
+                .Select(p => (int?)p.DiscountRate)
+                .FirstOrDefaultAsync();
         }
 
-        private static void ApplyPromotionToProduct(ProductViewModel product)
+        private decimal ApplyPromotionToProduct(decimal currentPrice, int? discountRate)
         {
-            if (product.Discount > 0)
+            if (discountRate.HasValue && discountRate > 0)
             {
-                product.Price = CalculateDiscountedPrice(product.Price, product.Discount);
+                return CalculateDiscountedPrice(currentPrice, discountRate.Value);
             }
-        }
 
-        private static void ApplyPromotionToProduct(IEnumerable<ProductListViewModel> products)
-        {
-            foreach (var product in products.Where(p => p.Discount.HasValue && p.Discount > 0))
-            {
-                ApplyPromotionToProduct(product);
-            }
+            return currentPrice;
         }
 
         private void DeleteImageDirectoryByProductId(int productId)
@@ -502,6 +484,10 @@ namespace RandomShop.Services.Products
                 CreatedOnDate = DateTime.Now,
             };
 
+            int? discountRate = await GetPromotionDiscountRateByIdAsync(model.PromotionId);
+
+            productItem.DiscountedPrice = ApplyPromotionToProduct(model.Price, discountRate);
+
             await this.context.ProductItems.AddAsync(productItem);
             await this.context.SaveChangesAsync();
 
@@ -522,13 +508,16 @@ namespace RandomShop.Services.Products
 
         private async Task AddProductPromotion(int productId, int promotionId)
         {
-            ProductPromotion productPromotion = new ProductPromotion()
+            if (promotionId != null && promotionId > 0)
             {
-                ProductId = productId,
-                PromotionId = promotionId,
-            };
+                ProductPromotion productPromotion = new ProductPromotion()
+                {
+                    ProductId = productId,
+                    PromotionId = promotionId,
+                };
 
-            await this.context.ProductPromotions.AddAsync(productPromotion);
+                await this.context.ProductPromotions.AddAsync(productPromotion);
+            }
         }
 
         private async Task CreateProductCategory(int productId, int categoryId)
@@ -536,7 +525,5 @@ namespace RandomShop.Services.Products
             await this.context.ProductCategories.AddAsync(new ProductCategory()
             { ProductId = productId, CategoryId = categoryId });
         }
-
-
     }
 }
