@@ -12,6 +12,9 @@ using NuGet.Packaging;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Variation;
 using RandomShop.Services.Variation;
+using System.Security.Cryptography.Xml;
+using RandomShop.Services.Promotions;
+using Microsoft.Build.Evaluation;
 
 
 namespace RandomShop.Services.Products
@@ -22,14 +25,16 @@ namespace RandomShop.Services.Products
         private readonly IMapper mapper;
         private readonly ICategoryService categoryService;
         private readonly IVariationService variationService;
+        private readonly IPromotionService promotionService;
 
         public ProductService(IMapper mapper, ShopContext context, ICategoryService categoryService,
-            IVariationService variationService)
+            IVariationService variationService, IPromotionService promotionService)
         {
             this.mapper = mapper;
             this.context = context;
             this.categoryService = categoryService;
             this.variationService = variationService;
+            this.promotionService = promotionService;
         }
 
         public async Task<ProductAddFormModel> InitProductAddFormModel(int categoryId)
@@ -71,6 +76,11 @@ namespace RandomShop.Services.Products
             }
         }
 
+        public async Task<int> EditProduct(ProductEditFormModel model)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<ProductViewModel> GetProductById(int productId)
         {
             ProductItem? productItem = await this.context.ProductItems
@@ -93,6 +103,67 @@ namespace RandomShop.Services.Products
             return productViewModel;
         }
 
+        public async Task<ProductEditFormModel> InitProductEditFormModel(int productId)
+        {
+            ProductDetailsDto? productDetails = await this.context.ProductItems
+                .AsNoTracking()
+                .Include(x => x.Product)
+                .ThenInclude(x => x.ProductCategories)
+                .Include(x => x.Product.ProductPromotions)
+                .ThenInclude(pp => pp.Promotion)
+                //.Include(x => x.ProductItemImages)
+                .Include(x => x.ProductConfigurations)
+                .ThenInclude(pc => pc.VariationOption.Variation)
+                .Where(x => x.Id == productId)
+                .Select(x => new ProductDetailsDto
+                {
+                    Price = x.Price,
+                    Name = x.Product.Name,
+                    Description = x.Product.Description,
+                    QuantityInStock = x.QuantityInStock,
+                    SKU = x.SKU,
+                    CategoryId = x.Product.ProductCategories.Select(pc => pc.CategoryId).FirstOrDefault(),
+                    PromotionId = x.Product.ProductPromotions.Select(pp => pp.PromotionId).FirstOrDefault(),
+                    ExistingVariationOptions = x.ProductConfigurations.Select(pc => new VariationViewModel
+                    {
+                        Name = pc.VariationOption.Variation.Name,
+                        Value = pc.VariationOption.Value
+                    }).ToList(),
+                })
+                .FirstOrDefaultAsync();
+
+            if (productDetails == null)
+            {
+                throw new NotFoundException($"Product with ID {productId} not found.");
+            }
+
+            ProductEditFormModel? model = await CreateProductEditFormModel(productId, productDetails);
+
+            return model;
+        }
+
+        private async Task<ProductEditFormModel> CreateProductEditFormModel(int productId, ProductDetailsDto productDetails, bool isAdmin = false)
+        {
+            ProductEditFormModel model = new ProductEditFormModel
+            {
+                Id = productId,
+                Price = productDetails.Price,
+                Name = productDetails.Name,
+                Description = productDetails.Description,
+                SKU = productDetails.SKU,
+                QuantityInStock = productDetails.QuantityInStock,
+                Categories = await this.categoryService.GetAllCategories(),
+                CategoryId = productDetails.CategoryId ?? throw new InvalidOperationException("Category ID cannot be null."), //(int)productDetails.CategoryId,
+                Images = ImageMapper.ReadImagesAsByteArray(productId),
+                PromotionId = productDetails.PromotionId ?? 0, // Default to 0 if null//(int)productDetails.PromotionId,
+                Promotions = await this.promotionService.GetAllPromotions(),
+                ExistingVariationOptions = CreateVariationsDictionary(productDetails.ExistingVariationOptions),
+                AllVariationOptions = await this.variationService.GetVariationsAndOptions(),
+            };
+
+            return model;
+        }
+
         public async Task<Product> GetProductByName(string productName)
         {
             Product? product =
@@ -108,6 +179,7 @@ namespace RandomShop.Services.Products
             try
             {
                 var products = await this.context.ProductItems.AsNoTracking()
+                    .Where(x => x.QuantityInStock > 0)
                       .Include(x => x.Product)
                       .Where(x => EF.Functions.Like(x.Product.Name.ToLower(), lowerProductName))
                       .Select(x => CreateProductListViewModel(x.Product, x))
@@ -126,6 +198,7 @@ namespace RandomShop.Services.Products
             try
             {
                 var products = await this.context.ProductItems.AsNoTracking()
+                    .Where(x => x.QuantityInStock > 0)
                      .Include(x => x.Product)
                      .Include(pp => pp.Product.ProductPromotions)
                      .ThenInclude(p => p.Promotion)
@@ -149,6 +222,7 @@ namespace RandomShop.Services.Products
             try
             {
                 List<ProductListViewModel> products = await this.context.ProductItems.AsNoTracking()
+                    .Where(x => x.QuantityInStock > 0)
                             .Include(x => x.Product)
                             .Include(pp => pp.Product.ProductPromotions)
                             .ThenInclude(p => p.Promotion)
@@ -370,16 +444,16 @@ namespace RandomShop.Services.Products
 
         private ProductViewModel CreateProductViewModel(ProductItem productItem)
         {
+            //Log the try-catch exceptions.
             ProductViewModel productViewModel = new ProductViewModel()
             {
                 Id = productItem.Id,
                 Name = productItem.Product.Name,
                 Description = productItem.Product.Description,
                 SKU = productItem.SKU,
-                Price = productItem.Price,
+                Price = productItem?.DiscountedPrice ?? productItem.Price,
                 Category = productItem.Product.ProductCategories.Select(pc => pc.Category.Name).FirstOrDefault(),
                 Promotion = productItem.Product.ProductPromotions.Select(pp => pp.Promotion.Name).FirstOrDefault(),
-                Discount = productItem.Product.ProductPromotions.Select(x => x.Promotion.DiscountRate).FirstOrDefault(),
                 Variations = productItem.ProductConfigurations.Select(pc => new VariationViewModel()
                 {
                     Name = pc.VariationOption.Variation.Name,
@@ -399,7 +473,7 @@ namespace RandomShop.Services.Products
             {
                 Id = product.Id,
                 Name = product.Name,
-                Price = productItem?.Price ?? 0,
+                Price = productItem?.DiscountedPrice ?? productItem.Price,
             };
 
             return productListViewModel;

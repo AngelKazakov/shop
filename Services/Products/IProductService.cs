@@ -35,6 +35,10 @@ namespace RandomShop.Services.Products
 
         public Task<int> AddProduct(ProductAddFormModel model);
 
+        public Task<int> EditProduct(ProductEditFormModel model);
+
         public Task<ProductAddFormModel> InitProductAddFormModel(int categoryId);
+
+        public Task<ProductEditFormModel> InitProductEditFormModel(int productId);
     }
 }

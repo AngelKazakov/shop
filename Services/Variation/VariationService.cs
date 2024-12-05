@@ -95,6 +95,26 @@ namespace RandomShop.Services.Variation
             }
         }
 
+        public async Task<List<VariationOptionViewModel>> GetVariationsAndOptions()
+        {
+            List<VariationOptionViewModel>? variationsAndOptions = await this.shopContext.Variations
+                .AsNoTracking()
+                .Include(x => x.VariationOptions)
+                .Select(x => new VariationOptionViewModel()
+                {
+                    VariationId = x.Id,
+                    VariationName = x.Name,
+                    VariationOptions = x.VariationOptions.Select(pc => new Models.Variation.VariationOptionFormViewModel()
+                    {
+                        VariationOptionId = pc.Id,
+                        Value = pc.Value,
+                    }).ToList(),
+                })
+                .ToListAsync();
+
+            return variationsAndOptions;
+        }
+
         public async Task<List<VariationOptionViewModel>> GetVariationOptionBySpecifyCategory(int categoryId)
         {
             List<VariationOptionViewModel> variationOptionViewModels = new List<VariationOptionViewModel>();

@@ -37,6 +37,28 @@ namespace RandomShop.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            ProductEditFormModel? model = await this.productService.InitProductEditFormModel(id);
+
+            return View(model);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(ProductEditFormModel model)
+        {
+            // Split => model.ImagesForDelete so the id's on images which are for deletion can be accessed.
+            int editedProductId = await this.productService.EditProduct(model);
+
+            if (editedProductId != null && editedProductId > 0)
+            {
+                return RedirectToAction("Details", new { id = editedProductId });
+            }
+
+            return RedirectToAction("Error", "Home");
+        }
+
+        [HttpGet]
         public async Task<JsonResult> GetVariationOptionsByCategory(int categoryId)
         {
             List<VariationOptionViewModel> variations = await this.variationService.GetVariationOptionBySpecifyCategory(categoryId);

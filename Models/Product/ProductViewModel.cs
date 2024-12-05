@@ -20,8 +20,6 @@ namespace RandomShop.Models.Product
 
         public string Promotion { get; set; }
 
-        public int? Discount { get; set; }
-
         public Dictionary<string, List<string>> VariationsAndOptions = new Dictionary<string, List<string>>();
 
         public List<byte[]> Images = new List<byte[]>();

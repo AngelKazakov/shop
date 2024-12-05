@@ -15,5 +15,7 @@ namespace RandomShop.Services.Variation
         public Task<bool> AddValueToVariationOption(VariationOptionAddFormModel model);
 
         public Task<List<VariationOptionViewModel>> GetVariationOptionBySpecifyCategory(int categoryId);
+
+        public Task<List<VariationOptionViewModel>> GetVariationsAndOptions();
     }
 }
