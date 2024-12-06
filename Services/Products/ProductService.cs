@@ -15,6 +15,7 @@ using RandomShop.Services.Variation;
 using System.Security.Cryptography.Xml;
 using RandomShop.Services.Promotions;
 using Microsoft.Build.Evaluation;
+using RandomShop.Services.Images;
 
 
 namespace RandomShop.Services.Products
@@ -24,17 +25,19 @@ namespace RandomShop.Services.Products
         private readonly ShopContext context;
         private readonly IMapper mapper;
         private readonly ICategoryService categoryService;
+        private readonly IImageService imageService;
         private readonly IVariationService variationService;
         private readonly IPromotionService promotionService;
 
         public ProductService(IMapper mapper, ShopContext context, ICategoryService categoryService,
-            IVariationService variationService, IPromotionService promotionService)
+            IVariationService variationService, IPromotionService promotionService, IImageService imageService)
         {
             this.mapper = mapper;
             this.context = context;
             this.categoryService = categoryService;
             this.variationService = variationService;
             this.promotionService = promotionService;
+            this.imageService = imageService;
         }
 
         public async Task<ProductAddFormModel> InitProductAddFormModel(int categoryId)
@@ -59,13 +62,16 @@ namespace RandomShop.Services.Products
                 await AddProductConfigurations(model, productItem.Id);
                 await CreateProductCategory(product.Id, model.CategoryId);
 
-                ICollection<ProductImage> productImages = ImageMapper.CreateProductImages(model.Images, product.Id);
+                //Check if the ImageMapper replacement with ImageService is correct.
+                // ICollection<ProductImage> productImages = ImageMapper.CreateProductImages(model.Images, product.Id);
+                ICollection<ProductImage> productImages = imageService.CreateProductImages(model.Images, product.Id);
                 AddProductImagesToProduct(productImages, product);
 
                 await context.SaveChangesAsync();
                 await transaction.CommitAsync();
-
-                await ImageMapper.SaveImages(model.Images, productImages);
+                //Check if the ImageMapper replacement with ImageService is correct.
+                //await ImageMapper.SaveImages(model.Images, productImages);
+                await imageService.SaveImages(model.Images, productImages);
 
                 return productItem.Id;
             }
@@ -99,7 +105,7 @@ namespace RandomShop.Services.Products
                 throw new NotFoundException("Product not found.");
             }
 
-            ProductViewModel productViewModel = CreateProductViewModel(productItem);
+            ProductViewModel productViewModel = await CreateProductViewModel(productItem);
             return productViewModel;
         }
 
@@ -111,7 +117,6 @@ namespace RandomShop.Services.Products
                 .ThenInclude(x => x.ProductCategories)
                 .Include(x => x.Product.ProductPromotions)
                 .ThenInclude(pp => pp.Promotion)
-                //.Include(x => x.ProductItemImages)
                 .Include(x => x.ProductConfigurations)
                 .ThenInclude(pc => pc.VariationOption.Variation)
                 .Where(x => x.Id == productId)
@@ -153,9 +158,10 @@ namespace RandomShop.Services.Products
                 SKU = productDetails.SKU,
                 QuantityInStock = productDetails.QuantityInStock,
                 Categories = await this.categoryService.GetAllCategories(),
-                CategoryId = productDetails.CategoryId ?? throw new InvalidOperationException("Category ID cannot be null."), //(int)productDetails.CategoryId,
-                Images = ImageMapper.ReadImagesAsByteArray(productId),
-                PromotionId = productDetails.PromotionId ?? 0, // Default to 0 if null//(int)productDetails.PromotionId,
+                CategoryId = productDetails.CategoryId ?? throw new InvalidOperationException("Category ID cannot be null."),
+                // Images = await imageService.ReadImagesAsByteArrayAsync(productId),
+                ExistingImages = await imageService.CreateProductImageViewModelAsync(productId),
+                PromotionId = productDetails.PromotionId ?? 0,
                 Promotions = await this.promotionService.GetAllPromotions(),
                 ExistingVariationOptions = CreateVariationsDictionary(productDetails.ExistingVariationOptions),
                 AllVariationOptions = await this.variationService.GetVariationsAndOptions(),
@@ -366,7 +372,8 @@ namespace RandomShop.Services.Products
                 return false;
             }
 
-            string tempImagePath = ImageMapper.MoveImagesToTempDirectory(productId);
+            //string tempImagePath = ImageMapper.MoveImagesToTempDirectory(productId);
+            string tempImagePath = await imageService.MoveImagesToTempDirectoryAsync(productId);
 
             await using var transaction = await context.Database.BeginTransactionAsync();
             try
@@ -377,14 +384,16 @@ namespace RandomShop.Services.Products
 
                 await transaction.CommitAsync();
 
-                ImageMapper.PermanentlyDeleteTempImageDirectory(tempImagePath);
+                //ImageMapper.PermanentlyDeleteTempImageDirectory(tempImagePath);
+                await imageService.PermanentlyDeleteTempImageDirectoryAsync(tempImagePath);
                 return true;
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
 
-                ImageMapper.RestoreImagesFromTempDirectory(tempImagePath, productId);
+                //ImageMapper.RestoreImagesFromTempDirectory(tempImagePath, productId);
+                await imageService.RestoreImagesFromTempDirectoryAsync(tempImagePath, productId);
                 throw new ApplicationException("An error occurred while deleting the product.", ex);
             }
         }
@@ -442,7 +451,7 @@ namespace RandomShop.Services.Products
             }
         }
 
-        private ProductViewModel CreateProductViewModel(ProductItem productItem)
+        private async Task<ProductViewModel> CreateProductViewModel(ProductItem productItem)
         {
             //Log the try-catch exceptions.
             ProductViewModel productViewModel = new ProductViewModel()
@@ -459,7 +468,8 @@ namespace RandomShop.Services.Products
                     Name = pc.VariationOption.Variation.Name,
                     Value = pc.VariationOption.Value
                 }).ToList(),
-                Images = ImageMapper.ReadImagesAsByteArray(productItem.ProductId),
+                //Images = ImageMapper.ReadImagesAsByteArray(productItem.ProductId),
+                Images = await imageService.ReadImagesAsByteArrayAsync(productItem.ProductId),
             };
 
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Infrastructure;
 using RandomShop.Services.Categories;
+using RandomShop.Services.Images;
 using RandomShop.Services.Products;
 using RandomShop.Services.Promotions;
 using RandomShop.Services.Variation;
@@ -25,6 +26,7 @@ builder.Services.AddTransient<ICategoryService, CategoryService>();
 builder.Services.AddTransient<IProductService, ProductService>();
 builder.Services.AddTransient<IPromotionService, PromotionService>();
 builder.Services.AddTransient<IVariationService, VariationService>();
+builder.Services.AddTransient<IImageService, ImageService>();
 
 var app = builder.Build();
 
