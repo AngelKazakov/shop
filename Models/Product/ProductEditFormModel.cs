@@ -1,5 +1,6 @@
 ﻿using RandomShop.Data;
 using RandomShop.Models.Category;
+using RandomShop.Models.Image;
 using RandomShop.Models.Promotion;
 using RandomShop.Models.Variation;
 using System.ComponentModel.DataAnnotations;
@@ -32,21 +33,16 @@ public class ProductEditFormModel
     [Range(DataConstants.Product.productItemQuantityMin, DataConstants.Product.productItemQuantityMax)]
     public int QuantityInStock { get; set; }
 
-    //Make it list of ProductImageViewModel so Id's can be used in Edit View.
-    public List<byte[]> Images = new List<byte[]>();
     public ICollection<IFormFile> NewAddedImages { get; set; } = new List<IFormFile>();
 
-
-    //public List<int> ImagesForDelete { get; set; } = new List<int>();
     public string ImagesForDelete { get; set; }
 
-    // public List<ProductImageViewModel> ExistingImages { get; set; } = new List<ProductImageViewModel>();
+    public List<ProductImageViewModel> ExistingImages { get; set; } = new List<ProductImageViewModel>();
 
     public ICollection<CategoryViewModel> Categories { get; set; } = new List<CategoryViewModel>();
 
     public ICollection<PromotionViewModel> Promotions { get; set; } = new List<PromotionViewModel>();
 
-    // public List<VariationViewModel> ExistingVariationOptions { get; set; } = new List<VariationViewModel>();
     public Dictionary<string, List<string>> ExistingVariationOptions { get; set; } = new Dictionary<string, List<string>>();
 
     public ICollection<VariationOptionViewModel> AllVariationOptions { get; set; } = new List<VariationOptionViewModel>();

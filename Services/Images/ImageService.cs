@@ -23,6 +23,7 @@ namespace RandomShop.Services.Images
                 return imageBytesList;
 
             var directoryInfo = new DirectoryInfo(productImagePath);
+
             foreach (var imageFile in directoryInfo.GetFiles())
             {
                 imageBytesList.Add(await File.ReadAllBytesAsync(imageFile.FullName));
@@ -49,23 +50,42 @@ namespace RandomShop.Services.Images
             }
         }
 
-        public async Task<List<ProductImageViewModel>> CreateProductImageViewModelAsync(int productId)
+        private async Task<List<ProductImage>> GetProductImagesByProductId(int productId)
         {
             List<ProductImage>? productImages = await context.ProductImages
-                .AsNoTracking()
-                .Where(pi => pi.ProductId == productId)
-                .ToListAsync();
+            .AsNoTracking()
+            .Where(pi => pi.ProductId == productId)
+            .ToListAsync();
 
-            List<byte[]>? imageBytesList = await ReadImagesAsByteArrayAsync(productId);
+            return productImages;
+        }
 
-            List<ProductImageViewModel>? productImageViewModels = productImages.Select((pi, index) => new ProductImageViewModel
+        public async Task<List<ProductImageViewModel>> CreateProductImageViewModelAsync(int productId)
+        {
+            List<ProductImage>? productImages = await GetProductImagesByProductId(productId);
+
+            List<byte[]>? imageBytesListFromFileSystem = await ReadImagesAsByteArrayAsync(productId);
+
+            // Ensure one-to-one mapping between product images and byte arrays
+            if (productImages.Count != imageBytesListFromFileSystem.Count)
             {
-                Id = pi.Id,
-                bytes = imageBytesList.ToList() // Convert to a List<byte[]>
-            }).ToList();
+                throw new InvalidOperationException("Mismatch between product images and image bytes in the file system.");
+            }
+
+            List<ProductImageViewModel>? productImageViewModels = new List<ProductImageViewModel>();
+
+            for (int i = 0; i < productImages.Count; i++)
+            {
+                productImageViewModels.Add(new ProductImageViewModel()
+                {
+                    ProductImageId = productImages[i].Id,
+                    bytes = imageBytesListFromFileSystem[i],
+                });
+            }
 
             return productImageViewModels;
         }
+
 
         public ICollection<ProductImage> CreateProductImages(ICollection<IFormFile> images, int productId)
         {

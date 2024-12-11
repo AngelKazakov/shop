@@ -190,14 +190,23 @@
 
             <h3>Images</h3>
             <div class="existing-images-container">
-                @for (int i = 0; i < Model.Images.Count; i++)
+                @for (int i = 0; i < Model.ExistingImages.Count; i++)
                 {
-                    <div class="image-item" id="image-item-@i">
-                        <img src="data:image/png;base64,@Convert.ToBase64String(Model.Images[i])" alt="Product Image" />
-                        <button type="button" class="delete-btn" onclick="removeImage(@i)">×</button>
-                        <!-- Hidden input to track deleted images
-                        <input type="hidden" name="ImagesForDelete" id="deleteImageInput@i" />-->
+                    var image = Model.ExistingImages[i];
+
+                    @*  @for (int j = 0; j < image.bytes.Count; j++)
+                    {
+                        <div class="image-item" id="image-item-@image.Id-@j">
+                            <img src="data:image/png;base64,@Convert.ToBase64String(image.bytes[j])" alt="Product Image" />
+                            <button type="button" class="delete-btn" onclick="removeImage(@image.Id)">×</button>
+                        </div>
+                    } *@
+
+                    <div class="image-item" id="image-item-@image.Id-">
+                        <img src="data:image/png;base64,@Convert.ToBase64String(image.bytes)" alt="Product Image" />
+                        <button type="button" class="delete-btn" onclick="removeImage(@image.Id)">×</button>
                     </div>
+
                 }
 
                 <!-- Add this hidden input inside your form -->
