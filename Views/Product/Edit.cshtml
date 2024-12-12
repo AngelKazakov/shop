@@ -108,6 +108,41 @@
         border: 1px solid #ddd;
         border-radius: 4px;
     }
+
+    #image-preview-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .preview-item {
+        position: relative;
+        display: inline-block;
+    }
+
+        .preview-item img {
+            max-width: 100px;
+            height: auto;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .preview-item .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: red;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 18px;
+            text-align: center;
+        }
 </style>
 
 <div class="form-container">
@@ -194,35 +229,23 @@
                 {
                     var image = Model.ExistingImages[i];
 
-                    @*  @for (int j = 0; j < image.bytes.Count; j++)
-                    {
-                        <div class="image-item" id="image-item-@image.Id-@j">
-                            <img src="data:image/png;base64,@Convert.ToBase64String(image.bytes[j])" alt="Product Image" />
-                            <button type="button" class="delete-btn" onclick="removeImage(@image.Id)">×</button>
-                        </div>
-                    } *@
-
-                    <div class="image-item" id="image-item-@image.Id-">
+                    <div class="image-item" id="image-item-@image.Id">
                         <img src="data:image/png;base64,@Convert.ToBase64String(image.bytes)" alt="Product Image" />
                         <button type="button" class="delete-btn" onclick="removeImage(@image.Id)">×</button>
                     </div>
 
                 }
 
-                <!-- Add this hidden input inside your form -->
                 <input type="hidden" id="ImagesForDeleteInput" name="ImagesForDelete" value="" />
             </div>
 
             <div class="form-group">
                 <label for="NewAddedImages">New Images</label>
-                <input asp-for="NewAddedImages" type="file" multiple class="form-control" />
-                <span asp-validation-for="NewAddedImages" class="text-danger"></span>
+                <input id="NewAddedImages" type="file" multiple class="form-control" onchange="handleImagePreview(event)" />
+                <div id="image-preview-container" class="existing-images-container"></div>
             </div>
         </div>
 
-
-
-        <!-- Variations Section -->
         <div class="form-section">
             <h3>Variations</h3>
             <table>
@@ -262,7 +285,6 @@
             </table>
         </div>
 
-        <!-- Submit Button -->
         <button type="submit" class="save-btn">Save Changes</button>
     </form>
 </div>
@@ -293,5 +315,86 @@
         }
 
     });
+
+        let newImages = []; // Array to track new images
+
+    function handleImagePreview(event) {
+        const files = event.target.files;
+        const previewContainer = document.getElementById('image-preview-container');
+
+        // Clear previous previews
+        previewContainer.innerHTML = '';
+
+        // Convert FileList to Array and store in newImages
+        newImages = Array.from(files);
+
+        // Loop through each file and create a preview
+        newImages.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.id = `preview-item-${index}`;
+
+                // Create image element
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = `Image ${index + 1}`;
+
+                // Create delete button
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerText = '×';
+                deleteBtn.onclick = () => removePreview(index);
+
+                previewItem.appendChild(img);
+                previewItem.appendChild(deleteBtn);
+                previewContainer.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file); // Read file as Data URL for preview
+        });
+    }
+
+    function removePreview(index) {
+        // Remove the image preview from the DOM
+        const previewItem = document.getElementById(`preview-item-${index}`);
+        if (previewItem) {
+            previewItem.remove();
+        }
+
+        // Remove the file from the newImages array
+        newImages.splice(index, 1);
+
+        // Re-render previews with updated indices
+        reRenderPreviews();
+    }
+
+    function reRenderPreviews() {
+        const previewContainer = document.getElementById('image-preview-container');
+        previewContainer.innerHTML = '';
+
+        newImages.forEach((file, index) => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item';
+                previewItem.id = `preview-item-${index}`;
+
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.alt = `Image ${index + 1}`;
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerText = '×';
+                deleteBtn.onclick = () => removePreview(index);
+
+                previewItem.appendChild(img);
+                previewItem.appendChild(deleteBtn);
+                previewContainer.appendChild(previewItem);
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 </script>
 
