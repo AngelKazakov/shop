@@ -16,6 +16,7 @@ using System.Security.Cryptography.Xml;
 using RandomShop.Services.Promotions;
 using Microsoft.Build.Evaluation;
 using RandomShop.Services.Images;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 
 namespace RandomShop.Services.Products
@@ -89,14 +90,9 @@ namespace RandomShop.Services.Products
 
         public async Task<ProductViewModel> GetProductById(int productId)
         {
-            ProductItem? productItem = await this.context.ProductItems
+            ProductItem? productItem = await
+                GetProductItemQuery()
                   .AsNoTracking()
-                 .Include(x => x.Product)
-                 .Include(x => x.ProductConfigurations)
-                 .ThenInclude(pc => pc.VariationOption)
-                 .ThenInclude(vo => vo.Variation)
-                 .Include(x => x.Product.ProductPromotions)
-                  .ThenInclude(p => p.Promotion)
                  .Where(x => x.Id == productId)
                  .FirstOrDefaultAsync();
 
@@ -111,14 +107,8 @@ namespace RandomShop.Services.Products
 
         public async Task<ProductEditFormModel> InitProductEditFormModel(int productId)
         {
-            ProductDetailsDto? productDetails = await this.context.ProductItems
-                .AsNoTracking()
-                .Include(x => x.Product)
-                .ThenInclude(x => x.ProductCategories)
-                .Include(x => x.Product.ProductPromotions)
-                .ThenInclude(pp => pp.Promotion)
-                .Include(x => x.ProductConfigurations)
-                .ThenInclude(pc => pc.VariationOption.Variation)
+            ProductDetailsDto? productDetails = await
+              GetProductItemQuery().AsNoTracking()
                 .Where(x => x.Id == productId)
                 .Select(x => new ProductDetailsDto
                 {
@@ -227,13 +217,10 @@ namespace RandomShop.Services.Products
             //Separate applying promotion from creating ProductViewModel and ProductListViewModel.
             try
             {
-                List<ProductListViewModel> products = await this.context.ProductItems.AsNoTracking()
-                    .Where(x => x.QuantityInStock > 0)
-                            .Include(x => x.Product)
-                            .Include(pp => pp.Product.ProductPromotions)
-                            .ThenInclude(p => p.Promotion)
-                            .Select(x => CreateProductListViewModel(x.Product, x))
-                            .ToListAsync();
+                List<ProductListViewModel> products = await
+                    GetProductItemQuery().Where(x => x.QuantityInStock > 0)
+                                    .Select(x => CreateProductListViewModel(x.Product, x))
+                                    .ToListAsync();
 
                 return products;
             }
@@ -247,11 +234,9 @@ namespace RandomShop.Services.Products
         {
             try
             {
-                List<ProductListViewModel> products = await this.context.ProductItems
+                List<ProductListViewModel> products = await
+                    GetProductItemQuery()
                     .AsNoTracking()
-                    .Include(x => x.Product)
-                    .Include(pp => pp.Product.ProductPromotions)
-                    .ThenInclude(p => p.Promotion)
                     .Where(p => p.Product.ProductCategories.Any(pc => pc.CategoryId == categoryId))
                     .Select(x => CreateProductListViewModel(x.Product, x))
                     .ToListAsync();
@@ -268,10 +253,9 @@ namespace RandomShop.Services.Products
         {
             try
             {
-                var products = await this.context.ProductItems
-                     .AsNoTracking()
-                     .Include(x => x.Product.ProductPromotions)
-                     .ThenInclude(x => x.Promotion)
+                var products = await
+                  GetProductItemQuery()
+                  .AsNoTracking()
                      .Where(x => x.Product.ProductPromotions.Any(pp => pp.PromotionId == promotionId))
                      .Select(x => CreateProductListViewModel(x.Product, x))
                      .ToListAsync();
@@ -460,7 +444,8 @@ namespace RandomShop.Services.Products
                 Name = productItem.Product.Name,
                 Description = productItem.Product.Description,
                 SKU = productItem.SKU,
-                Price = productItem?.DiscountedPrice ?? productItem.Price,
+                //  Price = productItem?.DiscountedPrice ?? productItem.Price,
+                Price = (productItem?.DiscountedPrice > 0) ? productItem.DiscountedPrice : productItem.Price,
                 Category = productItem.Product.ProductCategories.Select(pc => pc.Category.Name).FirstOrDefault(),
                 Promotion = productItem.Product.ProductPromotions.Select(pp => pp.Promotion.Name).FirstOrDefault(),
                 Variations = productItem.ProductConfigurations.Select(pc => new VariationViewModel()
@@ -608,6 +593,19 @@ namespace RandomShop.Services.Products
         {
             await this.context.ProductCategories.AddAsync(new ProductCategory()
             { ProductId = productId, CategoryId = categoryId });
+        }
+        private IQueryable<ProductItem> GetProductItemQuery()
+        {
+            return this.context.ProductItems
+                               .Include(x => x.Product)
+                               .Include(x => x.Product.ProductCategories)
+                               .ThenInclude(x => x.Category)
+                               .Include(x => x.Product.ProductImages)
+                               .Include(x => x.ProductConfigurations)
+                               .ThenInclude(pc => pc.VariationOption)
+                               .ThenInclude(vo => vo.Variation)
+                               .Include(x => x.Product.ProductPromotions)
+                               .ThenInclude(p => p.Promotion);
         }
     }
 }

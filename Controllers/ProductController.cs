@@ -47,7 +47,6 @@ namespace RandomShop.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(ProductEditFormModel model)
         {
-            // Split => model.ImagesForDelete so the id's on images which are for deletion can be accessed.
             int editedProductId = await this.productService.EditProduct(model);
 
             if (editedProductId != null && editedProductId > 0)

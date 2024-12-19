@@ -229,9 +229,9 @@
                 {
                     var image = Model.ExistingImages[i];
 
-                    <div class="image-item" id="image-item-@image.Id">
+                    <div class="image-item" id="image-item-@image.ProductImageId">
                         <img src="data:image/png;base64,@Convert.ToBase64String(image.bytes)" alt="Product Image" />
-                        <button type="button" class="delete-btn" onclick="removeImage(@image.Id)">×</button>
+                        <button type="button" class="delete-btn" onclick="removeImage(@image.ProductImageId)">×</button>
                     </div>
 
                 }
