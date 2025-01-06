@@ -132,6 +132,39 @@ namespace RandomShop.Services.Images
             return productImages;
         }
 
+        public void DeleteProductImages(ICollection<int> imageIdsForDeletion, int productId)
+        {
+            if (imageIdsForDeletion == null || !imageIdsForDeletion.Any())
+                return;
+
+            // Define the directory path for the product images
+            string productDirectory = Path.Combine(DataConstants.ImagesPath, $"Product{productId}");
+
+            // Retrieve images from the database based on the provided IDs
+            var imagesToDelete = this.context.ProductImages
+                .Where(img => img.ProductId == productId && imageIdsForDeletion.Contains(img.Id))
+                .ToList();
+
+            foreach (var image in imagesToDelete)
+            {
+                // Build the full file path
+                string filePath = Path.Combine(productDirectory, image.UniqueName);
+
+                // Delete the file from the file system
+                if (File.Exists(filePath))
+                {
+                    File.Delete(filePath);
+                }
+
+                // Remove the image from the database
+                this.context.ProductImages.Remove(image);
+            }
+
+            // Save changes to the database
+            this.context.SaveChanges();
+        }
+
+
         //public ICollection<ProductImage> CreateProductImages(ICollection<IFormFile> images, int productId)
         //{
         //    List<ProductImage>? productImages = new List<ProductImage>();

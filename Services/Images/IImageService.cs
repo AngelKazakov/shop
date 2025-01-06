@@ -18,5 +18,7 @@ namespace RandomShop.Services.Images
         public ICollection<ProductImage> CreateProductImages(ICollection<IFormFile> images, int productId);
 
         public Task SaveImages(ICollection<IFormFile> files, ICollection<ProductImage> productImages);
+
+        public void DeleteProductImages(ICollection<int> imageIdsForDeletion, int productId);
     }
 }
