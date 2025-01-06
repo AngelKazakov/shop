@@ -86,22 +86,38 @@ namespace RandomShop.Services.Images
             return productImageViewModels;
         }
 
-
         public ICollection<ProductImage> CreateProductImages(ICollection<IFormFile> images, int productId)
         {
-            List<ProductImage>? productImages = new List<ProductImage>();
+            if (images == null || !images.Any())
+                return new List<ProductImage>();
+
+            // Define the directory path for the product images
             string productDirectory = Path.Combine(DataConstants.ImagesPath, $"Product{productId}");
 
-            Directory.CreateDirectory(productDirectory);
+            // Ensure the directory exists
+            if (!Directory.Exists(productDirectory))
+            {
+                Directory.CreateDirectory(productDirectory);
+            }
+
+            List<ProductImage> productImages = new List<ProductImage>();
 
             foreach (var image in images)
             {
-                if (image != null)
+                if (image != null && image.Length > 0)
                 {
+                    // Generate a unique file name for the image
                     string uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName).ToLower()}";
                     string fullPath = Path.Combine(productDirectory, uniqueFileName);
 
-                    ProductImage? productImage = new ProductImage
+                    // Save the file to the directory
+                    using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        image.CopyTo(fileStream);
+                    }
+
+                    // Add the image metadata to the collection
+                    ProductImage productImage = new ProductImage
                     {
                         Name = image.FileName,
                         UniqueName = uniqueFileName,
@@ -112,8 +128,37 @@ namespace RandomShop.Services.Images
                     productImages.Add(productImage);
                 }
             }
+
             return productImages;
         }
+
+        //public ICollection<ProductImage> CreateProductImages(ICollection<IFormFile> images, int productId)
+        //{
+        //    List<ProductImage>? productImages = new List<ProductImage>();
+        //    string productDirectory = Path.Combine(DataConstants.ImagesPath, $"Product{productId}");
+
+        //    Directory.CreateDirectory(productDirectory);
+
+        //    foreach (var image in images)
+        //    {
+        //        if (image != null)
+        //        {
+        //            string uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName).ToLower()}";
+        //            string fullPath = Path.Combine(productDirectory, uniqueFileName);
+
+        //            ProductImage? productImage = new ProductImage
+        //            {
+        //                Name = image.FileName,
+        //                UniqueName = uniqueFileName,
+        //                ProductId = productId,
+        //                FullPath = fullPath,
+        //            };
+
+        //            productImages.Add(productImage);
+        //        }
+        //    }
+        //    return productImages;
+        //}
 
         public Task<string> MoveImagesToTempDirectoryAsync(int productId)
         {
