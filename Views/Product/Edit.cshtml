@@ -241,7 +241,7 @@
 
             <div class="form-group">
                 <label for="NewAddedImages">New Images</label>
-                <input id="NewAddedImages" type="file" multiple class="form-control" onchange="handleImagePreview(event)" />
+                <input asp-for="NewAddedImages" id="NewAddedImages" type="file" multiple class="form-control" onchange="handleImagePreview(event)" />
                 <div id="image-preview-container" class="existing-images-container"></div>
             </div>
         </div>

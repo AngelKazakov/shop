@@ -63,15 +63,11 @@ namespace RandomShop.Services.Products
                 await AddProductConfigurations(model, productItem.Id);
                 await CreateProductCategory(product.Id, model.CategoryId);
 
-                //Check if the ImageMapper replacement with ImageService is correct.
-                // ICollection<ProductImage> productImages = ImageMapper.CreateProductImages(model.Images, product.Id);
                 ICollection<ProductImage> productImages = imageService.CreateProductImages(model.Images, product.Id);
                 AddProductImagesToProduct(productImages, product);
 
                 await context.SaveChangesAsync();
                 await transaction.CommitAsync();
-                //Check if the ImageMapper replacement with ImageService is correct.
-                //await ImageMapper.SaveImages(model.Images, productImages);
                 await imageService.SaveImages(model.Images, productImages);
 
                 return productItem.Id;
@@ -85,7 +81,64 @@ namespace RandomShop.Services.Products
 
         public async Task<int> EditProduct(ProductEditFormModel model)
         {
-            throw new NotImplementedException();
+            List<int> imagesIdsForDeletion = new List<int>();
+            //If no one image is selected for deletion, the ImagesForDelete property will be null and throw error.
+            if (model.ImagesForDelete != null)
+            {
+                imagesIdsForDeletion = model.ImagesForDelete
+                 .Split(',')
+                 .Select(id => int.TryParse(id, out var result) ? (int?)result : null)
+                 .Where(id => id.HasValue)
+                 .Select(id => id.Value)
+                 .ToList();
+            }
+
+            ProductItem? modelForEdit = await GetProductItemQuery().FirstOrDefaultAsync(x => x.Id == model.Id);
+
+            try
+            {
+                modelForEdit.Product.Name = model.Name;
+                modelForEdit.Product.Description = model.Description;
+                modelForEdit.SKU = model.SKU;
+                modelForEdit.QuantityInStock = model.QuantityInStock;
+                modelForEdit.Price = model.Price;
+                modelForEdit.DiscountedPrice = CalculateDiscountedPrice(model.Price, await GetPromotionDiscountRateByIdAsync(model.PromotionId) ?? 0);
+
+                // modelForEdit.ProductItemImages = imageService.CreateProductImages(model.NewAddedImages, model.Id);
+
+                modelForEdit.ProductItemImages.AddRange(imageService.CreateProductImages(model.NewAddedImages, modelForEdit.Id));
+
+                ProductCategory? existingProductCategory = modelForEdit.Product.ProductCategories.FirstOrDefault(x => x.ProductId == model.Id);
+
+                // Remove the old category association\
+                //Check if current category name is different
+                if (model.CategoryId != existingProductCategory.CategoryId && existingProductCategory != null)
+                {
+                    modelForEdit.Product.ProductCategories.Remove(existingProductCategory);
+                    this.context.ProductCategories.Add(new ProductCategory() { CategoryId = model.CategoryId, ProductId = model.Id });
+                }
+
+                ProductPromotion? existingProductPromotion = modelForEdit.Product.ProductPromotions.FirstOrDefault(x => x.ProductId == model.Id);
+
+                if (model.PromotionId != existingProductPromotion.PromotionId && existingProductPromotion != null)
+                {
+                    modelForEdit.Product.ProductPromotions.Remove(existingProductPromotion);
+                    this.context.ProductPromotions.Add(new ProductPromotion() { PromotionId = model.PromotionId, ProductId = model.Id });
+                }
+
+                //Make separate methods for appyling new Category to Product and new Promotion to Product on Edit action.
+                imageService.DeleteProductImages(imagesIdsForDeletion, modelForEdit.Id);
+                var editedProduct = modelForEdit;
+
+                await this.context.SaveChangesAsync();
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+            return modelForEdit.Id;
         }
 
         public async Task<ProductViewModel> GetProductById(int productId)
