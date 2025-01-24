@@ -81,64 +81,34 @@ namespace RandomShop.Services.Products
 
         public async Task<int> EditProduct(ProductEditFormModel model)
         {
-            List<int> imagesIdsForDeletion = new List<int>();
-            //If no one image is selected for deletion, the ImagesForDelete property will be null and throw error.
-            if (model.ImagesForDelete != null)
-            {
-                imagesIdsForDeletion = model.ImagesForDelete
-                 .Split(',')
-                 .Select(id => int.TryParse(id, out var result) ? (int?)result : null)
-                 .Where(id => id.HasValue)
-                 .Select(id => id.Value)
-                 .ToList();
-            }
-
-            ProductItem? modelForEdit = await GetProductItemQuery().FirstOrDefaultAsync(x => x.Id == model.Id);
+            ProductItem? modelForedit = await GetProductItemQuery()
+                .FirstOrDefaultAsync(x => x.Id == model.Id) ?? throw new KeyNotFoundException($"Product with ID {model.Id} not found.");
 
             try
             {
-                modelForEdit.Product.Name = model.Name;
-                modelForEdit.Product.Description = model.Description;
-                modelForEdit.SKU = model.SKU;
-                modelForEdit.QuantityInStock = model.QuantityInStock;
-                modelForEdit.Price = model.Price;
-                modelForEdit.DiscountedPrice = CalculateDiscountedPrice(model.Price, await GetPromotionDiscountRateByIdAsync(model.PromotionId) ?? 0);
+                // Update basic product details (async, since we fetch the discount rate)
+                await UpdateProductDetails(modelForedit, model);
 
-                // modelForEdit.ProductItemImages = imageService.CreateProductImages(model.NewAddedImages, model.Id);
+                //Handle images (new and deletion)
+                HandleImages(model, modelForedit);
 
-                modelForEdit.ProductItemImages.AddRange(imageService.CreateProductImages(model.NewAddedImages, modelForEdit.Id));
+                //Update category
+                await UpdateProductCategory(modelForedit.Product, model.CategoryId);
 
-                ProductCategory? existingProductCategory = modelForEdit.Product.ProductCategories.FirstOrDefault(x => x.ProductId == model.Id);
+                //Update promotion
+                await UpdateProductPromotion(modelForedit.Product, model.PromotionId);
 
-                // Remove the old category association\
-                //Check if current category name is different
-                if (model.CategoryId != existingProductCategory.CategoryId && existingProductCategory != null)
-                {
-                    modelForEdit.Product.ProductCategories.Remove(existingProductCategory);
-                    this.context.ProductCategories.Add(new ProductCategory() { CategoryId = model.CategoryId, ProductId = model.Id });
-                }
+                //Save changes
 
-                ProductPromotion? existingProductPromotion = modelForEdit.Product.ProductPromotions.FirstOrDefault(x => x.ProductId == model.Id);
-
-                if (model.PromotionId != existingProductPromotion.PromotionId && existingProductPromotion != null)
-                {
-                    modelForEdit.Product.ProductPromotions.Remove(existingProductPromotion);
-                    this.context.ProductPromotions.Add(new ProductPromotion() { PromotionId = model.PromotionId, ProductId = model.Id });
-                }
-
-                //Make separate methods for appyling new Category to Product and new Promotion to Product on Edit action.
-                imageService.DeleteProductImages(imagesIdsForDeletion, modelForEdit.Id);
-                var editedProduct = modelForEdit;
-
-                await this.context.SaveChangesAsync();
+                await context.SaveChangesAsync();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                throw;
+                //Handle exception (log or rethrow with context)
+                throw new InvalidOperationException("Error while editing product with ID {model.Id}", ex);
             }
 
-            return modelForEdit.Id;
+            return modelForedit.Id;
         }
 
         public async Task<ProductViewModel> GetProductById(int productId)
@@ -454,7 +424,6 @@ namespace RandomShop.Services.Products
             await this.context.SaveChangesAsync();
             return true;
         }
-
         public async Task<bool> BulkDeleteProducts(List<int> productIds)
         {
             await using (var transaction = await this.context.Database.BeginTransactionAsync())
@@ -525,6 +494,72 @@ namespace RandomShop.Services.Products
             };
 
             return productListViewModel;
+        }
+
+        private async Task UpdateProductDetails(ProductItem productItem, ProductEditFormModel model)
+        {
+            productItem.Product.Name = model.Name;
+            productItem.Product.Description = model.Description;
+            productItem.Price = model.Price;
+            productItem.SKU = model.SKU;
+            productItem.QuantityInStock = model.QuantityInStock;
+
+            int? discountRate = await GetPromotionDiscountRateByIdAsync(model.PromotionId) ?? 0;
+
+            productItem.DiscountedPrice = ApplyPromotionToProduct(model.Price, discountRate);
+        }
+
+        private async Task UpdateProductCategory(Product product, int newCategoryId)
+        {
+            ProductCategory? existingProductCategory = product.ProductCategories.FirstOrDefault();
+
+            if (existingProductCategory == null || existingProductCategory.CategoryId != newCategoryId)
+            {
+                if (existingProductCategory != null)
+                {
+                    context.ProductCategories.Remove(existingProductCategory);
+                }
+
+                product.ProductCategories.Add(new ProductCategory()
+                { ProductId = product.Id, CategoryId = newCategoryId });
+            }
+        }
+        private async Task UpdateProductPromotion(Product product, int newPromotionId)
+        {
+            ProductPromotion? existingProductPromotion = product.ProductPromotions.FirstOrDefault();
+            if (existingProductPromotion == null || existingProductPromotion.PromotionId != newPromotionId)
+            {
+                if (existingProductPromotion != null)
+                {
+                    context.ProductPromotions.Remove(existingProductPromotion);
+                }
+                product.ProductPromotions.Add(new ProductPromotion()
+                { ProductId = product.Id, PromotionId = newPromotionId });
+            }
+        }
+
+        private List<int> ParseImagesForDeletion(string imagesForDelete)
+        {
+            if (string.IsNullOrWhiteSpace(imagesForDelete))
+            {
+                return new List<int>();
+            }
+
+            return imagesForDelete
+        .Split(',')
+        .Select(id => int.TryParse(id, out var result) ? (int?)result : null)
+        .Where(id => id.HasValue)
+        .Select(id => id.Value)
+        .ToList();
+        }
+
+        private async void HandleImages(ProductEditFormModel model, ProductItem productItem)
+        {
+            List<int> imagesIdsForDeletion = ParseImagesForDeletion(model.ImagesForDelete);
+            imageService.DeleteProductImages(imagesIdsForDeletion, productItem.Id);
+
+            ICollection<ProductImage> newImages = imageService.CreateProductImages(model.NewAddedImages, productItem.Id);
+            productItem.ProductItemImages.AddRange(newImages);
         }
 
         private Dictionary<string, List<string>> CreateVariationsDictionary(IEnumerable<VariationViewModel> variations)
