@@ -17,6 +17,7 @@ using RandomShop.Services.Promotions;
 using Microsoft.Build.Evaluation;
 using RandomShop.Services.Images;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Linq;
 
 
 namespace RandomShop.Services.Products
@@ -79,6 +80,7 @@ namespace RandomShop.Services.Products
             }
         }
 
+        //Check if current user is able to edit the product?.
         public async Task<int> EditProduct(ProductEditFormModel model)
         {
             ProductItem? modelForedit = await GetProductItemQuery()
@@ -98,8 +100,10 @@ namespace RandomShop.Services.Products
                 //Update promotion
                 await UpdateProductPromotion(modelForedit.Product, model.PromotionId);
 
-                //Save changes
+                //Update variations and options
+                await UpdateVariationsAndOptions(model.SelectedVariationOptions, modelForedit.Id);
 
+                //Save changes
                 await context.SaveChangesAsync();
             }
             catch (Exception ex)
@@ -109,6 +113,57 @@ namespace RandomShop.Services.Products
             }
 
             return modelForedit.Id;
+        }
+
+        private async void UpdateVariationsAndOptions(Dictionary<int, int?> variations, int productItemId)
+        {
+            // Filter out null values (ensures only selected variation options are used)
+            //Key == VariationId and Value == VariationOptionId
+            Dictionary<int, int?> filteredVariations = variations
+                .Where(v => v.Value != null)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+
+            // Extract all non-null VariationOption Id's values- these are the selected options
+            List<int> variationOptionIds = filteredVariations.Values
+                .Where(v => v.HasValue)
+                .Select(v => v.Value)
+                .ToList();
+
+
+            // Query database for matching ProductConfigurations- we only need to update existing ones
+            List<ProductConfiguration> existingProductConfigurations = await this.context.ProductConfigurations
+                .Where(pc => pc.ProductItemId == productItemId).ToListAsync();
+
+            var productConfigurationsForDeletion = new List<ProductConfiguration>();
+
+            foreach (var productConfiguration in existingProductConfigurations)
+            {
+                if (!variationOptionIds.Contains(productConfiguration.VariationOptionId))
+                {
+                    productConfigurationsForDeletion.Add(productConfiguration);
+                }
+            }
+
+            this.context.ProductConfigurations.RemoveRange(productConfigurationsForDeletion);
+
+            List<ProductConfiguration> newProductConfigurations = new List<ProductConfiguration>();
+
+            foreach (var variationOptionId in variationOptionIds)
+            {
+                if (!existingProductConfigurations.Select(x => x.VariationOptionId).Contains(variationOptionId))
+                {
+                    newProductConfigurations.Add(new ProductConfiguration()
+                    {
+                        ProductItemId = productItemId,
+                        VariationOptionId = variationOptionId
+                    });
+
+                }
+            }
+
+            await this.context.ProductConfigurations.AddRangeAsync(newProductConfigurations);
+            await this.context.SaveChangesAsync();
         }
 
         public async Task<ProductViewModel> GetProductById(int productId)

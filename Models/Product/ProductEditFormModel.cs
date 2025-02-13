@@ -47,5 +47,7 @@ public class ProductEditFormModel
 
     public ICollection<VariationOptionViewModel> AllVariationOptions { get; set; } = new List<VariationOptionViewModel>();
 
-    public List<VariationOptionFormViewModel> SelectedVariationOptions { get; set; } = new List<VariationOptionFormViewModel>();
+    // public List<VariationOptionFormViewModel> SelectedVariationOptions { get; set; } = new List<VariationOptionFormViewModel>();
+
+    public Dictionary<int, int?> SelectedVariationOptions { get; set; } = new Dictionary<int, int?>();
 }
