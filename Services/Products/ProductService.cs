@@ -117,63 +117,37 @@ namespace RandomShop.Services.Products
 
         private async Task UpdateVariationsAndOptions(Dictionary<int, int?> variations, int productItemId)
         {
-            // Filter out null values (ensures only selected variation options are used)
-            //Key == VariationId and Value == VariationOptionId
-            Dictionary<int, int?> filteredVariations = variations
-                .Where(v => v.Value != null)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-            // Extract all non-null VariationOption Id's values- these are the selected options
-            List<int> variationOptionIds = filteredVariations.Values
-                .Where(v => v.HasValue)
-                .Select(v => v.Value)
-                .ToList();
-
-            // Query database for matching ProductConfigurations- we only need to update existing ones
-            List<ProductConfiguration> existingProductConfigurations = await this.context.ProductConfigurations
-                .Where(pc => pc.ProductItemId == productItemId).ToListAsync();
-
-            await RemoveVariationsWhichAreNoNeeded(existingProductConfigurations, variationOptionIds);
-            await AddNewProductConfigurations(variationOptionIds, existingProductConfigurations, productItemId);
-
-            await this.context.SaveChangesAsync();
-        }
-
-        private async Task AddNewProductConfigurations(List<int> variationOptionIds, List<ProductConfiguration> existingProductConfigurations, int productItemId)
-        {
-            List<ProductConfiguration> newProductConfigurations = new List<ProductConfiguration>();
-
-            foreach (var variationOptionId in variationOptionIds)
+            try
             {
-                if (!existingProductConfigurations.Select(x => x.VariationOptionId).Contains(variationOptionId))
-                {
-                    newProductConfigurations.Add(new ProductConfiguration()
-                    {
-                        ProductItemId = productItemId,
-                        VariationOptionId = variationOptionId
-                    });
+                // Filter out null values (ensures only selected variation options are used)
+                //Key == VariationId and Value == VariationOptionId
+                Dictionary<int, int?> filteredVariations = variations
+                    .Where(v => v.Value != null)
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
-                }
+                // Extract all non-null VariationOption Id's values- these are the selected options
+                List<int> variationOptionIds = filteredVariations.Values
+                    .Where(v => v.HasValue)
+                    .Select(v => v.Value)
+                    .ToList();
+
+                // Query database for matching ProductConfigurations- we only need to update existing ones
+                List<ProductConfiguration> existingProductConfigurations = await this.context.ProductConfigurations
+                    .Where(pc => pc.ProductItemId == productItemId).ToListAsync();
+
+                await RemoveVariationsWhichAreNoNeeded(existingProductConfigurations, variationOptionIds);
+                await AddNewProductConfigurations(variationOptionIds, existingProductConfigurations, productItemId);
+
+                await this.context.SaveChangesAsync();
             }
-
-            await this.context.ProductConfigurations.AddRangeAsync(newProductConfigurations);
-        }
-
-        private Task RemoveVariationsWhichAreNoNeeded(List<ProductConfiguration> existingProductConfigurations, List<int> variationOptionIds)
-        {
-            var productConfigurationsForDeletion = new List<ProductConfiguration>();
-
-            foreach (var productConfiguration in existingProductConfigurations)
+            catch (Exception ex)
             {
-                if (!variationOptionIds.Contains(productConfiguration.VariationOptionId))
-                {
-                    productConfigurationsForDeletion.Add(productConfiguration);
-                }
+                // Log the error (assuming you have a logging system)
+                Console.WriteLine($"Error while updating variations for ProductItemId {productItemId}: {ex.Message}");
+
+                // Optionally, rethrow the exception if you want the calling method to handle it
+                throw;
             }
-
-            this.context.ProductConfigurations.RemoveRange(productConfigurationsForDeletion);
-
-            return Task.CompletedTask;
         }
 
         public async Task<ProductViewModel> GetProductById(int productId)
@@ -572,6 +546,43 @@ namespace RandomShop.Services.Products
             int? discountRate = await GetPromotionDiscountRateByIdAsync(model.PromotionId) ?? 0;
 
             productItem.DiscountedPrice = ApplyPromotionToProduct(model.Price, discountRate);
+        }
+
+        private async Task AddNewProductConfigurations(List<int> variationOptionIds, List<ProductConfiguration> existingProductConfigurations, int productItemId)
+        {
+            List<ProductConfiguration> newProductConfigurations = new List<ProductConfiguration>();
+
+            foreach (var variationOptionId in variationOptionIds)
+            {
+                if (!existingProductConfigurations.Select(x => x.VariationOptionId).Contains(variationOptionId))
+                {
+                    newProductConfigurations.Add(new ProductConfiguration()
+                    {
+                        ProductItemId = productItemId,
+                        VariationOptionId = variationOptionId
+                    });
+
+                }
+            }
+
+            await this.context.ProductConfigurations.AddRangeAsync(newProductConfigurations);
+        }
+
+        private Task RemoveVariationsWhichAreNoNeeded(List<ProductConfiguration> existingProductConfigurations, List<int> variationOptionIds)
+        {
+            var productConfigurationsForDeletion = new List<ProductConfiguration>();
+
+            foreach (var productConfiguration in existingProductConfigurations)
+            {
+                if (!variationOptionIds.Contains(productConfiguration.VariationOptionId))
+                {
+                    productConfigurationsForDeletion.Add(productConfiguration);
+                }
+            }
+
+            this.context.ProductConfigurations.RemoveRange(productConfigurationsForDeletion);
+
+            return Task.CompletedTask;
         }
 
         private async Task UpdateProductCategory(Product product, int newCategoryId)
