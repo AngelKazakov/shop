@@ -24,5 +24,7 @@ namespace RandomShop.Data.Models
         public ICollection<ProductPromotion> ProductPromotions { get; set; } = new List<ProductPromotion>();
 
         public ICollection<ProductCategory> ProductCategories { get; set; } = new List<ProductCategory>();
+
+        public ICollection<UserFavoriteProduct> UserFavoriteProducts { get; set; } = new HashSet<UserFavoriteProduct>();
     }
 }

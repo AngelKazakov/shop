@@ -57,6 +57,8 @@ namespace RandomShop.Data
 
         public virtual DbSet<ProductCategory> ProductCategories { get; init; }
 
+        public virtual DbSet<UserFavoriteProduct> UserFavoriteProducts { get; init; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -120,6 +122,15 @@ namespace RandomShop.Data
              .HasForeignKey<ShoppingCart>(sc => sc.UserId);
 
             builder.Entity<ProductCategory>().HasKey(x => new { x.ProductId, x.CategoryId });
+
+            builder.Entity<UserFavoriteProduct>()
+                .HasOne(f => f.Product)
+                .WithMany(p => p.UserFavoriteProducts)
+                .HasForeignKey(x => x.ProductId);
+
+            builder.Entity<UserFavoriteProduct>()
+                .HasOne(f => f.User).WithMany(u => u.UserFavoriteProducts)
+                .HasForeignKey(f => f.UserId);
         }
     }
 }

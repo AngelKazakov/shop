@@ -25,5 +25,6 @@ namespace RandomShop.Data.Models
 
         public ICollection<UserPaymentMethod> UserPaymentMethods { get; set; } = new List<UserPaymentMethod>();
 
+        public ICollection<UserFavoriteProduct> UserFavoriteProducts { get; set; } = new HashSet<UserFavoriteProduct>();
     }
 }
