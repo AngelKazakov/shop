@@ -8,6 +8,9 @@ namespace RandomShop.Models.Product
 {
     public class ProductAddFormModel
     {
+        //Check if this Id is correct?.
+        public int Id { get; set; }
+
         [Required]
         [StringLength(DataConstants.Product.nameMaxLength, MinimumLength = DataConstants.Product.nameMinLength, ErrorMessage = DataConstants.Product.productNameErrorMessage)]
         public string Name { get; set; }
