@@ -9,15 +9,15 @@ using RandomShop.Services.Categories;
 using System.Linq.Dynamic.Core;
 using System.Reflection;
 using NuGet.Packaging;
-using RandomShop.Infrastructure;
 using RandomShop.Models.Variation;
 using RandomShop.Services.Variation;
-using System.Security.Cryptography.Xml;
 using RandomShop.Services.Promotions;
-using Microsoft.Build.Evaluation;
 using RandomShop.Services.Images;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Linq;
+using Microsoft.AspNetCore.Identity;
+using RandomShop.Services.User;
+using System.Threading.Tasks;
+using System.Security.Claims;
 
 
 namespace RandomShop.Services.Products
@@ -30,9 +30,11 @@ namespace RandomShop.Services.Products
         private readonly IImageService imageService;
         private readonly IVariationService variationService;
         private readonly IPromotionService promotionService;
+        private readonly IHttpContextAccessor httpContextAccessor;
+
 
         public ProductService(IMapper mapper, ShopContext context, ICategoryService categoryService,
-            IVariationService variationService, IPromotionService promotionService, IImageService imageService)
+            IVariationService variationService, IPromotionService promotionService, IImageService imageService, IHttpContextAccessor httpContextAccessor)
         {
             this.mapper = mapper;
             this.context = context;
@@ -40,6 +42,7 @@ namespace RandomShop.Services.Products
             this.variationService = variationService;
             this.promotionService = promotionService;
             this.imageService = imageService;
+            this.httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<ProductAddFormModel> InitProductAddFormModel(int categoryId)
@@ -50,6 +53,11 @@ namespace RandomShop.Services.Products
                 VariationOptions = await this.variationService.GetVariationOptionBySpecifyCategory(categoryId),
             };
         }
+
+        //private string? GetCurrentUserId()
+        //{
+        //    return httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        //}
 
         public async Task<int> AddProduct(ProductAddFormModel model)
         {
@@ -150,7 +158,7 @@ namespace RandomShop.Services.Products
             }
         }
 
-        public async Task<ProductViewModel> GetProductById(int productId)
+        public async Task<ProductViewModel> GetProductById(int productId, string? userId = null)
         {
             ProductItem? productItem = await
                 GetProductItemQuery()
@@ -163,7 +171,7 @@ namespace RandomShop.Services.Products
                 throw new NotFoundException("Product not found.");
             }
 
-            ProductViewModel productViewModel = await CreateProductViewModel(productItem);
+            ProductViewModel productViewModel = await CreateProductViewModel(productItem, userId);
             return productViewModel;
         }
 
@@ -240,10 +248,11 @@ namespace RandomShop.Services.Products
                     .Where(x => x.QuantityInStock > 0)
                       .Include(x => x.Product)
                       .Where(x => EF.Functions.Like(x.Product.Name.ToLower(), lowerProductName))
-                      .Select(x => CreateProductListViewModel(x.Product, x))
+                      //.Select(x => CreateProductListViewModel(x.Product, x))
                       .ToListAsync();
 
-                return products;
+                // return products;
+                return MapToViewModels(products);
             }
             catch (Exception ex)
             {
@@ -262,15 +271,21 @@ namespace RandomShop.Services.Products
                      .ThenInclude(p => p.Promotion)
                      .OrderByDescending(x => x.CreatedOnDate)
                      .Take(3)
-                     .Select(x => CreateProductListViewModel(x.Product, x))
+                     //.Select(x => CreateProductListViewModel(x.Product, x))
                      .ToListAsync();
 
-                return products;
+                // return products;
+                return MapToViewModels(products);
             }
             catch (Exception ex)
             {
                 throw new ApplicationException("An error occurred while getting latest products.", ex);
             }
+        }
+
+        private List<ProductListViewModel> MapToViewModels(List<ProductItem> productItems)
+        {
+            return productItems.Select(x => CreateProductListViewModel(x.Product, x)).ToList();
         }
 
         public async Task<ICollection<ProductListViewModel>> GetAllProducts()
@@ -279,12 +294,16 @@ namespace RandomShop.Services.Products
             //Separate applying promotion from creating ProductViewModel and ProductListViewModel.
             try
             {
-                List<ProductListViewModel> products = await
-                    GetProductItemQuery().Where(x => x.QuantityInStock > 0)
-                                    .Select(x => CreateProductListViewModel(x.Product, x))
-                                    .ToListAsync();
+                // List<ProductListViewModel> products = await
+                //     GetProductItemQuery().Where(x => x.QuantityInStock > 0)
+                //                     .Select(x => CreateProductListViewModel(x.Product, x))
+                //                     .ToListAsync();
 
-                return products;
+                var products2 = await GetProductItemQuery().Where(x => x.QuantityInStock > 0)
+                    .ToListAsync();
+
+                // return products;
+                return MapToViewModels(products2);
             }
             catch (Exception ex)
             {
@@ -296,14 +315,15 @@ namespace RandomShop.Services.Products
         {
             try
             {
-                List<ProductListViewModel> products = await
-                    GetProductItemQuery()
-                    .AsNoTracking()
-                    .Where(p => p.Product.ProductCategories.Any(pc => pc.CategoryId == categoryId))
-                    .Select(x => CreateProductListViewModel(x.Product, x))
-                    .ToListAsync();
+                var products = await
+                     GetProductItemQuery()
+                     .AsNoTracking()
+                     .Where(p => p.Product.ProductCategories.Any(pc => pc.CategoryId == categoryId))
+                     //.Select(x => CreateProductListViewModel(x.Product, x))
+                     .ToListAsync();
 
-                return products;
+                // return products;
+                return MapToViewModels(products);
             }
             catch (Exception ex)
             {
@@ -319,10 +339,11 @@ namespace RandomShop.Services.Products
                   GetProductItemQuery()
                   .AsNoTracking()
                      .Where(x => x.Product.ProductPromotions.Any(pp => pp.PromotionId == promotionId))
-                     .Select(x => CreateProductListViewModel(x.Product, x))
+                     // .Select(x => CreateProductListViewModel(x.Product, x))
                      .ToListAsync();
 
-                return products;
+                // return products
+                return MapToViewModels(products);
 
             }
             catch (Exception ex)
@@ -496,7 +517,7 @@ namespace RandomShop.Services.Products
             }
         }
 
-        private async Task<ProductViewModel> CreateProductViewModel(ProductItem productItem)
+        private async Task<ProductViewModel> CreateProductViewModel(ProductItem productItem, string? userId = null)
         {
             //Log the try-catch exceptions.
             ProductViewModel productViewModel = new ProductViewModel()
@@ -516,20 +537,24 @@ namespace RandomShop.Services.Products
                 }).ToList(),
                 //Images = ImageMapper.ReadImagesAsByteArray(productItem.ProductId),
                 Images = await imageService.ReadImagesAsByteArrayAsync(productItem.ProductId),
+                IsFavorite = userId != null && productItem.Product.UserFavoriteProducts.Any(fav => fav.UserId == userId && fav.ProductId == productItem.ProductId),
             };
 
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);
-
             return productViewModel;
         }
 
-        private static ProductListViewModel CreateProductListViewModel(Product product, ProductItem? productItem)
+        private ProductListViewModel CreateProductListViewModel(Product product, ProductItem? productItem, string userId = null)
         {
+            // string? userId = GetCurrentUserId();
+
+            //Pass userId in this method as parameter, also pass it in GetAllProducts method and get userId from Product controller and pass it.
             var productListViewModel = new ProductListViewModel()
             {
                 Id = product.Id,
                 Name = product.Name,
                 Price = productItem?.DiscountedPrice ?? productItem.Price,
+                IsFavorite = product.UserFavoriteProducts.Any(fav => fav.UserId == userId && fav.ProductId == product.Id),
             };
 
             return productListViewModel;
@@ -762,6 +787,7 @@ namespace RandomShop.Services.Products
         {
             return this.context.ProductItems
                                .Include(x => x.Product)
+                               .Include(x => x.Product.UserFavoriteProducts)
                                .Include(x => x.Product.ProductCategories)
                                .ThenInclude(x => x.Category)
                                .Include(x => x.Product.ProductImages)

@@ -5,7 +5,7 @@ namespace RandomShop.Services.Products
 {
     public interface IProductService
     {
-        public Task<ProductViewModel> GetProductById(int productId);
+        public Task<ProductViewModel> GetProductById(int productId, string? userId = null);
 
         public Task<bool> DeleteProduct(int productId);
 

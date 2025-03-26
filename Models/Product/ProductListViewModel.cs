@@ -9,5 +9,7 @@
         public decimal Price { get; set; }
 
         public bool Selected { get; set; }
+
+        public bool IsFavorite { get; set; }
     }
 }

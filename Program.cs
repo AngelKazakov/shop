@@ -2,11 +2,13 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
+using RandomShop.Data.Models;
 using RandomShop.Infrastructure;
 using RandomShop.Services.Categories;
 using RandomShop.Services.Images;
 using RandomShop.Services.Products;
 using RandomShop.Services.Promotions;
+using RandomShop.Services.User;
 using RandomShop.Services.Variation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +19,7 @@ builder.Services.AddDbContext<ShopContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services.AddDefaultIdentity<RandomShop.Data.Models.User>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ShopContext>();
 builder.Services.AddControllersWithViews();
 
@@ -27,6 +29,8 @@ builder.Services.AddTransient<IProductService, ProductService>();
 builder.Services.AddTransient<IPromotionService, PromotionService>();
 builder.Services.AddTransient<IVariationService, VariationService>();
 builder.Services.AddTransient<IImageService, ImageService>();
+builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

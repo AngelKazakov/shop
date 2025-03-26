@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RandomShop.Infrastructure;
 using RandomShop.Models.Product;
 using RandomShop.Models.Variation;
 using RandomShop.Services.Products;
@@ -67,7 +68,9 @@ namespace RandomShop.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
-            ProductViewModel productDetails = await this.productService.GetProductById(id);
+            string? userId = this.User.Id();
+
+            ProductViewModel productDetails = await this.productService.GetProductById(id, userId);
 
             if (productDetails is null)
             {
