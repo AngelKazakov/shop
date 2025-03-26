@@ -283,12 +283,12 @@ namespace RandomShop.Services.Products
             }
         }
 
-        private List<ProductListViewModel> MapToViewModels(List<ProductItem> productItems)
+        private List<ProductListViewModel> MapToViewModels(List<ProductItem> productItems, string? userId = null)
         {
-            return productItems.Select(x => CreateProductListViewModel(x.Product, x)).ToList();
+            return productItems.Select(x => CreateProductListViewModel(x.Product, x, userId)).ToList();
         }
 
-        public async Task<ICollection<ProductListViewModel>> GetAllProducts()
+        public async Task<ICollection<ProductListViewModel>> GetAllProducts(string? userId = null)
         {
             //Apply the promotion after fetching products from database to simplify LINQ query.
             //Separate applying promotion from creating ProductViewModel and ProductListViewModel.
@@ -299,11 +299,11 @@ namespace RandomShop.Services.Products
                 //                     .Select(x => CreateProductListViewModel(x.Product, x))
                 //                     .ToListAsync();
 
-                var products2 = await GetProductItemQuery().Where(x => x.QuantityInStock > 0)
+                var products = await GetProductItemQuery().Where(x => x.QuantityInStock > 0)
                     .ToListAsync();
 
                 // return products;
-                return MapToViewModels(products2);
+                return MapToViewModels(products, userId);
             }
             catch (Exception ex)
             {
@@ -546,15 +546,16 @@ namespace RandomShop.Services.Products
 
         private ProductListViewModel CreateProductListViewModel(Product product, ProductItem? productItem, string userId = null)
         {
-            // string? userId = GetCurrentUserId();
+            bool isFavorite = userId != null &&
+                      product.UserFavoriteProducts != null &&
+                      product.UserFavoriteProducts.Any(fav => fav.UserId == userId && fav.ProductId == product.Id);
 
-            //Pass userId in this method as parameter, also pass it in GetAllProducts method and get userId from Product controller and pass it.
             var productListViewModel = new ProductListViewModel()
             {
                 Id = product.Id,
                 Name = product.Name,
-                Price = productItem?.DiscountedPrice ?? productItem.Price,
-                IsFavorite = product.UserFavoriteProducts.Any(fav => fav.UserId == userId && fav.ProductId == product.Id),
+                Price = productItem?.DiscountedPrice > 0 ? productItem.DiscountedPrice : productItem.Price,
+                IsFavorite = isFavorite
             };
 
             return productListViewModel;

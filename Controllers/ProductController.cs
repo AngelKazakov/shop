@@ -92,7 +92,9 @@ namespace RandomShop.Controllers
         [HttpGet]
         public async Task<IActionResult> All()
         {
-            ICollection<ProductListViewModel> productList = await this.productService.GetAllProducts();
+            string? userId = this.User?.Id();
+
+            ICollection<ProductListViewModel> productList = await this.productService.GetAllProducts(userId);
 
             return View(productList);
         }

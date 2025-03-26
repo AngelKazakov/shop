@@ -17,7 +17,7 @@ namespace RandomShop.Services.Products
 
         public Task<ICollection<ProductListViewModel>> GetLatestAddedProducts();
 
-        public Task<ICollection<ProductListViewModel>> GetAllProducts();
+        public Task<ICollection<ProductListViewModel>> GetAllProducts(string? userId = null);
 
         public Task<ICollection<ProductListViewModel>> GetProductsByCategory(int categoryId);
 
