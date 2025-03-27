@@ -309,7 +309,7 @@ namespace RandomShop.Services.Products
 
         private IQueryable<ProductListViewModel> GetProductListProjection(string? userId = null)
         {
-            var productItems = this.context.ProductItems.AsNoTracking().Where(x => x.QuantityInStock > 0)
+            IQueryable<ProductListViewModel>? productItems = this.context.ProductItems.AsNoTracking().Where(x => x.QuantityInStock > 0)
                 .Select(x => new ProductListViewModel()
                 {
                     Id = x.Product.Id,
@@ -325,15 +325,10 @@ namespace RandomShop.Services.Products
         {
             try
             {
-                var products = await
-                     GetProductItemQuery()
-                     .AsNoTracking()
-                     .Where(p => p.Product.ProductCategories.Any(pc => pc.CategoryId == categoryId))
-                     //.Select(x => CreateProductListViewModel(x.Product, x))
-                     .ToListAsync();
+                List<ProductListViewModel>? products = await GetProductListProjection()
+                    .Where(p => this.context.ProductCategories.Any(pc => pc.CategoryId == categoryId && pc.ProductId == p.Id)).ToListAsync();
 
-                // return products;
-                return MapToViewModels(products);
+                return products;
             }
             catch (Exception ex)
             {
