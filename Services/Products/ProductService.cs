@@ -340,16 +340,10 @@ namespace RandomShop.Services.Products
         {
             try
             {
-                var products = await
-                  GetProductItemQuery()
-                  .AsNoTracking()
-                     .Where(x => x.Product.ProductPromotions.Any(pp => pp.PromotionId == promotionId))
-                     // .Select(x => CreateProductListViewModel(x.Product, x))
-                     .ToListAsync();
+                List<ProductListViewModel>? products = await GetProductListProjection()
+                   .Where(p => this.context.ProductPromotions.Any(pp => pp.PromotionId == promotionId && pp.ProductId == p.Id)).ToListAsync();
 
-                // return products
-                return MapToViewModels(products);
-
+                return products;
             }
             catch (Exception ex)
             {
