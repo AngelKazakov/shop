@@ -294,21 +294,31 @@ namespace RandomShop.Services.Products
             //Separate applying promotion from creating ProductViewModel and ProductListViewModel.
             try
             {
-                // List<ProductListViewModel> products = await
-                //     GetProductItemQuery().Where(x => x.QuantityInStock > 0)
-                //                     .Select(x => CreateProductListViewModel(x.Product, x))
-                //                     .ToListAsync();
+                // var products = await GetProductItemQuery().Where(x => x.QuantityInStock > 0)
+                //     .ToListAsync();
+                //
+                // return MapToViewModels(products, userId);
 
-                var products = await GetProductItemQuery().Where(x => x.QuantityInStock > 0)
-                    .ToListAsync();
-
-                // return products;
-                return MapToViewModels(products, userId);
+                return await GetProductListProjection(userId).ToListAsync();
             }
             catch (Exception ex)
             {
                 throw new ApplicationException("An error occurred while fetching all products.", ex);
             }
+        }
+
+        private IQueryable<ProductListViewModel> GetProductListProjection(string? userId = null)
+        {
+            var productItems = this.context.ProductItems.AsNoTracking().Where(x => x.QuantityInStock > 0)
+                .Select(x => new ProductListViewModel()
+                {
+                    Id = x.Product.Id,
+                    Name = x.Product.Name,
+                    Price = x.DiscountedPrice > 0 ? x.DiscountedPrice : x.Price,
+                    IsFavorite = userId != null && x.Product.UserFavoriteProducts.Any(fav => fav.UserId == userId && fav.ProductId == x.Product.Id),
+                });
+
+            return productItems;
         }
 
         public async Task<ICollection<ProductListViewModel>> GetProductsByCategory(int categoryId)
