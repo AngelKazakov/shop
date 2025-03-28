@@ -244,15 +244,18 @@ namespace RandomShop.Services.Products
 
             try
             {
-                var products = await this.context.ProductItems.AsNoTracking()
-                    .Where(x => x.QuantityInStock > 0)
-                      .Include(x => x.Product)
-                      .Where(x => EF.Functions.Like(x.Product.Name.ToLower(), lowerProductName))
-                      //.Select(x => CreateProductListViewModel(x.Product, x))
-                      .ToListAsync();
+                List<ProductListViewModel>? filteredProductsByName = await this.context.ProductItems.Where(x => x.QuantityInStock > 0 &&
+                EF.Functions.Like(x.Product.Name.ToLower(), $"%{lowerProductName}%"))
+                    .Select(x => new ProductListViewModel()
+                    {
+                        Id = x.ProductId,
+                        Name = x.Product.Name,
+                        Price = x.DiscountedPrice > 0 ? x.DiscountedPrice : x.Price,
+                        IsFavorite = false,
+                    })
+                    .ToListAsync();
 
-                // return products;
-                return MapToViewModels(products);
+                return filteredProductsByName;
             }
             catch (Exception ex)
             {
@@ -294,12 +297,9 @@ namespace RandomShop.Services.Products
             //Separate applying promotion from creating ProductViewModel and ProductListViewModel.
             try
             {
-                // var products = await GetProductItemQuery().Where(x => x.QuantityInStock > 0)
-                //     .ToListAsync();
-                //
-                // return MapToViewModels(products, userId);
+                List<ProductListViewModel>? products = await GetProductListProjection(userId).ToListAsync();
 
-                return await GetProductListProjection(userId).ToListAsync();
+                return products;
             }
             catch (Exception ex)
             {
