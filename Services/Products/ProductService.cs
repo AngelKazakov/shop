@@ -230,13 +230,13 @@ namespace RandomShop.Services.Products
             return model;
         }
 
-        public async Task<Product> GetProductByName(string productName)
-        {
-            Product? product =
-                await this.context.Products.Where(x => x.Name.Contains(productName)).FirstOrDefaultAsync();
-
-            return product;
-        }
+        //  public async Task<Product> GetProductByName(string productName)
+        //  {
+        //      Product? product =
+        //          await this.context.Products.Where(x => x.Name.Contains(productName)).FirstOrDefaultAsync();
+        //
+        //      return product;
+        //  }
 
         public async Task<ICollection<ProductListViewModel>> GetProductsByName(string productName)
         {
@@ -267,18 +267,20 @@ namespace RandomShop.Services.Products
         {
             try
             {
-                var products = await this.context.ProductItems.AsNoTracking()
+                List<ProductListViewModel>? latestProducts = await this.context.ProductItems
                     .Where(x => x.QuantityInStock > 0)
-                     .Include(x => x.Product)
-                     .Include(pp => pp.Product.ProductPromotions)
-                     .ThenInclude(p => p.Promotion)
-                     .OrderByDescending(x => x.CreatedOnDate)
-                     .Take(3)
-                     //.Select(x => CreateProductListViewModel(x.Product, x))
-                     .ToListAsync();
+                    .OrderByDescending(x => x.CreatedOnDate)
+                    .Take(3)
+                    .Select(x => new ProductListViewModel()
+                    {
+                        Id = x.ProductId,
+                        Name = x.Product.Name,
+                        Price = x.DiscountedPrice > 0 ? x.DiscountedPrice : x.Price,
+                        IsFavorite = false,
+                    })
+                    .ToListAsync();
 
-                // return products;
-                return MapToViewModels(products);
+                return latestProducts;
             }
             catch (Exception ex)
             {
