@@ -178,7 +178,7 @@ namespace RandomShop.Services.Products
         public async Task<ProductEditFormModel> InitProductEditFormModel(int productId)
         {
             ProductDetailsDto? productDetails = await
-              GetProductItemQuery().AsNoTracking()
+            this.context.ProductItems.AsNoTracking()
                 .Where(x => x.Id == productId)
                 .Select(x => new ProductDetailsDto
                 {
@@ -229,14 +229,6 @@ namespace RandomShop.Services.Products
 
             return model;
         }
-
-        //  public async Task<Product> GetProductByName(string productName)
-        //  {
-        //      Product? product =
-        //          await this.context.Products.Where(x => x.Name.Contains(productName)).FirstOrDefaultAsync();
-        //
-        //      return product;
-        //  }
 
         public async Task<ICollection<ProductListViewModel>> GetProductsByName(string productName)
         {
