@@ -9,6 +9,7 @@ namespace RandomShop.Controllers
     {
         private readonly IPromotionService promotionService;
         private readonly IMapper mapper;
+
         public PromotionController(IPromotionService promotionService, IMapper mapper)
         {
             this.promotionService = promotionService;

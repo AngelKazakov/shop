@@ -34,7 +34,8 @@ namespace RandomShop.Services.Products
 
 
         public ProductService(IMapper mapper, ShopContext context, ICategoryService categoryService,
-            IVariationService variationService, IPromotionService promotionService, IImageService imageService, IHttpContextAccessor httpContextAccessor)
+            IVariationService variationService, IPromotionService promotionService, IImageService imageService,
+            IHttpContextAccessor httpContextAccessor)
         {
             this.mapper = mapper;
             this.context = context;
@@ -92,7 +93,8 @@ namespace RandomShop.Services.Products
         public async Task<int> EditProduct(ProductEditFormModel model)
         {
             ProductItem? modelForedit = await GetProductItemQuery()
-                .FirstOrDefaultAsync(x => x.Id == model.Id) ?? throw new KeyNotFoundException($"Product with ID {model.Id} not found.");
+                                            .FirstOrDefaultAsync(x => x.Id == model.Id) ??
+                                        throw new KeyNotFoundException($"Product with ID {model.Id} not found.");
 
             try
             {
@@ -162,9 +164,9 @@ namespace RandomShop.Services.Products
         {
             ProductItem? productItem = await
                 GetProductItemQuery()
-                  .AsNoTracking()
-                 .Where(x => x.Id == productId)
-                 .FirstOrDefaultAsync();
+                    .AsNoTracking()
+                    .Where(x => x.Id == productId)
+                    .FirstOrDefaultAsync();
 
             if (productItem == null)
             {
@@ -178,24 +180,24 @@ namespace RandomShop.Services.Products
         public async Task<ProductEditFormModel> InitProductEditFormModel(int productId)
         {
             ProductDetailsDto? productDetails = await
-            this.context.ProductItems.AsNoTracking()
-                .Where(x => x.Id == productId)
-                .Select(x => new ProductDetailsDto
-                {
-                    Price = x.Price,
-                    Name = x.Product.Name,
-                    Description = x.Product.Description,
-                    QuantityInStock = x.QuantityInStock,
-                    SKU = x.SKU,
-                    CategoryId = x.Product.ProductCategories.Select(pc => pc.CategoryId).FirstOrDefault(),
-                    PromotionId = x.Product.ProductPromotions.Select(pp => pp.PromotionId).FirstOrDefault(),
-                    ExistingVariationOptions = x.ProductConfigurations.Select(pc => new VariationViewModel
+                this.context.ProductItems.AsNoTracking()
+                    .Where(x => x.Id == productId)
+                    .Select(x => new ProductDetailsDto
                     {
-                        Name = pc.VariationOption.Variation.Name,
-                        Value = pc.VariationOption.Value
-                    }).ToList(),
-                })
-                .FirstOrDefaultAsync();
+                        Price = x.Price,
+                        Name = x.Product.Name,
+                        Description = x.Product.Description,
+                        QuantityInStock = x.QuantityInStock,
+                        SKU = x.SKU,
+                        CategoryId = x.Product.ProductCategories.Select(pc => pc.CategoryId).FirstOrDefault(),
+                        PromotionId = x.Product.ProductPromotions.Select(pp => pp.PromotionId).FirstOrDefault(),
+                        ExistingVariationOptions = x.ProductConfigurations.Select(pc => new VariationViewModel
+                        {
+                            Name = pc.VariationOption.Variation.Name,
+                            Value = pc.VariationOption.Value
+                        }).ToList(),
+                    })
+                    .FirstOrDefaultAsync();
 
             if (productDetails == null)
             {
@@ -207,7 +209,8 @@ namespace RandomShop.Services.Products
             return model;
         }
 
-        private async Task<ProductEditFormModel> CreateProductEditFormModel(int productId, ProductDetailsDto productDetails, bool isAdmin = false)
+        private async Task<ProductEditFormModel> CreateProductEditFormModel(int productId,
+            ProductDetailsDto productDetails, bool isAdmin = false)
         {
             ProductEditFormModel model = new ProductEditFormModel
             {
@@ -218,7 +221,8 @@ namespace RandomShop.Services.Products
                 SKU = productDetails.SKU,
                 QuantityInStock = productDetails.QuantityInStock,
                 Categories = await this.categoryService.GetAllCategories(),
-                CategoryId = productDetails.CategoryId ?? throw new InvalidOperationException("Category ID cannot be null."),
+                CategoryId = productDetails.CategoryId ??
+                             throw new InvalidOperationException("Category ID cannot be null."),
                 // Images = await imageService.ReadImagesAsByteArrayAsync(productId),
                 ExistingImages = await imageService.CreateProductImageViewModelAsync(productId),
                 PromotionId = productDetails.PromotionId ?? 0,
@@ -236,8 +240,9 @@ namespace RandomShop.Services.Products
 
             try
             {
-                List<ProductListViewModel>? filteredProductsByName = await this.context.ProductItems.Where(x => x.QuantityInStock > 0 &&
-                EF.Functions.Like(x.Product.Name.ToLower(), $"%{lowerProductName}%"))
+                List<ProductListViewModel>? filteredProductsByName = await this.context.ProductItems.Where(x =>
+                        x.QuantityInStock > 0 &&
+                        EF.Functions.Like(x.Product.Name.ToLower(), $"%{lowerProductName}%"))
                     .Select(x => new ProductListViewModel()
                     {
                         Id = x.ProductId,
@@ -280,11 +285,6 @@ namespace RandomShop.Services.Products
             }
         }
 
-        private List<ProductListViewModel> MapToViewModels(List<ProductItem> productItems, string? userId = null)
-        {
-            return productItems.Select(x => CreateProductListViewModel(x.Product, x, userId)).ToList();
-        }
-
         public async Task<ICollection<ProductListViewModel>> GetAllProducts(string? userId = null)
         {
             //Apply the promotion after fetching products from database to simplify LINQ query.
@@ -303,13 +303,16 @@ namespace RandomShop.Services.Products
 
         private IQueryable<ProductListViewModel> GetProductListProjection(string? userId = null)
         {
-            IQueryable<ProductListViewModel>? productItems = this.context.ProductItems.AsNoTracking().Where(x => x.QuantityInStock > 0)
+            IQueryable<ProductListViewModel>? productItems = this.context.ProductItems.AsNoTracking()
+                .Where(x => x.QuantityInStock > 0)
                 .Select(x => new ProductListViewModel()
                 {
                     Id = x.Product.Id,
                     Name = x.Product.Name,
                     Price = x.DiscountedPrice > 0 ? x.DiscountedPrice : x.Price,
-                    IsFavorite = userId != null && x.Product.UserFavoriteProducts.Any(fav => fav.UserId == userId && fav.ProductId == x.Product.Id),
+                    IsFavorite = userId != null &&
+                                 x.Product.UserFavoriteProducts.Any(fav =>
+                                     fav.UserId == userId && fav.ProductId == x.Product.Id),
                 });
 
             return productItems;
@@ -320,7 +323,8 @@ namespace RandomShop.Services.Products
             try
             {
                 List<ProductListViewModel>? products = await GetProductListProjection()
-                    .Where(p => this.context.ProductCategories.Any(pc => pc.CategoryId == categoryId && pc.ProductId == p.Id)).ToListAsync();
+                    .Where(p => this.context.ProductCategories.Any(pc =>
+                        pc.CategoryId == categoryId && pc.ProductId == p.Id)).ToListAsync();
 
                 return products;
             }
@@ -335,7 +339,8 @@ namespace RandomShop.Services.Products
             try
             {
                 List<ProductListViewModel>? products = await GetProductListProjection()
-                   .Where(p => this.context.ProductPromotions.Any(pp => pp.PromotionId == promotionId && pp.ProductId == p.Id)).ToListAsync();
+                    .Where(p => this.context.ProductPromotions.Any(pp =>
+                        pp.PromotionId == promotionId && pp.ProductId == p.Id)).ToListAsync();
 
                 return products;
             }
@@ -477,6 +482,7 @@ namespace RandomShop.Services.Products
             await this.context.SaveChangesAsync();
             return true;
         }
+
         public async Task<bool> BulkDeleteProducts(List<int> productIds)
         {
             await using (var transaction = await this.context.Database.BeginTransactionAsync())
@@ -530,28 +536,12 @@ namespace RandomShop.Services.Products
                 }).ToList(),
                 //Images = ImageMapper.ReadImagesAsByteArray(productItem.ProductId),
                 Images = await imageService.ReadImagesAsByteArrayAsync(productItem.ProductId),
-                IsFavorite = userId != null && productItem.Product.UserFavoriteProducts.Any(fav => fav.UserId == userId && fav.ProductId == productItem.ProductId),
+                IsFavorite = userId != null && productItem.Product.UserFavoriteProducts.Any(fav =>
+                    fav.UserId == userId && fav.ProductId == productItem.ProductId),
             };
 
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);
             return productViewModel;
-        }
-
-        private ProductListViewModel CreateProductListViewModel(Product product, ProductItem? productItem, string userId = null)
-        {
-            bool isFavorite = userId != null &&
-                      product.UserFavoriteProducts != null &&
-                      product.UserFavoriteProducts.Any(fav => fav.UserId == userId && fav.ProductId == product.Id);
-
-            var productListViewModel = new ProductListViewModel()
-            {
-                Id = product.Id,
-                Name = product.Name,
-                Price = productItem?.DiscountedPrice > 0 ? productItem.DiscountedPrice : productItem.Price,
-                IsFavorite = isFavorite
-            };
-
-            return productListViewModel;
         }
 
         private async Task UpdateProductDetails(ProductItem productItem, ProductEditFormModel model)
@@ -567,7 +557,8 @@ namespace RandomShop.Services.Products
             productItem.DiscountedPrice = ApplyPromotionToProduct(model.Price, discountRate);
         }
 
-        private async Task AddNewProductConfigurations(List<int> variationOptionIds, List<ProductConfiguration> existingProductConfigurations, int productItemId)
+        private async Task AddNewProductConfigurations(List<int> variationOptionIds,
+            List<ProductConfiguration> existingProductConfigurations, int productItemId)
         {
             List<ProductConfiguration> newProductConfigurations = new List<ProductConfiguration>();
 
@@ -580,14 +571,14 @@ namespace RandomShop.Services.Products
                         ProductItemId = productItemId,
                         VariationOptionId = variationOptionId
                     });
-
                 }
             }
 
             await this.context.ProductConfigurations.AddRangeAsync(newProductConfigurations);
         }
 
-        private Task RemoveVariationsWhichAreNoNeeded(List<ProductConfiguration> existingProductConfigurations, List<int> variationOptionIds)
+        private Task RemoveVariationsWhichAreNoNeeded(List<ProductConfiguration> existingProductConfigurations,
+            List<int> variationOptionIds)
         {
             var productConfigurationsForDeletion = new List<ProductConfiguration>();
 
@@ -619,6 +610,7 @@ namespace RandomShop.Services.Products
                 { ProductId = product.Id, CategoryId = newCategoryId });
             }
         }
+
         private async Task UpdateProductPromotion(Product product, int newPromotionId)
         {
             ProductPromotion? existingProductPromotion = product.ProductPromotions.FirstOrDefault();
@@ -628,6 +620,7 @@ namespace RandomShop.Services.Products
                 {
                     context.ProductPromotions.Remove(existingProductPromotion);
                 }
+
                 product.ProductPromotions.Add(new ProductPromotion()
                 { ProductId = product.Id, PromotionId = newPromotionId });
             }
@@ -641,11 +634,11 @@ namespace RandomShop.Services.Products
             }
 
             return imagesForDelete
-        .Split(',')
-        .Select(id => int.TryParse(id, out var result) ? (int?)result : null)
-        .Where(id => id.HasValue)
-        .Select(id => id.Value)
-        .ToList();
+                .Split(',')
+                .Select(id => int.TryParse(id, out var result) ? (int?)result : null)
+                .Where(id => id.HasValue)
+                .Select(id => id.Value)
+                .ToList();
         }
 
         private async void HandleImages(ProductEditFormModel model, ProductItem productItem)
@@ -653,7 +646,8 @@ namespace RandomShop.Services.Products
             List<int> imagesIdsForDeletion = ParseImagesForDeletion(model.ImagesForDelete);
             imageService.DeleteProductImages(imagesIdsForDeletion, productItem.Id);
 
-            ICollection<ProductImage> newImages = imageService.CreateProductImages(model.NewAddedImages, productItem.Id);
+            ICollection<ProductImage>
+                newImages = imageService.CreateProductImages(model.NewAddedImages, productItem.Id);
             productItem.ProductItemImages.AddRange(newImages);
         }
 
@@ -777,19 +771,20 @@ namespace RandomShop.Services.Products
             await this.context.ProductCategories.AddAsync(new ProductCategory()
             { ProductId = productId, CategoryId = categoryId });
         }
+
         private IQueryable<ProductItem> GetProductItemQuery()
         {
             return this.context.ProductItems
-                               .Include(x => x.Product)
-                               .Include(x => x.Product.UserFavoriteProducts)
-                               .Include(x => x.Product.ProductCategories)
-                               .ThenInclude(x => x.Category)
-                               .Include(x => x.Product.ProductImages)
-                               .Include(x => x.ProductConfigurations)
-                               .ThenInclude(pc => pc.VariationOption)
-                               .ThenInclude(vo => vo.Variation)
-                               .Include(x => x.Product.ProductPromotions)
-                               .ThenInclude(p => p.Promotion);
+                .Include(x => x.Product)
+                .Include(x => x.Product.UserFavoriteProducts)
+                .Include(x => x.Product.ProductCategories)
+                .ThenInclude(x => x.Category)
+                .Include(x => x.Product.ProductImages)
+                .Include(x => x.ProductConfigurations)
+                .ThenInclude(pc => pc.VariationOption)
+                .ThenInclude(vo => vo.Variation)
+                .Include(x => x.Product.ProductPromotions)
+                .ThenInclude(p => p.Promotion);
         }
     }
 }
