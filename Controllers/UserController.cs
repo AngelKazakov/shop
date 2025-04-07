@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using RandomShop.Infrastructure;
+using RandomShop.Models.Product;
 using RandomShop.Services.User;
 
 namespace RandomShop.Controllers
@@ -14,40 +15,23 @@ namespace RandomShop.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> AddFavorite(int productId)
+        public async Task<IActionResult> RemoveFavorite([FromBody] FavoriteActionRequest request)
         {
-            //Check if this type of getting current user Id is working properly.
             string? userId = this.User.Id();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized();
-            }
-
-            bool isAddedToFavorite = await userService.AddProductToFavorite(userId, productId);
-
-            return Ok(new { isFavorite = isAddedToFavorite });
+            bool removed = await userService.RemoveProductFromFavorite(userId, request.ProductId);
+            return Ok(new { isFavorite = !removed ? true : false });
         }
 
         [HttpPost]
-        public async Task<IActionResult> RemoveFavorite(int productId)
+        public async Task<IActionResult> AddFavorite([FromBody] FavoriteActionRequest request)
         {
             string? userId = this.User.Id();
+            if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
-            if (string.IsNullOrEmpty(userId))
-            {
-                return Unauthorized();
-            }
-
-            bool isRemovedFromFavorite = await userService.RemoveProductFromFavorite(userId, productId);
-
-            if (!isRemovedFromFavorite)
-            {
-                return NotFound(new { message = "Favorite product not found or already removed." });
-            }
-
-            return Ok(new { message = "Product removed from favorites." });
-
+            bool added = await userService.AddProductToFavorite(userId, request.ProductId);
+            return Ok(new { isFavorite = added });
         }
     }
 }
