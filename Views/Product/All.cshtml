@@ -128,6 +128,23 @@
         #deleteSelectedForm button[type="submit"]:hover {
             background-color: #c82333;
         }
+
+    .favorite-icon {
+        font-size: 1.5em;
+        cursor: pointer;
+        margin-left: 10px;
+        user-select: none;
+        transition: color 0.3s;
+    }
+
+        .favorite-icon.filled {
+            color: red;
+        }
+
+        .favorite-icon.outlined {
+            color: gray;
+        }
+
 </style>
 
 <div class="product-list-container">
@@ -137,6 +154,7 @@
 
     @if (Model.Any())
     {
+
         @foreach (var product in Model)
         {
             <div class="product-item">
@@ -150,6 +168,11 @@
                     <span class="product-price">$@product.Price.ToString("F2")</span>
                 </div>
 
+                <!-- Favorite Icon -->
+                <span class="favorite-icon @(product.IsFavorite ? "filled" : "outlined")">
+                    @(product.IsFavorite ? "❤️" : "🤍")
+                </span>
+
                 <div class="action-buttons">
                     <a asp-controller="Product" asp-action="Buy" asp-route-id="@product.Id" class="btn btn-buy">Buy</a>
                     <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" class="btn btn-details">Details</a>
@@ -160,7 +183,6 @@
                 </div>
             </div>
         }
-
         <button id="deleteSelelectedProductsButton" type="button" class="btn btn-danger mt-3" style="display:none;" onclick="deleteSecletedProducts()">Delete Selected</button>
     }
     else
