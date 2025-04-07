@@ -28,5 +28,26 @@ namespace RandomShop.Controllers
 
             return Ok(new { isFavorite = isAddedToFavorite });
         }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveFavorite(int productId)
+        {
+            string? userId = this.User.Id();
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            bool isRemovedFromFavorite = await userService.RemoveProductFromFavorite(userId, productId);
+
+            if (!isRemovedFromFavorite)
+            {
+                return NotFound(new { message = "Favorite product not found or already removed." });
+            }
+
+            return Ok(new { message = "Product removed from favorites." });
+
+        }
     }
 }

@@ -18,6 +18,21 @@ namespace RandomShop.Services.User
             return await CreateUserFavoriteProduct(userId, productId);
         }
 
+        public async Task<bool> RemoveProductFromFavorite(string userId, int productId)
+        {
+            UserFavoriteProduct? productForRemoval = await this.context.UserFavoriteProducts.FirstOrDefaultAsync(x => x.UserId == userId && x.ProductId == productId);
+
+            if (productForRemoval != null)
+            {
+                this.context.UserFavoriteProducts.Remove(productForRemoval);
+                await this.context.SaveChangesAsync();
+
+                return true;
+            }
+
+            return false;
+        }
+
         private async Task<bool> CreateUserFavoriteProduct(string userId, int productId)
         {
             if (!await CheckIfProductIsAlreadyFavorite(userId, productId))
