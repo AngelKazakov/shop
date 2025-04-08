@@ -149,7 +149,7 @@
 
 <div class="product-list-container">
     <div class="product-list-header">
-        <h2>Products</h2>
+        <h2>@(ViewBag.Title ?? "Products")</h2>
     </div>
 
     @if (Model.Any())

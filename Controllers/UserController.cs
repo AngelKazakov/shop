@@ -33,5 +33,16 @@ namespace RandomShop.Controllers
             bool added = await userService.AddProductToFavorite(userId, request.ProductId);
             return Ok(new { isFavorite = added });
         }
+
+        [HttpGet]
+        public async Task<IActionResult> MyFavorites()
+        {
+            ViewBag.Title = "My Favorite Products";
+
+            var userFavoriteProducts = await this.userService.GetFavoriteProducts(this.User.Id());
+            //Fetch favorite products and reuse Product/All View for the favorite products.
+
+            return View("~/Views/Product/All.cshtml", userFavoriteProducts);
+        }
     }
 }

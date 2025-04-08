@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
+using RandomShop.Models.Product;
 
 namespace RandomShop.Services.User
 {
@@ -31,6 +32,22 @@ namespace RandomShop.Services.User
             }
 
             return false;
+        }
+
+        public async Task<ICollection<ProductListViewModel>> GetFavoriteProducts(string userId)
+        {
+            var userFavoriteProducts = await this.context.UserFavoriteProducts.Where(x => x.UserId == userId)
+                .Select(x => new ProductListViewModel()
+                {
+                    Id = x.ProductId,
+                    Name = x.Product.Name,
+                    Price = x.Product.ProductItems.FirstOrDefault().DiscountedPrice > 0
+                         ? x.Product.ProductItems.FirstOrDefault().DiscountedPrice
+                         : x.Product.ProductItems.FirstOrDefault().Price,
+                    IsFavorite = x.Product.UserFavoriteProducts.Any(f => f.UserId == userId && f.ProductId == x.Product.Id)
+                }).ToListAsync();
+
+            return userFavoriteProducts;
         }
 
         private async Task<bool> CreateUserFavoriteProduct(string userId, int productId)
