@@ -36,18 +36,22 @@ namespace RandomShop.Services.User
 
         public async Task<ICollection<ProductListViewModel>> GetFavoriteProducts(string userId)
         {
-            var userFavoriteProducts = await this.context.UserFavoriteProducts.Where(x => x.UserId == userId)
+            var favoriteProducts = await this.context.UserFavoriteProducts.Where(x => x.UserId == userId)
+                .Select(x => new
+                {
+                    Product = x.Product,
+                    FirstItem = x.Product.ProductItems.FirstOrDefault(),
+                })
                 .Select(x => new ProductListViewModel()
                 {
-                    Id = x.ProductId,
+                    Id = x.Product.Id,
                     Name = x.Product.Name,
-                    Price = x.Product.ProductItems.FirstOrDefault().DiscountedPrice > 0
-                         ? x.Product.ProductItems.FirstOrDefault().DiscountedPrice
-                         : x.Product.ProductItems.FirstOrDefault().Price,
-                    IsFavorite = x.Product.UserFavoriteProducts.Any(f => f.UserId == userId && f.ProductId == x.Product.Id)
-                }).ToListAsync();
+                    Price = x.FirstItem.DiscountedPrice > 0 ? x.FirstItem.DiscountedPrice : x.FirstItem.Price,
+                    IsFavorite = true,
+                })
+                .ToListAsync();
 
-            return userFavoriteProducts;
+            return favoriteProducts;
         }
 
         private async Task<bool> CreateUserFavoriteProduct(string userId, int productId)
