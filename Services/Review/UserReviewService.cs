@@ -20,7 +20,7 @@ public class UserReviewService : IUserReviewService
         if (reviewForDeletion != null)
         {
             this.context.UserReviews.Remove(reviewForDeletion);
-
+            await this.context.SaveChangesAsync();
             return true;
         }
 
