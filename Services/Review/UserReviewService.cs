@@ -13,11 +13,11 @@ public class UserReviewService : IUserReviewService
         this.context = context;
     }
 
-    public async Task<bool> DeleteReview(int reviewId)
+    public async Task<bool> DeleteReview(int reviewId, string userId)
     {
         UserReview? reviewForDeletion = await this.context.UserReviews.FirstOrDefaultAsync(x => x.Id == reviewId);
 
-        if (reviewForDeletion != null)
+        if (reviewForDeletion != null && reviewForDeletion.UserId == userId)
         {
             this.context.UserReviews.Remove(reviewForDeletion);
             await this.context.SaveChangesAsync();

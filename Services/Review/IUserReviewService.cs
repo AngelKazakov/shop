@@ -5,5 +5,5 @@ namespace RandomShop.Services.Review;
 
 public interface IUserReviewService
 {
-    public Task<bool> DeleteReview(int reviewId);
+    public Task<bool> DeleteReview(int reviewId,string userId);
 }
