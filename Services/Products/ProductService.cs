@@ -607,7 +607,7 @@ namespace RandomShop.Services.Products
                 }
 
                 product.ProductCategories.Add(new ProductCategory()
-                { ProductId = product.Id, CategoryId = newCategoryId });
+                    { ProductId = product.Id, CategoryId = newCategoryId });
             }
         }
 
@@ -622,7 +622,7 @@ namespace RandomShop.Services.Products
                 }
 
                 product.ProductPromotions.Add(new ProductPromotion()
-                { ProductId = product.Id, PromotionId = newPromotionId });
+                    { ProductId = product.Id, PromotionId = newPromotionId });
             }
         }
 
@@ -769,7 +769,7 @@ namespace RandomShop.Services.Products
         private async Task CreateProductCategory(int productId, int categoryId)
         {
             await this.context.ProductCategories.AddAsync(new ProductCategory()
-            { ProductId = productId, CategoryId = categoryId });
+                { ProductId = productId, CategoryId = categoryId });
         }
 
         private IQueryable<ProductItem> GetProductItemQuery()
