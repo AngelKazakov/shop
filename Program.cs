@@ -8,6 +8,7 @@ using RandomShop.Services.Categories;
 using RandomShop.Services.Images;
 using RandomShop.Services.Products;
 using RandomShop.Services.Promotions;
+using RandomShop.Services.Review;
 using RandomShop.Services.User;
 using RandomShop.Services.Variation;
 
@@ -19,7 +20,8 @@ builder.Services.AddDbContext<ShopContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
-builder.Services.AddDefaultIdentity<RandomShop.Data.Models.User>(options => options.SignIn.RequireConfirmedAccount = true)
+builder.Services
+    .AddDefaultIdentity<RandomShop.Data.Models.User>(options => options.SignIn.RequireConfirmedAccount = true)
     .AddEntityFrameworkStores<ShopContext>();
 builder.Services.AddControllersWithViews();
 
@@ -30,6 +32,7 @@ builder.Services.AddTransient<IPromotionService, PromotionService>();
 builder.Services.AddTransient<IVariationService, VariationService>();
 builder.Services.AddTransient<IImageService, ImageService>();
 builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddTransient<IUserReviewService, UserReviewService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();

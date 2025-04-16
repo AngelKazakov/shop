@@ -45,13 +45,7 @@ public class UserReviewService : IUserReviewService
 
         try
         {
-            UserReview userReview = new UserReview()
-            {
-                OrderLineId = reviewInputModel.OrderLineId,
-                Comment = reviewInputModel.Comment,
-                RatingValue = reviewInputModel.Rating,
-                UserId = userId,
-            };
+            UserReview userReview = MapToUserReview(reviewInputModel, userId);
 
             await this.context.UserReviews.AddAsync(userReview);
             await this.context.SaveChangesAsync();
@@ -80,5 +74,16 @@ public class UserReviewService : IUserReviewService
             ol.ShopOrder.UserId == userId &&
             ol.ProductItem.ProductId == productId &&
             ol.ShopOrder.OrderStatus.Status == "Delivered");
+    }
+
+    private UserReview MapToUserReview(UserReviewInputModel reviewInputModel, string userId)
+    {
+        return new UserReview()
+        {
+            OrderLineId = reviewInputModel.OrderLineId,
+            RatingValue = reviewInputModel.Rating,
+            Comment = reviewInputModel.Comment,
+            UserId = userId,
+        };
     }
 }
