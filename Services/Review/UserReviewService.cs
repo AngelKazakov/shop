@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
+using RandomShop.Models.UserReview;
 
 namespace RandomShop.Services.Review;
 
@@ -25,5 +26,59 @@ public class UserReviewService : IUserReviewService
         }
 
         return false;
+    }
+
+    public async Task<bool> CreateReview(UserReviewInputModel reviewInputModel, string userId)
+    {
+        int productId = await this.context.OrderLines.Where(x => x.Id == reviewInputModel.OrderLineId)
+            .Select(x => x.ProductItem.ProductId).SingleOrDefaultAsync();
+
+        if (productId == 0) return false;
+
+        bool isProductPurchased = await CheckIfUserPurchasedProduct(productId, userId);
+        bool isAlreadyReviewed = await CheckIfUserAlreadyReviewedProduct(productId, userId);
+
+        if (!isProductPurchased || isAlreadyReviewed)
+        {
+            return false;
+        }
+
+        try
+        {
+            UserReview userReview = new UserReview()
+            {
+                OrderLineId = reviewInputModel.OrderLineId,
+                Comment = reviewInputModel.Comment,
+                RatingValue = reviewInputModel.Rating,
+                UserId = userId,
+            };
+
+            await this.context.UserReviews.AddAsync(userReview);
+            await this.context.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    private async Task<bool> CheckIfUserAlreadyReviewedProduct(int productId, string userId)
+    {
+        bool isAlreadyReviewed =
+            await context.UserReviews.AnyAsync(x =>
+                x.UserId == userId && x.OrderLine.ProductItem.ProductId == productId);
+
+        return isAlreadyReviewed;
+    }
+
+    private async Task<bool> CheckIfUserPurchasedProduct(int productId, string userId)
+    {
+        return await context.OrderLines.AnyAsync(ol =>
+            ol.ShopOrder.UserId == userId &&
+            ol.ProductItem.ProductId == productId &&
+            ol.ShopOrder.OrderStatus.Status == "Delivered");
     }
 }
