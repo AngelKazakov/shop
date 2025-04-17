@@ -59,6 +59,37 @@ public class UserReviewService : IUserReviewService
         }
     }
 
+    public async Task<bool> EditReview(UserReviewInputModel reviewInputModel, int reviewId, string userId)
+    {
+        var reviewForEdit =
+            await this.context.UserReviews.FirstOrDefaultAsync(x => x.Id == reviewId && x.UserId == userId);
+
+        if (reviewForEdit == null)
+        {
+            throw new UnauthorizedAccessException("Cannot edit this review.");
+        }
+
+        try
+        {
+            reviewForEdit.RatingValue = reviewInputModel.Rating;
+            reviewForEdit.Comment = reviewInputModel.Comment;
+
+            await this.context.SaveChangesAsync();
+
+            return true;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+    }
+
+    // private Task<bool> IsAllowedToEdit(int reviewId, string userId)
+    // {
+    //     return this.context.UserReviews.AnyAsync(x => x.Id == reviewId && x.UserId == userId);
+    // }
+
     private async Task<bool> CheckIfUserAlreadyReviewedProduct(int productId, string userId)
     {
         bool isAlreadyReviewed =
