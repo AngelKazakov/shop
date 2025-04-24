@@ -61,7 +61,7 @@ public class UserReviewService : IUserReviewService
 
     public async Task<bool> EditReview(UserReviewInputModel reviewInputModel, int reviewId, string userId)
     {
-        var reviewForEdit =
+        UserReview? reviewForEdit =
             await this.context.UserReviews.FirstOrDefaultAsync(x => x.Id == reviewId && x.UserId == userId);
 
         if (reviewForEdit == null)

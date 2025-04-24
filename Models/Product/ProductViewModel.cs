@@ -22,6 +22,8 @@ namespace RandomShop.Models.Product
 
         public bool IsFavorite { get; set; }
 
+        public double Rating { get; set; }
+
         public Dictionary<string, List<string>> VariationsAndOptions = new Dictionary<string, List<string>>();
 
         public List<byte[]> Images = new List<byte[]>();

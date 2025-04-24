@@ -519,6 +519,7 @@ namespace RandomShop.Services.Products
         private async Task<ProductViewModel> CreateProductViewModel(ProductItem productItem, string? userId = null)
         {
             //Log the try-catch exceptions.
+            //Add Rating property to Product model and database. Calculate rating properly and show it in UI.
             ProductViewModel productViewModel = new ProductViewModel()
             {
                 Id = productItem.Id,
@@ -538,10 +539,25 @@ namespace RandomShop.Services.Products
                 Images = await imageService.ReadImagesAsByteArrayAsync(productItem.ProductId),
                 IsFavorite = userId != null && productItem.Product.UserFavoriteProducts.Any(fav =>
                     fav.UserId == userId && fav.ProductId == productItem.ProductId),
+                Rating = await CalculateRating(productItem.ProductId)
             };
 
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);
             return productViewModel;
+        }
+
+        public async Task<double> CalculateRating(int productId)
+        {
+            //Load all User Reviews for product details model.
+            //Make object property in product details view model for rating.
+            //Make separate method for fetching all reviews for product details model and select only nessersary data.
+
+            var ratings = await context.UserReviews
+                .Where(r => r.OrderLine.ProductItem.ProductId == productId)
+                .Select(r => r.RatingValue)
+                .ToListAsync();
+
+            return ratings.Any() ? ratings.Average() : 0;
         }
 
         private async Task UpdateProductDetails(ProductItem productItem, ProductEditFormModel model)
@@ -742,8 +758,8 @@ namespace RandomShop.Services.Products
 
         private async Task AddProductConfigurations(ProductAddFormModel model, int productItemId)
         {
-            List<ProductConfiguration> productConfigurationsList = model.SelectedVariationOptions.Select(
-                variationOption => new ProductConfiguration
+            List<ProductConfiguration> productConfigurationsList = model.SelectedVariationOptions
+                .Select(variationOption => new ProductConfiguration
                 {
                     ProductItemId = productItemId,
                     VariationOptionId = variationOption.VariationOptionId
