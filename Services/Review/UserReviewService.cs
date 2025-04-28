@@ -28,6 +28,27 @@ public class UserReviewService : IUserReviewService
         return false;
     }
 
+    public async Task<bool> DeleteMultipleReviews(List<int> reviewIds, bool isAdmin = false)
+    {
+        if (!isAdmin)
+        {
+            throw new UnauthorizedAccessException("Only admins can delete multiple reviews.");
+        }
+
+        var reviewsToDelete = await this.context.UserReviews
+            .Where(x => reviewIds.Contains(x.Id))
+            .ToListAsync();
+
+        if (!reviewsToDelete.Any())
+        {
+            return false;
+        }
+
+        this.context.UserReviews.RemoveRange(reviewsToDelete);
+        await this.context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> CreateReview(UserReviewInputModel reviewInputModel, string userId)
     {
         int productId = await this.context.OrderLines.Where(x => x.Id == reviewInputModel.OrderLineId)
