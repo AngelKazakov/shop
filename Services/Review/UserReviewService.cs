@@ -57,8 +57,7 @@ public class UserReviewService : IUserReviewService
         if (productId == 0) return false;
 
         bool isProductPurchased = await CheckIfUserPurchasedProduct(productId, userId);
-        bool isAlreadyReviewed = await CheckIfUserAlreadyReviewedProduct(productId, userId);
-
+        bool isAlreadyReviewed = await CheckIfUserAlreadyReviewedProduct(productId, userId)
         if (!isProductPurchased || isAlreadyReviewed)
         {
             return false;
@@ -104,6 +103,19 @@ public class UserReviewService : IUserReviewService
             Console.WriteLine(e);
             throw;
         }
+    }
+
+    public async Task<bool> CanUserLeaveReview(int productId, string userId)
+    {
+        bool hasPurchased = await CheckIfUserPurchasedProduct(productId, userId);
+        bool hasLeftReview = await CheckIfUserAlreadyReviewedProduct(productId, userId);
+
+        if (hasPurchased && !hasLeftReview)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     // private Task<bool> IsAllowedToEdit(int reviewId, string userId)
