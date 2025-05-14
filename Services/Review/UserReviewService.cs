@@ -56,9 +56,7 @@ public class UserReviewService : IUserReviewService
 
         if (productId == 0) return false;
 
-        bool isProductPurchased = await CheckIfUserPurchasedProduct(productId, userId);
-        bool isAlreadyReviewed = await CheckIfUserAlreadyReviewedProduct(productId, userId)
-        if (!isProductPurchased || isAlreadyReviewed)
+        if (!await CanUserLeaveReview(productId, userId))
         {
             return false;
         }
