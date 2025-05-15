@@ -94,12 +94,11 @@ public class UserReviewController : Controller
         return Ok(new { message = "Reviews deleted successfully." });
 
         //Implement deleting multiple reviews only if the current user is Admin.
+        
         //Implement feature for like/dislike review.
         //User can like review only once other wise when click "Like" should dislike the review.
         //Add likes counting to the model in the database and show it on the review.
         //Add an image and create on date to the review.
         //Make a table if it's needed between user and likes to see which user liked the review so it can be easily managed.
-
-        throw new NotImplementedException();
     }
 }

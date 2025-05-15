@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Identity;
 using RandomShop.Services.User;
 using System.Threading.Tasks;
 using System.Security.Claims;
+using RandomShop.Models.UserReview;
 
 
 namespace RandomShop.Services.Products
@@ -164,6 +165,9 @@ namespace RandomShop.Services.Products
         {
             ProductItem? productItem = await
                 GetProductItemQuery()
+                    .Include(x => x.OrderLines)
+                    .ThenInclude(x => x.UserReviews)
+                    .ThenInclude(ur => ur.User)
                     .AsNoTracking()
                     .Where(x => x.Id == productId)
                     .FirstOrDefaultAsync();
@@ -539,7 +543,20 @@ namespace RandomShop.Services.Products
                 Images = await imageService.ReadImagesAsByteArrayAsync(productItem.ProductId),
                 IsFavorite = userId != null && productItem.Product.UserFavoriteProducts.Any(fav =>
                     fav.UserId == userId && fav.ProductId == productItem.ProductId),
-                Rating = await CalculateRating(productItem.ProductId)
+                Rating = await CalculateRating(productItem.ProductId),
+                Reveiws = productItem.Product.ProductItems
+                    .SelectMany(pi => pi.OrderLines)
+                    .SelectMany(ol => ol.UserReviews)
+                    .Select(r => new UserReviewModel()
+                    {
+                        ReviewId = r.Id,
+                        UserName = r.User.UserName,
+                        RatingValue = r.RatingValue,
+                        Comment = r.Comment,
+                        CreatedOn = r.OrderLine.ShopOrder.OrderDate // Implement create on creation of the review.
+                    })
+                    .OrderByDescending(r => r.CreatedOn)
+                    .ToList()
             };
 
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);

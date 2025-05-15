@@ -1,4 +1,5 @@
-﻿using RandomShop.Models.Variation;
+﻿using RandomShop.Models.UserReview;
+using RandomShop.Models.Variation;
 
 namespace RandomShop.Models.Product
 {
@@ -29,5 +30,7 @@ namespace RandomShop.Models.Product
         public List<byte[]> Images = new List<byte[]>();
 
         public ICollection<VariationViewModel> Variations { get; set; } = new List<VariationViewModel>();
+
+        public ICollection<UserReviewModel> Reveiws { get; set; } = new List<UserReviewModel>();
     }
 }
