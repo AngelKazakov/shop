@@ -51,6 +51,35 @@
     .table-striped tbody tr:nth-of-type(odd) {
         background-color: #f8f9fa;
     }
+
+    /* Reviews section styling */
+    .reviews-section {
+        margin-top: 30px;
+    }
+
+    .review-item {
+        border-bottom: 1px solid #ddd;
+        padding: 15px 0;
+    }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+    .review-user {
+        font-weight: bold;
+        color: #007bff;
+    }
+
+    .review-date {
+        color: #777;
+        font-size: 0.9em;
+    }
+
+    .review-rating {
+        color: #ffc107;
+        font-size: 1.2em;
+    }
 </style>
 
 <div class="container mt-4">
@@ -90,6 +119,7 @@
             <p><strong>Promotion:</strong> @Model.Promotion</p>
         }
         <p><strong>Description:</strong> @Model.Description</p>
+        <p><strong>Average Rating:</strong> @Model.Rating.ToString("F1") ⭐</p>
     </div>
 
     <!-- Variations Table -->
@@ -110,6 +140,28 @@
             }
         </tbody>
     </table>
+
+    <!-- Reviews Section -->
+    <div class="reviews-section mt-5">
+        <h4>User Reviews</h4>
+
+        @if (Model.Reveiws.Any())
+        {
+            @foreach (var review in Model.Reveiws)
+            {
+                <div class="review-item">
+                    <span class="review-user">@review.UserName</span>
+                    <span class="review-date"> - @review.CreatedOn.ToString("dd MMM yyyy")</span>
+                    <div class="review-rating">Rating: @review.RatingValue ⭐</div>
+                    <p>@review.Comment</p>
+                </div>
+            }
+        }
+        else
+        {
+            <p>No reviews yet for this product.</p>
+        }
+    </div>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
@@ -120,5 +172,5 @@
     $('#carouselExampleIndicators').carousel({
         interval: 3000,
         pause: 'hover'
-        });
+    });
 </script>

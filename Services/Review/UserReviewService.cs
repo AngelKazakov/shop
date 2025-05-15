@@ -145,6 +145,7 @@ public class UserReviewService : IUserReviewService
             OrderLineId = reviewInputModel.OrderLineId,
             RatingValue = reviewInputModel.Rating,
             Comment = reviewInputModel.Comment,
+            CreatedOn = DateTime.Now,
             UserId = userId,
         };
     }

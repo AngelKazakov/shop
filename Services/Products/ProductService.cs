@@ -163,14 +163,24 @@ namespace RandomShop.Services.Products
 
         public async Task<ProductViewModel> GetProductById(int productId, string? userId = null)
         {
-            ProductItem? productItem = await
-                GetProductItemQuery()
-                    .Include(x => x.OrderLines)
-                    .ThenInclude(x => x.UserReviews)
-                    .ThenInclude(ur => ur.User)
-                    .AsNoTracking()
-                    .Where(x => x.Id == productId)
-                    .FirstOrDefaultAsync();
+            //roductItem? productItem = await
+            //   GetProductItemQuery()
+            //       .Include(x => x.OrderLines)
+            //       .ThenInclude(x => x.UserReviews)
+            //       .ThenInclude(ur => ur.User)
+            //       .AsNoTracking()
+            //       .Where(x => x.Id == productId)
+            //       .FirstOrDefaultAsync();
+
+            ProductItem? productItem = await GetProductItemQuery()
+    .Include(x => x.OrderLines)
+        .ThenInclude(ol => ol.UserReviews)
+            .ThenInclude(ur => ur.User)
+    .Include(x => x.OrderLines)
+        .ThenInclude(ol => ol.ShopOrder)
+    .AsNoTracking()
+    .FirstOrDefaultAsync(x => x.Id == productId);
+
 
             if (productItem == null)
             {
@@ -544,19 +554,18 @@ namespace RandomShop.Services.Products
                 IsFavorite = userId != null && productItem.Product.UserFavoriteProducts.Any(fav =>
                     fav.UserId == userId && fav.ProductId == productItem.ProductId),
                 Rating = await CalculateRating(productItem.ProductId),
-                Reveiws = productItem.Product.ProductItems
-                    .SelectMany(pi => pi.OrderLines)
-                    .SelectMany(ol => ol.UserReviews)
-                    .Select(r => new UserReviewModel()
-                    {
-                        ReviewId = r.Id,
-                        UserName = r.User.UserName,
-                        RatingValue = r.RatingValue,
-                        Comment = r.Comment,
-                        CreatedOn = r.OrderLine.ShopOrder.OrderDate // Implement create on creation of the review.
-                    })
-                    .OrderByDescending(r => r.CreatedOn)
-                    .ToList()
+                Reveiws = productItem.OrderLines
+                 .SelectMany(ol => ol.UserReviews)
+          .Select(r => new UserReviewModel()
+          {
+              ReviewId = r.Id,
+              UserName = r.User?.UserName ?? "Unknown User",
+              RatingValue = r.RatingValue,
+              Comment = r.Comment,
+              CreatedOn = r.OrderLine?.ShopOrder?.OrderDate ?? DateTime.MinValue
+          })
+                .OrderByDescending(r => r.CreatedOn)
+                         .ToList()
             };
 
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);
@@ -640,7 +649,7 @@ namespace RandomShop.Services.Products
                 }
 
                 product.ProductCategories.Add(new ProductCategory()
-                    { ProductId = product.Id, CategoryId = newCategoryId });
+                { ProductId = product.Id, CategoryId = newCategoryId });
             }
         }
 
@@ -655,7 +664,7 @@ namespace RandomShop.Services.Products
                 }
 
                 product.ProductPromotions.Add(new ProductPromotion()
-                    { ProductId = product.Id, PromotionId = newPromotionId });
+                { ProductId = product.Id, PromotionId = newPromotionId });
             }
         }
 
@@ -802,7 +811,7 @@ namespace RandomShop.Services.Products
         private async Task CreateProductCategory(int productId, int categoryId)
         {
             await this.context.ProductCategories.AddAsync(new ProductCategory()
-                { ProductId = productId, CategoryId = categoryId });
+            { ProductId = productId, CategoryId = categoryId });
         }
 
         private IQueryable<ProductItem> GetProductItemQuery()

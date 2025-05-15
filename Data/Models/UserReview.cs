@@ -6,8 +6,7 @@ namespace RandomShop.Data.Models
     {
         public int Id { get; set; }
 
-        [Required]
-        public string UserId { get; set; }
+        [Required] public string UserId { get; set; }
 
         public User User { get; set; }
 
@@ -19,7 +18,9 @@ namespace RandomShop.Data.Models
         public string Comment { get; set; }
 
         [Required]
-        public int OrderLineId { get; set; }
+        public DateTime CreatedOn { get; set; }
+
+        [Required] public int OrderLineId { get; set; }
 
         public OrderLine OrderLine { get; set; }
     }
