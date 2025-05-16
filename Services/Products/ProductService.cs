@@ -19,6 +19,7 @@ using RandomShop.Services.User;
 using System.Threading.Tasks;
 using System.Security.Claims;
 using RandomShop.Models.UserReview;
+using RandomShop.Services.Review;
 
 
 namespace RandomShop.Services.Products
@@ -31,12 +32,10 @@ namespace RandomShop.Services.Products
         private readonly IImageService imageService;
         private readonly IVariationService variationService;
         private readonly IPromotionService promotionService;
-        private readonly IHttpContextAccessor httpContextAccessor;
-
+    private readonly IReviewEligibilityService reviewEligibilityService;
 
         public ProductService(IMapper mapper, ShopContext context, ICategoryService categoryService,
-            IVariationService variationService, IPromotionService promotionService, IImageService imageService,
-            IHttpContextAccessor httpContextAccessor)
+            IVariationService variationService, IPromotionService promotionService, IImageService imageService, IReviewEligibilityService reviewEligibilityService)
         {
             this.mapper = mapper;
             this.context = context;
@@ -44,7 +43,7 @@ namespace RandomShop.Services.Products
             this.variationService = variationService;
             this.promotionService = promotionService;
             this.imageService = imageService;
-            this.httpContextAccessor = httpContextAccessor;
+            this.reviewEligibilityService = reviewEligibilityService;
         }
 
         public async Task<ProductAddFormModel> InitProductAddFormModel(int categoryId)
@@ -55,11 +54,6 @@ namespace RandomShop.Services.Products
                 VariationOptions = await this.variationService.GetVariationOptionBySpecifyCategory(categoryId),
             };
         }
-
-        //private string? GetCurrentUserId()
-        //{
-        //    return httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        //}
 
         public async Task<int> AddProduct(ProductAddFormModel model)
         {
@@ -173,13 +167,13 @@ namespace RandomShop.Services.Products
             //       .FirstOrDefaultAsync();
 
             ProductItem? productItem = await GetProductItemQuery()
-    .Include(x => x.OrderLines)
-        .ThenInclude(ol => ol.UserReviews)
-            .ThenInclude(ur => ur.User)
-    .Include(x => x.OrderLines)
-        .ThenInclude(ol => ol.ShopOrder)
-    .AsNoTracking()
-    .FirstOrDefaultAsync(x => x.Id == productId);
+                .Include(x => x.OrderLines)
+                .ThenInclude(ol => ol.UserReviews)
+                .ThenInclude(ur => ur.User)
+                .Include(x => x.OrderLines)
+                .ThenInclude(ol => ol.ShopOrder)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(x => x.Id == productId);
 
 
             if (productItem == null)
@@ -555,20 +549,21 @@ namespace RandomShop.Services.Products
                     fav.UserId == userId && fav.ProductId == productItem.ProductId),
                 Rating = await CalculateRating(productItem.ProductId),
                 Reveiws = productItem.OrderLines
-                 .SelectMany(ol => ol.UserReviews)
-          .Select(r => new UserReviewModel()
-          {
-              ReviewId = r.Id,
-              UserName = r.User?.UserName ?? "Unknown User",
-              RatingValue = r.RatingValue,
-              Comment = r.Comment,
-              CreatedOn = r.OrderLine?.ShopOrder?.OrderDate ?? DateTime.MinValue
-          })
-                .OrderByDescending(r => r.CreatedOn)
-                         .ToList()
+                    .SelectMany(ol => ol.UserReviews)
+                    .Select(r => new UserReviewModel()
+                    {
+                        ReviewId = r.Id,
+                        UserName = r.User?.UserName ?? "Unknown User",
+                        RatingValue = r.RatingValue,
+                        Comment = r.Comment,
+                        CreatedOn = r.OrderLine?.ShopOrder?.OrderDate ?? DateTime.MinValue
+                    })
+                    .OrderByDescending(r => r.CreatedOn)
+                    .ToList()
             };
 
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);
+            productViewModel.CanLeaveReview = await this.reviewEligibilityService.CanUserLeaveReview(productItem.Id, userId);
             return productViewModel;
         }
 
@@ -649,7 +644,7 @@ namespace RandomShop.Services.Products
                 }
 
                 product.ProductCategories.Add(new ProductCategory()
-                { ProductId = product.Id, CategoryId = newCategoryId });
+                    { ProductId = product.Id, CategoryId = newCategoryId });
             }
         }
 
@@ -664,7 +659,7 @@ namespace RandomShop.Services.Products
                 }
 
                 product.ProductPromotions.Add(new ProductPromotion()
-                { ProductId = product.Id, PromotionId = newPromotionId });
+                    { ProductId = product.Id, PromotionId = newPromotionId });
             }
         }
 
@@ -811,7 +806,7 @@ namespace RandomShop.Services.Products
         private async Task CreateProductCategory(int productId, int categoryId)
         {
             await this.context.ProductCategories.AddAsync(new ProductCategory()
-            { ProductId = productId, CategoryId = categoryId });
+                { ProductId = productId, CategoryId = categoryId });
         }
 
         private IQueryable<ProductItem> GetProductItemQuery()

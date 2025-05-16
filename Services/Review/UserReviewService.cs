@@ -8,10 +8,12 @@ namespace RandomShop.Services.Review;
 public class UserReviewService : IUserReviewService
 {
     private readonly ShopContext context;
+    private readonly IReviewEligibilityService reviewEligibilityService;
 
-    public UserReviewService(ShopContext context)
+    public UserReviewService(ShopContext context, IReviewEligibilityService reviewEligibilityService)
     {
         this.context = context;
+        this.reviewEligibilityService = reviewEligibilityService;
     }
 
     public async Task<bool> DeleteReview(int reviewId, string userId)
@@ -56,7 +58,7 @@ public class UserReviewService : IUserReviewService
 
         if (productId == 0) return false;
 
-        if (!await CanUserLeaveReview(productId, userId))
+        if (!await this.reviewEligibilityService.CanUserLeaveReview(productId, userId))
         {
             return false;
         }
@@ -103,18 +105,18 @@ public class UserReviewService : IUserReviewService
         }
     }
 
-    public async Task<bool> CanUserLeaveReview(int productId, string userId)
-    {
-        bool hasPurchased = await CheckIfUserPurchasedProduct(productId, userId);
-        bool hasLeftReview = await CheckIfUserAlreadyReviewedProduct(productId, userId);
+    // public async Task<bool> CanUserLeaveReview(int productId, string userId)
+    // {
+    //     bool hasPurchased = await CheckIfUserPurchasedProduct(productId, userId);
+    //     bool hasLeftReview = await CheckIfUserAlreadyReviewedProduct(productId, userId);
 
-        if (hasPurchased && !hasLeftReview)
-        {
-            return true;
-        }
+    //     if (hasPurchased && !hasLeftReview)
+    //     {
+    //         return true;
+    //     }
 
-        return false;
-    }
+    //     return false;
+    // }
 
     // private Task<bool> IsAllowedToEdit(int reviewId, string userId)
     // {

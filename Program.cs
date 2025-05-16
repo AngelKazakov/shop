@@ -33,6 +33,7 @@ builder.Services.AddTransient<IVariationService, VariationService>();
 builder.Services.AddTransient<IImageService, ImageService>();
 builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IUserReviewService, UserReviewService>();
+builder.Services.AddTransient<IReviewEligibilityService, ReviewEligibilityService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
