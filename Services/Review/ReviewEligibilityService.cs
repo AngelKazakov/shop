@@ -12,15 +12,37 @@ public class ReviewEligibilityService : IReviewEligibilityService
 
     public async Task<bool> CanUserLeaveReview(int productId, string userId)
     {
-        bool hasPurchased = await context.OrderLines.AnyAsync(ol =>
-            ol.ProductItem.ProductId == productId &&
-            ol.ShopOrder.UserId == userId &&
-            ol.ShopOrder.OrderStatus.Status == "Delivered");
+        bool hasPurchased = await CheckIfUserPurchasedProduct(productId, userId);
 
-        bool hasLeftReview = await context.UserReviews.AnyAsync(ur =>
-            ur.UserId == userId &&
-            ur.OrderLine.ProductItem.ProductId == productId);
+        bool hasLeftReview = await CheckIfUserAlreadyReviewedProduct(productId, userId);
 
         return hasPurchased && !hasLeftReview;
+    }
+
+    public async Task<int?> GetEligibleOrderLineId(int productId, string userId)
+    {
+        var eligibleOrderLine = await this.context.OrderLines
+            .Where(ol => ol.ProductItem.ProductId == productId
+                         && ol.ShopOrder.UserId == userId
+                         && ol.ShopOrder.OrderStatus.Status == "Delivered"
+                         && !this.context.UserReviews.Any(r => r.OrderLineId == ol.Id))
+            .Select(ol => ol.Id)
+            .FirstOrDefaultAsync();
+
+        return eligibleOrderLine == 0 ? null : eligibleOrderLine;
+    }
+
+    private async Task<bool> CheckIfUserAlreadyReviewedProduct(int productId, string userId)
+    {
+        return await this.context.UserReviews
+            .AnyAsync(x => x.UserId == userId && x.OrderLine.ProductItem.ProductId == productId);
+    }
+
+    private async Task<bool> CheckIfUserPurchasedProduct(int productId, string userId)
+    {
+        return await this.context.OrderLines
+            .AnyAsync(ol => ol.ProductItem.ProductId == productId
+                            && ol.ShopOrder.UserId == userId
+                            && ol.ShopOrder.OrderStatus.Status == "Delivered");
     }
 }
