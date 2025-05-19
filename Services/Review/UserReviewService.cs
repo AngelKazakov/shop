@@ -105,41 +105,6 @@ public class UserReviewService : IUserReviewService
         }
     }
 
-    // public async Task<bool> CanUserLeaveReview(int productId, string userId)
-    // {
-    //     bool hasPurchased = await CheckIfUserPurchasedProduct(productId, userId);
-    //     bool hasLeftReview = await CheckIfUserAlreadyReviewedProduct(productId, userId);
-
-    //     if (hasPurchased && !hasLeftReview)
-    //     {
-    //         return true;
-    //     }
-
-    //     return false;
-    // }
-
-    // private Task<bool> IsAllowedToEdit(int reviewId, string userId)
-    // {
-    //     return this.context.UserReviews.AnyAsync(x => x.Id == reviewId && x.UserId == userId);
-    // }
-
-    private async Task<bool> CheckIfUserAlreadyReviewedProduct(int productId, string userId)
-    {
-        bool isAlreadyReviewed =
-            await context.UserReviews.AnyAsync(x =>
-                x.UserId == userId && x.OrderLine.ProductItem.ProductId == productId);
-
-        return isAlreadyReviewed;
-    }
-
-    private async Task<bool> CheckIfUserPurchasedProduct(int productId, string userId)
-    {
-        return await context.OrderLines.AnyAsync(ol =>
-            ol.ShopOrder.UserId == userId &&
-            ol.ProductItem.ProductId == productId &&
-            ol.ShopOrder.OrderStatus.Status == "Delivered");
-    }
-
     private UserReview MapToUserReview(UserReviewInputModel reviewInputModel, string userId)
     {
         return new UserReview()
