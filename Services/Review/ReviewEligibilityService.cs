@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
+using RandomShop.Models.UserReview;
 
 namespace RandomShop.Services.Review;
 
@@ -19,17 +20,22 @@ public class ReviewEligibilityService : IReviewEligibilityService
         return hasPurchased && !hasLeftReview;
     }
 
-    public async Task<int?> GetEligibleOrderLineId(int productId, string userId)
+    public async Task<EligibleReviewData> GetEligibleOrderLineWithProductDataAsync(int productId, string userId)
     {
-        var eligibleOrderLine = await this.context.OrderLines
+        var result = await context.OrderLines
             .Where(ol => ol.ProductItem.ProductId == productId
                          && ol.ShopOrder.UserId == userId
                          && ol.ShopOrder.OrderStatus.Status == "Delivered"
-                         && !this.context.UserReviews.Any(r => r.OrderLineId == ol.Id))
-            .Select(ol => ol.Id)
+                         && !context.UserReviews.Any(r => r.OrderLineId == ol.Id))
+            .Select(ol => new EligibleReviewData
+            {
+                OrderLineId = ol.Id,
+                ProductItemId = ol.ProductItemId,
+                ProductId = ol.ProductItem.ProductId
+            })
             .FirstOrDefaultAsync();
 
-        return eligibleOrderLine == 0 ? null : eligibleOrderLine;
+        return result;
     }
 
     private async Task<bool> CheckIfUserAlreadyReviewedProduct(int productId, string userId)

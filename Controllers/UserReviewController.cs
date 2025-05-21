@@ -8,10 +8,13 @@ namespace RandomShop.Controllers;
 public class UserReviewController : Controller
 {
     private readonly IUserReviewService userReviewService;
+    private readonly IReviewEligibilityService reviewEligibilityService;
 
-    public UserReviewController(IUserReviewService userReviewService)
+    public UserReviewController(IUserReviewService userReviewService,
+        IReviewEligibilityService reviewEligibilityService)
     {
         this.userReviewService = userReviewService;
+        this.reviewEligibilityService = reviewEligibilityService;
     }
 
     [HttpPost]
@@ -34,6 +37,26 @@ public class UserReviewController : Controller
         return Ok(new { message = "Review deleted successfully." });
     }
 
+    [HttpGet]
+    public async Task<IActionResult> CreateReview(int productId)
+    {
+        string userId = User.Id();
+        var data = await reviewEligibilityService.GetEligibleOrderLineWithProductDataAsync(productId, userId);
+
+        if (data == null)
+        {
+            return BadRequest("You cannot leave a review for this product.");
+        }
+
+        var model = new UserReviewInputModel
+        {
+            OrderLineId = data.OrderLineId,
+            ProductId = data.ProductItemId,
+        };
+
+        return View(model);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CreateReview(UserReviewInputModel model)
     {
@@ -46,7 +69,7 @@ public class UserReviewController : Controller
 
         bool isReviewCreated = await this.userReviewService.CreateReview(model, userId);
 
-        if (!isReviewCreated)
+        if (isReviewCreated)
         {
             return BadRequest("You are not allowed to review this product or you already submitted a review.");
         }

@@ -20,7 +20,7 @@ namespace RandomShop.Data.Models
         [Required]
         public DateTime CreatedOn { get; set; }
 
-        [Required] public int OrderLineId { get; set; }
+        [Required] public int? OrderLineId { get; set; }
 
         public OrderLine OrderLine { get; set; }
     }

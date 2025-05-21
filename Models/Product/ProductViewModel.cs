@@ -25,6 +25,8 @@ namespace RandomShop.Models.Product
 
         public double Rating { get; set; }
 
+        public bool CanLeaveReview { get; set; }
+
         public Dictionary<string, List<string>> VariationsAndOptions = new Dictionary<string, List<string>>();
 
         public List<byte[]> Images = new List<byte[]>();
