@@ -1,0 +1,114 @@
+﻿@model UserReviewInputModel
+
+@{
+    ViewData["Title"] = "Leave a Review";
+}
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<style>
+    .review-container {
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 30px;
+        background-color: #f9f9f9;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .review-container h2 {
+        text-align: center;
+        margin-bottom: 25px;
+        color: #333;
+    }
+
+    .form-group label {
+        font-weight: bold;
+        margin-bottom: 5px;
+        display: block;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+    }
+
+    .star-rating input[type="radio"] {
+        display: none;
+    }
+
+    .star-rating label {
+        color: #ccc; /* Default gray */
+        cursor: pointer;
+        transition: color 0.2s ease-in-out;
+    }
+
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        color: #ffc107; /* Hover yellow */
+    }
+
+    .star-rating input[type="radio"]:checked ~ label {
+        color: #ffc107; /* Selected yellow */
+    }
+
+    .btn-submit {
+        display: block;
+        width: 100%;
+        background-color: #007bff;
+        color: white;
+        padding: 10px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .btn-submit:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<div class="review-container">
+    <h2>Leave a Review</h2>
+    <form asp-action="Create" method="post">
+        <input type="hidden" asp-for="ProductId"/>
+        <input type="hidden" asp-for="OrderLineId"/>
+
+        <div class="form-group">
+            <label>Rating</label>
+            <div class="star-rating">
+                @for (int i = 5; i >= 1; i--)
+                {
+                    <input type="radio" name="Rating" id="star-@i" value="@i" @(Model.Rating == i ? "checked" : "")/>
+                    <label for="star-@i"><i class="fa fa-star"></i></label>
+                }
+
+            </div>
+            <span asp-validation-for="Rating" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Comment"></label>
+            <textarea asp-for="Comment" class="form-control" rows="5"></textarea>
+            <span asp-validation-for="Comment" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn-submit">Submit Review</button>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial"/>
+}

@@ -12,6 +12,4 @@ public interface IUserReviewService
     public Task<bool> CreateReview(UserReviewInputModel reviewInputModel, string userId);
 
     public Task<bool> EditReview(UserReviewInputModel reviewInputModel, int reviewId, string userId);
-
-    //  public Task<bool> CanUserLeaveReview(int productId, string userId);
 }

@@ -5,12 +5,12 @@ using RandomShop.Services.Review;
 
 namespace RandomShop.Controllers;
 
-public class UserReviewController : Controller
+public class ReviewController : Controller
 {
     private readonly IUserReviewService userReviewService;
     private readonly IReviewEligibilityService reviewEligibilityService;
 
-    public UserReviewController(IUserReviewService userReviewService,
+    public ReviewController(IUserReviewService userReviewService,
         IReviewEligibilityService reviewEligibilityService)
     {
         this.userReviewService = userReviewService;
@@ -38,27 +38,35 @@ public class UserReviewController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> CreateReview(int productId)
+    public async Task<IActionResult> Create(int productId)
     {
-        string userId = User.Id();
-        var data = await reviewEligibilityService.GetEligibleOrderLineWithProductDataAsync(productId, userId);
+        // string userId = User.Id();
+        // var data = await reviewEligibilityService.GetEligibleOrderLineWithProductDataAsync(productId, userId);
 
-        if (data == null)
-        {
-            return BadRequest("You cannot leave a review for this product.");
-        }
+        // if (data == null)
+        // {
+        //     return BadRequest("You cannot leave a review for this product.");
+        // }
+
+        // var model = new UserReviewInputModel
+        // {
+        //     OrderLineId = data.OrderLineId,
+        //     ProductId = data.ProductItemId,
+        // };
 
         var model = new UserReviewInputModel
         {
-            OrderLineId = data.OrderLineId,
-            ProductId = data.ProductItemId,
+            ProductId = 3,
+            Rating = 0,
+            Comment = "Awesome product!",
+            OrderLineId = 1
         };
 
         return View(model);
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateReview(UserReviewInputModel model)
+    public async Task<IActionResult> Create(UserReviewInputModel model)
     {
         string? userId = this.User.Id();
 
@@ -69,7 +77,7 @@ public class UserReviewController : Controller
 
         bool isReviewCreated = await this.userReviewService.CreateReview(model, userId);
 
-        if (isReviewCreated)
+        if (!isReviewCreated)
         {
             return BadRequest("You are not allowed to review this product or you already submitted a review.");
         }
