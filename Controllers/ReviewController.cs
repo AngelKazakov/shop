@@ -40,26 +40,18 @@ public class ReviewController : Controller
     [HttpGet]
     public async Task<IActionResult> Create(int productId)
     {
-        // string userId = User.Id();
-        // var data = await reviewEligibilityService.GetEligibleOrderLineWithProductDataAsync(productId, userId);
+        string userId = User.Id();
+        EligibleReviewData data = await reviewEligibilityService.GetEligibleOrderLineWithProductDataAsync(productId, userId);
 
-        // if (data == null)
-        // {
-        //     return BadRequest("You cannot leave a review for this product.");
-        // }
-
-        // var model = new UserReviewInputModel
-        // {
-        //     OrderLineId = data.OrderLineId,
-        //     ProductId = data.ProductItemId,
-        // };
+        if (data == null)
+        {
+            return BadRequest("You cannot leave a review for this product.");
+        }
 
         var model = new UserReviewInputModel
         {
-            ProductId = 3,
-            Rating = 0,
-            Comment = "Awesome product!",
-            OrderLineId = 1
+            OrderLineId = data.OrderLineId,
+            ProductId = data.ProductItemId,
         };
 
         return View(model);
@@ -84,6 +76,13 @@ public class ReviewController : Controller
 
         return Ok(new { message = "Review created successfully." });
     }
+
+    [HttpGet]
+    public IActionResult Edit()
+    {
+        throw new NotImplementedException();
+    }
+
 
     [HttpPost]
     public async Task<IActionResult> EditReview(UserReviewInputModel model, int reviewId)
