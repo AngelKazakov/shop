@@ -5,8 +5,7 @@ namespace RandomShop.Models.UserReview;
 
 public class UserReviewInputModel
 {
-    [Required]
-    public int ProductId { get; set; }
+    [Required] public int ProductId { get; set; }
 
     [Required]
     [Range(1, 5, ErrorMessage = "Rating must be between 1 and 5.")]
@@ -16,6 +15,7 @@ public class UserReviewInputModel
     [StringLength(500, ErrorMessage = "Comment must be between 10 and 500 characters.", MinimumLength = 10)]
     public string Comment { get; set; }
 
-    [Required]
-    public int OrderLineId { get; set; } // Make it non-nullable
+    [Required] public int OrderLineId { get; set; } // Make it non-nullable
+
+    public int? ReviewId { get; set; }
 }

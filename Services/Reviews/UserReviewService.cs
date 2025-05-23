@@ -105,6 +105,23 @@ public class UserReviewService : IUserReviewService
         }
     }
 
+    public async Task<UserReviewInputModel> PopulateReviewInputModel(int reviewId, string userId)
+    {
+        UserReviewInputModel? reviewModel = await this.context.UserReviews
+            .Where(x => x.Id == reviewId && x.UserId == userId)
+            .Select(x => new UserReviewInputModel
+            {
+                Comment = x.Comment,
+                Rating = x.RatingValue,
+                ProductId = x.OrderLine.ProductItem.ProductId,
+                OrderLineId = x.OrderLine.Id,
+                ReviewId = x.Id
+            })
+            .FirstOrDefaultAsync();
+
+        return reviewModel;
+    }
+
     private UserReview MapToUserReview(UserReviewInputModel reviewInputModel, string userId)
     {
         return new UserReview()
