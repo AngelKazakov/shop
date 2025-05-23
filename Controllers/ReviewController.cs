@@ -41,7 +41,8 @@ public class ReviewController : Controller
     public async Task<IActionResult> Create(int productId)
     {
         string userId = User.Id();
-        EligibleReviewData data = await reviewEligibilityService.GetEligibleOrderLineWithProductDataAsync(productId, userId);
+        EligibleReviewData data =
+            await reviewEligibilityService.GetEligibleOrderLineWithProductDataAsync(productId, userId);
 
         if (data == null)
         {
@@ -74,13 +75,26 @@ public class ReviewController : Controller
             return BadRequest("You are not allowed to review this product or you already submitted a review.");
         }
 
-        return Ok(new { message = "Review created successfully." });
+        TempData["SuccessMessage"] = "Review created successfully!";
+        return RedirectToAction("Details", "Product", new { id = model.ProductId });
     }
 
     [HttpGet]
-    public IActionResult Edit()
+    public async Task<IActionResult> Edit(int reviewId)
     {
-        throw new NotImplementedException();
+        string userId = this.User.Id();
+
+        UserReviewInputModel
+            model = await this.userReviewService.PopulateReviewInputModel(reviewId, userId);
+
+        if (model == null)
+        {
+            return NotFound();
+        }
+
+        model.ReviewId = reviewId;
+
+        return View("Create", model);
     }
 
 
@@ -101,7 +115,7 @@ public class ReviewController : Controller
             return BadRequest("You are not allowed to edit this review.");
         }
 
-        return Ok(new { message = "Review edited successfully." });
+        return RedirectToAction("Details", "Product", new { id = model.ProductId });
     }
 
     [HttpPost]

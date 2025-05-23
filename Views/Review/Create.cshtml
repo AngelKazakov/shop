@@ -48,18 +48,15 @@
     }
 
     .star-rating label {
-        color: #ccc; /* Default gray */
+        color: #ccc;
         cursor: pointer;
         transition: color 0.2s ease-in-out;
     }
 
+    .star-rating input[type="radio"]:checked ~ label,
     .star-rating label:hover,
     .star-rating label:hover ~ label {
-        color: #ffc107; /* Hover yellow */
-    }
-
-    .star-rating input[type="radio"]:checked ~ label {
-        color: #ffc107; /* Selected yellow */
+        color: #ffc107;
     }
 
     .btn-submit {
@@ -78,23 +75,40 @@
     .btn-submit:hover {
         background-color: #0056b3;
     }
+
+    .alert-success {
+        text-align: center;
+        margin-bottom: 20px;
+        padding: 10px;
+        color: #155724;
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 6px;
+    }
 </style>
 
 <div class="review-container">
-    <h2>Leave a Review</h2>
-    <form asp-action="Create" method="post">
+    <h2>@(Model.ReviewId.HasValue ? "Edit Your Review" : "Leave a Review")</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert-success">@TempData["SuccessMessage"]</div>
+    }
+
+    <form asp-action="@(Model.ReviewId.HasValue ? "EditReview" : "Create")" method="post">
         <input type="hidden" asp-for="ProductId"/>
         <input type="hidden" asp-for="OrderLineId"/>
+        <input type="hidden" asp-for="ReviewId"/>
 
         <div class="form-group">
             <label>Rating</label>
             <div class="star-rating">
                 @for (int i = 5; i >= 1; i--)
                 {
-                    <input type="radio" name="Rating" id="star-@i" value="@i" @(Model.Rating == i ? "checked" : "")/>
+                    var isChecked = Model.Rating == i ? "checked" : "";
+                    <input type="radio" name="Rating" id="star-@i" value="@i" @isChecked/>
                     <label for="star-@i"><i class="fa fa-star"></i></label>
                 }
-
             </div>
             <span asp-validation-for="Rating" class="text-danger"></span>
         </div>
@@ -105,7 +119,9 @@
             <span asp-validation-for="Comment" class="text-danger"></span>
         </div>
 
-        <button type="submit" class="btn-submit">Submit Review</button>
+        <button type="submit" class="btn-submit">
+            @(Model.ReviewId.HasValue ? "Save Changes" : "Submit Review")
+        </button>
     </form>
 </div>
 
