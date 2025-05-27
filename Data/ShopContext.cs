@@ -59,6 +59,8 @@ namespace RandomShop.Data
 
         public virtual DbSet<UserFavoriteProduct> UserFavoriteProducts { get; init; }
 
+        public virtual DbSet<UserReviewLike> ReviewLikes { get; init; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -111,15 +113,15 @@ namespace RandomShop.Data
                 .OnDelete(DeleteBehavior.ClientSetNull);
 
             builder.Entity<Category>()
-                    .HasOne(x => x.ParentCategory)
-                    .WithMany(x => x.Subcategories)
-                    .HasForeignKey(x => x.ParentCategoryId)
-                    .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(x => x.ParentCategory)
+                .WithMany(x => x.Subcategories)
+                .HasForeignKey(x => x.ParentCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<User>()
-            .HasOne(u => u.ShoppingCart)
-            .WithOne(sc => sc.User)
-             .HasForeignKey<ShoppingCart>(sc => sc.UserId);
+                .HasOne(u => u.ShoppingCart)
+                .WithOne(sc => sc.User)
+                .HasForeignKey<ShoppingCart>(sc => sc.UserId);
 
             builder.Entity<ProductCategory>().HasKey(x => new { x.ProductId, x.CategoryId });
 
