@@ -5,7 +5,7 @@
 namespace RandomShop.Migrations
 {
     /// <inheritdoc />
-    public partial class AddReviewLikesTable : Migration
+    public partial class AddReviewLikesWithRestrict : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -33,7 +33,7 @@ namespace RandomShop.Migrations
                         column: x => x.ReviewId,
                         principalTable: "UserReviews",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

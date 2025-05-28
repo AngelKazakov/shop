@@ -23,5 +23,7 @@ namespace RandomShop.Data.Models
         [Required] public int? OrderLineId { get; set; }
 
         public OrderLine OrderLine { get; set; }
+
+        public ICollection<UserReviewLike> UserReviewLikes { get; set; } = new List<UserReviewLike>();
     }
 }

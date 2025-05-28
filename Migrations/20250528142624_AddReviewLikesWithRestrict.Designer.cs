@@ -12,8 +12,8 @@ using RandomShop.Data;
 namespace RandomShop.Migrations
 {
     [DbContext(typeof(ShopContext))]
-    [Migration("20250527174331_AddReviewLikesTable")]
-    partial class AddReviewLikesTable
+    [Migration("20250528142624_AddReviewLikesWithRestrict")]
+    partial class AddReviewLikesWithRestrict
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -801,7 +801,8 @@ namespace RandomShop.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("ReviewId")
+                    b.Property<int?>("ReviewId")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("UserId")
@@ -1183,9 +1184,9 @@ namespace RandomShop.Migrations
             modelBuilder.Entity("RandomShop.Data.Models.UserReviewLike", b =>
                 {
                     b.HasOne("RandomShop.Data.Models.UserReview", "Review")
-                        .WithMany()
+                        .WithMany("UserReviewLikes")
                         .HasForeignKey("ReviewId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("RandomShop.Data.Models.User", "User")
@@ -1305,6 +1306,11 @@ namespace RandomShop.Migrations
                     b.Navigation("UserPaymentMethods");
 
                     b.Navigation("UserReviews");
+                });
+
+            modelBuilder.Entity("RandomShop.Data.Models.UserReview", b =>
+                {
+                    b.Navigation("UserReviewLikes");
                 });
 
             modelBuilder.Entity("RandomShop.Data.Models.Variation", b =>

@@ -133,6 +133,12 @@ namespace RandomShop.Data
             builder.Entity<UserFavoriteProduct>()
                 .HasOne(f => f.User).WithMany(u => u.UserFavoriteProducts)
                 .HasForeignKey(f => f.UserId);
+
+            builder.Entity<UserReviewLike>()
+                .HasOne(x => x.Review)
+                .WithMany(x => x.UserReviewLikes)
+                .HasForeignKey(x => x.ReviewId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
