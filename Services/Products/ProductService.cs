@@ -32,10 +32,11 @@ namespace RandomShop.Services.Products
         private readonly IImageService imageService;
         private readonly IVariationService variationService;
         private readonly IPromotionService promotionService;
-    private readonly IReviewEligibilityService reviewEligibilityService;
+        private readonly IReviewEligibilityService reviewEligibilityService;
 
         public ProductService(IMapper mapper, ShopContext context, ICategoryService categoryService,
-            IVariationService variationService, IPromotionService promotionService, IImageService imageService, IReviewEligibilityService reviewEligibilityService)
+            IVariationService variationService, IPromotionService promotionService, IImageService imageService,
+            IReviewEligibilityService reviewEligibilityService)
         {
             this.mapper = mapper;
             this.context = context;
@@ -166,10 +167,23 @@ namespace RandomShop.Services.Products
             //       .Where(x => x.Id == productId)
             //       .FirstOrDefaultAsync();
 
+            //ProductItem? productItem = await GetProductItemQuery()
+            //    .Include(x => x.OrderLines)
+            //    .ThenInclude(ol => ol.UserReviews)
+            //    .ThenInclude(x => x.UserReviewLikes)
+            //    .ThenInclude(ur => ur.User)
+            //    .Include(x => x.OrderLines)
+            //    .ThenInclude(ol => ol.ShopOrder)
+            //    .AsNoTracking()
+            //    .FirstOrDefaultAsync(x => x.Id == productId);
+
             ProductItem? productItem = await GetProductItemQuery()
                 .Include(x => x.OrderLines)
                 .ThenInclude(ol => ol.UserReviews)
-                .ThenInclude(ur => ur.User)
+                .ThenInclude(r => r.User)
+                .Include(x => x.OrderLines)
+                .ThenInclude(ol => ol.UserReviews)
+                .ThenInclude(r => r.UserReviewLikes)
                 .Include(x => x.OrderLines)
                 .ThenInclude(ol => ol.ShopOrder)
                 .AsNoTracking()
@@ -527,7 +541,6 @@ namespace RandomShop.Services.Products
         private async Task<ProductViewModel> CreateProductViewModel(ProductItem productItem, string? userId = null)
         {
             //Log the try-catch exceptions.
-            //Add Rating property to Product model and database. Calculate rating properly and show it in UI.
             ProductViewModel productViewModel = new ProductViewModel()
             {
                 Id = productItem.Id,
@@ -548,31 +561,37 @@ namespace RandomShop.Services.Products
                 IsFavorite = userId != null && productItem.Product.UserFavoriteProducts.Any(fav =>
                     fav.UserId == userId && fav.ProductId == productItem.ProductId),
                 Rating = await CalculateRating(productItem.ProductId),
-                Reveiws = productItem.OrderLines
-                    .SelectMany(ol => ol.UserReviews)
-                    .Select(r => new UserReviewModel()
-                    {
-                        ReviewId = r.Id,
-                        UserName = r.User?.UserName ?? "Unknown User",
-                        RatingValue = r.RatingValue,
-                        Comment = r.Comment,
-                        CreatedOn = r.OrderLine?.ShopOrder?.OrderDate ?? DateTime.MinValue
-                    })
-                    .OrderByDescending(r => r.CreatedOn)
-                    .ToList()
             };
 
+
+            //Check if .Include() is needed.
+            var reviews = productItem.OrderLines
+                .SelectMany(ol => ol.UserReviews)
+                .ToList();
+
+            productViewModel.Reveiws = reviews
+                .Select(r => new UserReviewModel
+                {
+                    ReviewId = r.Id,
+                    UserName = r.User?.UserName ?? "Unknown User",
+                    RatingValue = r.RatingValue,
+                    Comment = r.Comment,
+                    CreatedOn = r.OrderLine?.ShopOrder?.OrderDate ?? DateTime.MinValue,
+                    TotalLikes = r.UserReviewLikes?.Count ?? 0,
+                    IsLikedByCurrentUser = userId != null && r.UserReviewLikes.Any(l => l.UserId == userId)
+                })
+                .OrderByDescending(r => r.CreatedOn)
+                .ToList();
+
+
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);
-            productViewModel.CanLeaveReview = await this.reviewEligibilityService.CanUserLeaveReview(productItem.Id, userId);
+            productViewModel.CanLeaveReview =
+                await this.reviewEligibilityService.CanUserLeaveReview(productItem.Id, userId);
             return productViewModel;
         }
 
         public async Task<double> CalculateRating(int productId)
         {
-            //Load all User Reviews for product details model.
-            //Make object property in product details view model for rating.
-            //Make separate method for fetching all reviews for product details model and select only nessersary data.
-
             var ratings = await context.UserReviews
                 .Where(r => r.OrderLine.ProductItem.ProductId == productId)
                 .Select(r => r.RatingValue)

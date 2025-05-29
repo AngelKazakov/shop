@@ -9,12 +9,14 @@ public class ReviewController : Controller
 {
     private readonly IUserReviewService userReviewService;
     private readonly IReviewEligibilityService reviewEligibilityService;
+    private readonly IReviewInteractionService reviewInteractionService;
 
     public ReviewController(IUserReviewService userReviewService,
-        IReviewEligibilityService reviewEligibilityService)
+        IReviewEligibilityService reviewEligibilityService, IReviewInteractionService reviewInteractionService)
     {
         this.userReviewService = userReviewService;
         this.reviewEligibilityService = reviewEligibilityService;
+        this.reviewInteractionService = reviewInteractionService;
     }
 
     [HttpPost]
@@ -138,11 +140,31 @@ public class ReviewController : Controller
         return Ok(new { message = "Reviews deleted successfully." });
 
         //Implement deleting multiple reviews only if the current user is Admin.
-
-        //Add an image and create on date to the review.
         //Implement feature for like/dislike review.
         //User can like review only once other wise when click "Like" should dislike the review.
         //Add likes counting to the model in the database and show it on the review.
         //Make a table if it's needed between user and likes to see which user liked the review so it can be easily managed.
+
+
+        //Add an image and create on date to the review.
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Like(int reviewId)
+    {
+        var userId = this.User.Id();
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized();
+        }
+
+        var isLiked = await this.reviewInteractionService.ToggleLike(reviewId, userId);
+
+        return Ok(new
+        {
+            liked = isLiked,
+            totalLikes = await this.reviewInteractionService.GetLikesCountForReview(reviewId)
+        });
     }
 }

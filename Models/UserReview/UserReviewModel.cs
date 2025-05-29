@@ -11,4 +11,8 @@ public class UserReviewModel
     public string Comment { get; set; }
 
     public DateTime CreatedOn { get; set; }
+
+    public int TotalLikes { get; set; }
+
+    public bool IsLikedByCurrentUser { get; set; }
 }

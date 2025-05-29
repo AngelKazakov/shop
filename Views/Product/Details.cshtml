@@ -4,7 +4,7 @@
     ViewData["Title"] = "Product Details";
 }
 
-<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"/>
 <style>
     /* Carousel styling */
     .carousel-inner img {
@@ -33,9 +33,9 @@
         color: #555;
     }
 
-        .product-info p strong {
-            color: #000;
-        }
+    .product-info p strong {
+        color: #000;
+    }
 
     /* Table styling */
     .table th, .table td {
@@ -62,9 +62,9 @@
         padding: 15px 0;
     }
 
-        .review-item:last-child {
-            border-bottom: none;
-        }
+    .review-item:last-child {
+        border-bottom: none;
+    }
 
     .review-user {
         font-weight: bold;
@@ -79,7 +79,40 @@
     .review-rating {
         color: #ffc107;
         font-size: 1.2em;
+        margin-bottom: 10px;
     }
+
+    .filled-star {
+        color: #ffc107;
+    }
+
+    .empty-star {
+        color: #ccc;
+    }
+
+    .like-button {
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        font-size: 1.1em;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 0;
+    }
+
+    .like-button .fa-thumbs-up.liked {
+        color: #007bff;
+    }
+
+    .liked-count-bump {
+        font-weight: bold;
+        transition: transform 0.2s;
+        transform: scale(1.2);
+    }
+
+
 </style>
 
 <div class="container mt-4">
@@ -94,7 +127,8 @@
             @for (int i = 0; i < Model.Images.Count; i++)
             {
                 <div class="carousel-item @(i == 0 ? "active" : "")">
-                    <img class="d-block w-100" src="data:image/png;base64,@(Convert.ToBase64String(Model.Images[i]))" alt="Product Image @i">
+                    <img class="d-block w-100" src="data:image/png;base64,@(Convert.ToBase64String(Model.Images[i]))"
+                         alt="Product Image @i">
                 </div>
             }
         </div>
@@ -125,25 +159,26 @@
     <!-- Variations Table -->
     <table class="table table-bordered table-striped mt-4 shadow-sm">
         <thead class="thead-light">
-            <tr>
-                <th>Variation</th>
-                <th>Option</th>
-            </tr>
+        <tr>
+            <th>Variation</th>
+            <th>Option</th>
+        </tr>
         </thead>
         <tbody>
-            @foreach (var variation in Model.VariationsAndOptions)
-            {
-                <tr>
-                    <td>@variation.Key</td>
-                    <td>@string.Join(", ", variation.Value)</td>
-                </tr>
-            }
+        @foreach (var variation in Model.VariationsAndOptions)
+        {
+            <tr>
+                <td>@variation.Key</td>
+                <td>@string.Join(", ", variation.Value)</td>
+            </tr>
+        }
         </tbody>
     </table>
-
     <!-- Reviews Section -->
     <div class="reviews-section mt-5">
         <h4>User Reviews</h4>
+
+        @Html.AntiForgeryToken() <!-- Required for secure POST via JavaScript -->
 
         @if (Model.Reveiws.Any())
         {
@@ -152,8 +187,28 @@
                 <div class="review-item">
                     <span class="review-user">@review.UserName</span>
                     <span class="review-date"> - @review.CreatedOn.ToString("dd MMM yyyy")</span>
-                    <div class="review-rating">Rating: @review.RatingValue ⭐</div>
+
+                    <div class="review-rating">
+                        Rating:
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= review.RatingValue)
+                            {
+                                <i class="fa fa-star filled-star"></i>
+                            }
+                            else
+                            {
+                                <i class="fa fa-star empty-star"></i>
+                            }
+                        }
+                    </div>
+
                     <p>@review.Comment</p>
+
+                    <button class="like-button" data-review-id="@review.ReviewId" type="button">
+                        <i class="fa fa-thumbs-up @(review.IsLikedByCurrentUser ? "liked" : "")"></i>
+                        <span class="like-count">@review.TotalLikes</span>
+                    </button>
                 </div>
             }
         }
@@ -162,6 +217,10 @@
             <p>No reviews yet for this product.</p>
         }
     </div>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </div>
 
 <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"></script>
@@ -172,5 +231,32 @@
     $('#carouselExampleIndicators').carousel({
         interval: 3000,
         pause: 'hover'
+    });
+
+    document.querySelectorAll('.like-button').forEach(button => {
+        button.addEventListener('click', async function () {
+            const reviewId = this.getAttribute('data-review-id');
+
+            const response = await fetch(`/Review/Like/?reviewId=${reviewId}`, {
+                method: 'POST',
+                headers: {
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                }
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+
+                const icon = this.querySelector('.fa-thumbs-up');
+                icon.classList.toggle('liked', result.liked);
+
+                const likeCountSpan = this.querySelector('.like-count');
+                likeCountSpan.textContent = result.totalLikes;
+
+                // Animate bump
+                likeCountSpan.classList.add('liked-count-bump');
+                setTimeout(() => likeCountSpan.classList.remove('liked-count-bump'), 200);
+            }
+        });
     });
 </script>
