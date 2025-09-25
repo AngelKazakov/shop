@@ -122,6 +122,38 @@ public class UserReviewService : IUserReviewService
         return reviewModel;
     }
 
+    public async Task<ICollection<UserReviewModel>> GetSortedReviews(int productId, string? userId, string sortBy)
+    {
+        var query = this.context.UserReviews
+            .Where(x => x.OrderLine.ProductItem.Product.Id == productId)
+            .AsQueryable();
+
+        // Apply sorting before projection
+        query = sortBy switch
+        {
+            "rating" => query.OrderByDescending(x => x.RatingValue),
+            "date_asc" => query.OrderBy(x => x.CreatedOn),
+            "likes" => query.OrderByDescending(x => x.UserReviewLikes.Count()),
+            _ => query.OrderByDescending(x => x.CreatedOn)
+        };
+
+        // Apply projection after sorting
+        var userReviews = await query
+            .Select(x => new UserReviewModel
+            {
+                ReviewId = x.Id,
+                UserName = x.User.UserName,
+                RatingValue = x.RatingValue,
+                Comment = x.Comment,
+                CreatedOn = x.CreatedOn,
+                TotalLikes = x.UserReviewLikes.Count(),
+                IsLikedByCurrentUser = userId != null && x.UserReviewLikes.Any(l => l.UserId == userId)
+            })
+            .ToListAsync();
+
+        return userReviews;
+    }
+
     private UserReview MapToUserReview(UserReviewInputModel reviewInputModel, string userId)
     {
         return new UserReview()

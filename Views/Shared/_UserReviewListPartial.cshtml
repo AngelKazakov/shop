@@ -1,0 +1,24 @@
+﻿@model ICollection<UserReviewModel>
+
+@foreach (var review in Model)
+{
+    <div class="review-item">
+        <span class="review-user">@review.UserName</span>
+        <span class="review-date"> - @review.CreatedOn.ToString("dd MMM yyyy")</span>
+
+        <div class="review-rating">
+            Rating:
+            @for (int i = 1; i <= 5; i++)
+            {
+                <i class="fa fa-star @(i <= review.RatingValue ? "filled-star" : "empty-star")"></i>
+            }
+        </div>
+
+        <p>@review.Comment</p>
+
+        <button class="like-button" data-review-id="@review.ReviewId">
+            <i class="fa fa-thumbs-up @(review.IsLikedByCurrentUser ? "liked" : "")"></i>
+            <span class="like-count">@review.TotalLikes</span>
+        </button>
+    </div>
+}

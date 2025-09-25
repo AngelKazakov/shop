@@ -13,4 +13,6 @@ public interface IUserReviewService
 
     public Task<bool> EditReview(UserReviewInputModel reviewInputModel, int reviewId, string userId);
     public Task<UserReviewInputModel> PopulateReviewInputModel(int reviewId, string userId);
+
+    public Task<ICollection<UserReviewModel>> GetSortedReviews(int productId, string? userId, string sortBy);
 }

@@ -12,6 +12,7 @@ namespace RandomShop.Controllers
     {
         private readonly IProductService productService;
         private readonly IVariationService variationService;
+
         public ProductController(IProductService productService, IVariationService variationService)
         {
             this.productService = productService;
@@ -61,7 +62,8 @@ namespace RandomShop.Controllers
         [HttpGet]
         public async Task<JsonResult> GetVariationOptionsByCategory(int categoryId)
         {
-            List<VariationOptionViewModel> variations = await this.variationService.GetVariationOptionBySpecifyCategory(categoryId);
+            List<VariationOptionViewModel> variations =
+                await this.variationService.GetVariationOptionBySpecifyCategory(categoryId);
             return Json(variations);
         }
 

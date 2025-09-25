@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Mvc;
 using RandomShop.Infrastructure;
 using RandomShop.Models.UserReview;
 using RandomShop.Services.Review;
@@ -140,18 +141,14 @@ public class ReviewController : Controller
         return Ok(new { message = "Reviews deleted successfully." });
 
         //Implement deleting multiple reviews only if the current user is Admin.
-        //Implement feature for like/dislike review.
-        //User can like review only once other wise when click "Like" should dislike the review.
-        //Add likes counting to the model in the database and show it on the review.
-        //Make a table if it's needed between user and likes to see which user liked the review so it can be easily managed.
-
-
         //Add an image and create on date to the review.
     }
 
     [HttpPost]
     public async Task<IActionResult> Like(int reviewId)
     {
+        //Display avatars or initials of users in reviews
+
         var userId = this.User.Id();
 
         if (string.IsNullOrEmpty(userId))
@@ -166,5 +163,25 @@ public class ReviewController : Controller
             liked = isLiked,
             totalLikes = await this.reviewInteractionService.GetLikesCountForReview(reviewId)
         });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetSortedReviews(int productId, string sortBy)
+    {
+        try
+        {
+            string? userId = User.Identity?.IsAuthenticated == true
+                ? User.FindFirstValue(ClaimTypes.NameIdentifier)
+                : null;
+
+            ICollection<UserReviewModel> reviews =
+                await this.userReviewService.GetSortedReviews(productId, userId, sortBy);
+            return PartialView("~/Views/Shared/_UserReviewListPartial.cshtml", reviews);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading reviews: {ex.Message}");
+            return StatusCode(500, "Internal server error.");
+        }
     }
 }

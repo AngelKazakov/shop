@@ -158,25 +158,6 @@ namespace RandomShop.Services.Products
 
         public async Task<ProductViewModel> GetProductById(int productId, string? userId = null)
         {
-            //roductItem? productItem = await
-            //   GetProductItemQuery()
-            //       .Include(x => x.OrderLines)
-            //       .ThenInclude(x => x.UserReviews)
-            //       .ThenInclude(ur => ur.User)
-            //       .AsNoTracking()
-            //       .Where(x => x.Id == productId)
-            //       .FirstOrDefaultAsync();
-
-            //ProductItem? productItem = await GetProductItemQuery()
-            //    .Include(x => x.OrderLines)
-            //    .ThenInclude(ol => ol.UserReviews)
-            //    .ThenInclude(x => x.UserReviewLikes)
-            //    .ThenInclude(ur => ur.User)
-            //    .Include(x => x.OrderLines)
-            //    .ThenInclude(ol => ol.ShopOrder)
-            //    .AsNoTracking()
-            //    .FirstOrDefaultAsync(x => x.Id == productId);
-
             ProductItem? productItem = await GetProductItemQuery()
                 .Include(x => x.OrderLines)
                 .ThenInclude(ol => ol.UserReviews)
@@ -565,9 +546,27 @@ namespace RandomShop.Services.Products
 
 
             //Check if .Include() is needed.
+            //r reviews = await context.UserReviews
+            //  .Where(r => r.OrderLine.ProductItemId == productItem.Id)
+            //  .Include(r => r.User)
+            //  .Include(r => r.UserReviewLikes)
+            //  .Include(r => r.OrderLine)
+            //  .ThenInclude(ol => ol.ShopOrder)
+            //  .AsNoTracking()
+            //  .ToListAsync();
+
             var reviews = productItem.OrderLines
                 .SelectMany(ol => ol.UserReviews)
+                .GroupBy(r => r.Id)
+                .Select(g => g.First())
                 .ToList();
+
+
+            // var reviews = productItem.OrderLines
+            //     .SelectMany(ol => ol.UserReviews)
+            //     .GroupBy(r => r.Id) // Group by review ID to remove duplicates
+            //     .Select(g => g.First()) // Take only the first unique review
+            //     .ToList();
 
             productViewModel.Reveiws = reviews
                 .Select(r => new UserReviewModel
@@ -582,7 +581,6 @@ namespace RandomShop.Services.Products
                 })
                 .OrderByDescending(r => r.CreatedOn)
                 .ToList();
-
 
             productViewModel.VariationsAndOptions = CreateVariationsDictionary(productViewModel.Variations);
             productViewModel.CanLeaveReview =
@@ -832,15 +830,35 @@ namespace RandomShop.Services.Products
         {
             return this.context.ProductItems
                 .Include(x => x.Product)
-                .Include(x => x.Product.UserFavoriteProducts)
+                .ThenInclude(p => p.UserFavoriteProducts)
                 .Include(x => x.Product.ProductCategories)
-                .ThenInclude(x => x.Category)
+                .ThenInclude(pc => pc.Category)
                 .Include(x => x.Product.ProductImages)
                 .Include(x => x.ProductConfigurations)
                 .ThenInclude(pc => pc.VariationOption)
                 .ThenInclude(vo => vo.Variation)
                 .Include(x => x.Product.ProductPromotions)
-                .ThenInclude(p => p.Promotion);
+                .ThenInclude(pp => pp.Promotion)
+                .Include(x => x.OrderLines)
+                .ThenInclude(ol => ol.UserReviews)
+                .ThenInclude(ur => ur.User)
+                .Include(x => x.OrderLines)
+                .ThenInclude(ol => ol.UserReviews)
+                .ThenInclude(ur => ur.UserReviewLikes)
+                .Include(x => x.OrderLines)
+                .ThenInclude(ol => ol.ShopOrder);
+
+            //return this.context.ProductItems
+            //    .Include(x => x.Product)
+            //    .Include(x => x.Product.UserFavoriteProducts)
+            //    .Include(x => x.Product.ProductCategories)
+            //    .ThenInclude(x => x.Category)
+            //    .Include(x => x.Product.ProductImages)
+            //    .Include(x => x.ProductConfigurations)
+            //    .ThenInclude(pc => pc.VariationOption)
+            //    .ThenInclude(vo => vo.Variation)
+            //    .Include(x => x.Product.ProductPromotions)
+            //    .ThenInclude(p => p.Promotion);
         }
     }
 }
