@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Infrastructure;
+using RandomShop.Services.Cart;
 using RandomShop.Services.Categories;
 using RandomShop.Services.Images;
 using RandomShop.Services.Products;
@@ -35,6 +36,7 @@ builder.Services.AddTransient<IUserService, UserService>();
 builder.Services.AddTransient<IUserReviewService, UserReviewService>();
 builder.Services.AddTransient<IReviewEligibilityService, ReviewEligibilityService>();
 builder.Services.AddTransient<IReviewInteractionService, ReviewInteractionService>();
+builder.Services.AddTransient<ICartService, CartService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
