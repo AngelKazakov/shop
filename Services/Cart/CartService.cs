@@ -48,7 +48,7 @@ public class CartService : ICartService
             cartItem = new ShoppingCartItem()
             {
                 ShoppingCartId = cart.Id,
-                ProductItemId = productId,
+                ProductItemId = productItemId,
                 Quantity = quantity,
             };
 
@@ -56,5 +56,12 @@ public class CartService : ICartService
         }
 
         await this.context.SaveChangesAsync();
+    }
+
+    public async Task<ICollection<ShoppingCartItem>> GetCartItemsAsync(string userId)
+    {
+        ShoppingCart cart = await GetOrCreateCartAsync(userId);
+
+        return cart.Items.ToList();
     }
 }
