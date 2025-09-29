@@ -64,4 +64,25 @@ public class CartService : ICartService
 
         return cart.Items.ToList();
     }
+
+    public async Task UpdateQuantity(string userId, int productItemId, int quantity)
+    {
+        ShoppingCart cart = await GetOrCreateCartAsync(userId);
+
+        ShoppingCartItem? cartItem = cart.Items.FirstOrDefault(x => x.ProductItemId == productItemId);
+
+        if (cartItem != null)
+        {
+            if (quantity <= 0)
+            {
+                context.ShoppingCartItems.Remove(cartItem);
+            }
+            else
+            {
+                cartItem.Quantity = quantity;
+            }
+
+            await context.SaveChangesAsync();
+        }
+    }
 }
