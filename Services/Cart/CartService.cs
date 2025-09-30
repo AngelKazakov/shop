@@ -123,4 +123,26 @@ public class CartService : ICartService
 
         return cart.Items.Sum(i => i.Quantity);
     }
+
+    public async Task<bool> ValidateCart(string userId)
+    {
+        ShoppingCart cart = await GetOrCreateCartAsync(userId);
+
+        List<int> productItemIds = cart.Items.Select(i => i.ProductItemId).ToList();
+
+        Dictionary<int, ProductItem> productItems = await context.ProductItems
+            .Where(pi => productItemIds.Contains(pi.Id))
+            .ToDictionaryAsync(pi => pi.ProductId, pi => pi);
+
+        foreach (var item in cart.Items)
+        {
+            if (!productItems.ContainsKey(item.ProductItemId) ||
+                productItems[item.ProductItemId].QuantityInStock < item.Quantity)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 }

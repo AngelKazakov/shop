@@ -19,4 +19,6 @@ public interface ICartService
     public Task<decimal> GetCartTotal(string userId);
     
     public Task<int> GetCartTotalQuantity(string userId);
+    
+    public Task<bool> ValidateCart(string userId);
 }
