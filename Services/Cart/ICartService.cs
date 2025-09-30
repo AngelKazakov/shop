@@ -17,4 +17,6 @@ public interface ICartService
     public Task ClearCart(string userId);
 
     public Task<decimal> GetCartTotal(string userId);
+    
+    public Task<int> GetCartTotalQuantity(string userId);
 }

@@ -116,4 +116,11 @@ public class CartService : ICartService
 
         return totalAmount;
     }
+
+    public async Task<int> GetCartTotalQuantity(string userId)
+    {
+        ShoppingCart cart = await GetOrCreateCartAsync(userId);
+
+        return cart.Items.Sum(i => i.Quantity);
+    }
 }
