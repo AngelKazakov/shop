@@ -11,4 +11,6 @@ public interface ICartService
     public Task<ICollection<ShoppingCartItem>> GetCartItemsAsync(string userId);
 
     public Task UpdateQuantity(string userId, int productItemId, int quantity);
+
+    public Task RemoveFromCart(string userId, int productItemId);
 }

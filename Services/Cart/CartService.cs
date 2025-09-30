@@ -85,4 +85,16 @@ public class CartService : ICartService
             await context.SaveChangesAsync();
         }
     }
+
+    public async Task RemoveFromCart(string userId, int productItemId)
+    {
+        ShoppingCart cart = await GetOrCreateCartAsync(userId);
+        ShoppingCartItem? cartItem = cart.Items.FirstOrDefault(x => x.ProductItemId == productItemId);
+
+        if (cartItem != null)
+        {
+            cart.Items.Remove(cartItem);
+            await context.SaveChangesAsync();
+        }
+    }
 }
