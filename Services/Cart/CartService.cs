@@ -15,6 +15,7 @@ public class CartService : ICartService
 
     public async Task<ShoppingCart> GetOrCreateCartAsync(string userId)
     {
+        //Include necessary properties to load data...
         ShoppingCart? cart = await context.ShoppingCarts.FirstOrDefaultAsync(x => x.UserId == userId);
 
         if (cart == null)
@@ -105,5 +106,14 @@ public class CartService : ICartService
         this.context.ShoppingCartItems.RemoveRange(cart.Items);
 
         await this.context.SaveChangesAsync();
+    }
+
+    public async Task<decimal> GetCartTotal(string userId)
+    {
+        ShoppingCart cart = await this.GetOrCreateCartAsync(userId);
+
+        decimal totalAmount = cart.Items.Sum(i => i.Quantity * i.ProductItem.Price);
+
+        return totalAmount;
     }
 }

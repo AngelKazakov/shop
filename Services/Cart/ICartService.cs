@@ -15,4 +15,6 @@ public interface ICartService
     public Task RemoveFromCart(string userId, int productItemId);
 
     public Task ClearCart(string userId);
+
+    public Task<decimal> GetCartTotal(string userId);
 }
