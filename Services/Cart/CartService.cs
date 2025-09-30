@@ -97,4 +97,13 @@ public class CartService : ICartService
             await context.SaveChangesAsync();
         }
     }
+
+    public async Task ClearCart(string userId)
+    {
+        ShoppingCart cart = await GetOrCreateCartAsync(userId);
+
+        this.context.ShoppingCartItems.RemoveRange(cart.Items);
+
+        await this.context.SaveChangesAsync();
+    }
 }
