@@ -59,11 +59,20 @@ public class CartService : ICartService
         await this.context.SaveChangesAsync();
     }
 
-    public async Task<ICollection<ShoppingCartItem>> GetCartItemsAsync(string userId)
+    public async Task<ICollection<CartItemViewModel>> GetCartItemsAsync(string userId)
     {
         ShoppingCart cart = await GetOrCreateCartAsync(userId);
 
-        return cart.Items.ToList();
+        List<CartItemViewModel> cartItemsViewModels = cart.Items.Select(ci => new CartItemViewModel()
+            {
+                ProductItemId = ci.ProductItemId,
+                ProductName = ci.ProductItem.Product.Name,
+                Quantity = ci.Quantity,
+                UnitPrice = ci.ProductItem.Price,
+            })
+            .ToList();
+
+        return cartItemsViewModels;
     }
 
 
