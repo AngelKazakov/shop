@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
+using RandomShop.Models.Cart;
 
 namespace RandomShop.Services.Cart;
 
@@ -15,8 +16,7 @@ public class CartService : ICartService
 
     public async Task<ShoppingCart> GetOrCreateCartAsync(string userId)
     {
-        //Include necessary properties to load data...
-        ShoppingCart? cart = await context.ShoppingCarts.FirstOrDefaultAsync(x => x.UserId == userId);
+        ShoppingCart? cart = await GetCartWithItemsAsync(userId);
 
         if (cart == null)
         {
@@ -65,6 +65,7 @@ public class CartService : ICartService
 
         return cart.Items.ToList();
     }
+
 
     public async Task UpdateQuantity(string userId, int productItemId, int quantity)
     {
@@ -144,5 +145,16 @@ public class CartService : ICartService
         }
 
         return true;
+    }
+
+    private async Task<ShoppingCart?> GetCartWithItemsAsync(string userId)
+    {
+        var cart = await context.ShoppingCarts
+            .Include(c => c.Items)
+            .ThenInclude(i => i.ProductItem)
+            .ThenInclude(pi => pi.Product)
+            .FirstOrDefaultAsync(x => x.UserId == userId);
+
+        return cart;
     }
 }
