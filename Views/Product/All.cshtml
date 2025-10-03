@@ -28,9 +28,9 @@
         transition: background-color 0.3s;
     }
 
-        .product-item:hover {
-            background-color: #f0f8ff;
-        }
+    .product-item:hover {
+        background-color: #f0f8ff;
+    }
 
     .product-checkbox {
         margin-right: 20px;
@@ -83,34 +83,34 @@
         background-color: #007bff;
     }
 
-        .btn-buy:hover {
-            background-color: #0056b3;
-        }
+    .btn-buy:hover {
+        background-color: #0056b3;
+    }
 
     .btn-edit {
         background-color: #ffc107;
         color: black;
     }
 
-        .btn-edit:hover {
-            background-color: #e0a800;
-        }
+    .btn-edit:hover {
+        background-color: #e0a800;
+    }
 
     .btn-details {
         background-color: #17a2b8;
     }
 
-        .btn-details:hover {
-            background-color: #117a8b;
-        }
+    .btn-details:hover {
+        background-color: #117a8b;
+    }
 
     .btn-delete {
         background-color: #dc3545;
     }
 
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
 
     #deleteSelectedForm button[type="submit"] {
         padding: 10px 20px;
@@ -125,9 +125,9 @@
         transition: background-color 0.3s;
     }
 
-        #deleteSelectedForm button[type="submit"]:hover {
-            background-color: #c82333;
-        }
+    #deleteSelectedForm button[type="submit"]:hover {
+        background-color: #c82333;
+    }
 
     .favorite-icon {
         font-size: 1.5em;
@@ -137,13 +137,13 @@
         transition: color 0.3s;
     }
 
-        .favorite-icon.filled {
-            color: red;
-        }
+    .favorite-icon.filled {
+        color: red;
+    }
 
-        .favorite-icon.outlined {
-            color: gray;
-        }
+    .favorite-icon.outlined {
+        color: gray;
+    }
 
 </style>
 
@@ -154,17 +154,19 @@
 
     @if (Model.Any())
     {
-
         @foreach (var product in Model)
         {
             <div class="product-item">
 
-                <input type="checkbox" class="product-checkbox" name="@product.Id" value="@product.Id" onchange="toggleDeleteButton()" />
+                <input type="checkbox" class="product-checkbox" name="@product.Id" value="@product.Id"
+                       onchange="toggleDeleteButton()"/>
 
-                <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D" alt="Default Image" class="product-image" />
+                <img
+                    src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D"
+                    alt="Default Image" class="product-image"/>
 
                 <div class="product-info">
-                    <span class="product-name">@product.Name</span><br />
+                    <span class="product-name">@product.Name</span><br/>
                     <span class="product-price">$@product.Price.ToString("F2")</span>
                 </div>
 
@@ -176,16 +178,24 @@
                 </span>
 
                 <div class="action-buttons">
-                    <a asp-controller="Product" asp-action="Buy" asp-route-id="@product.Id" class="btn btn-buy">Buy</a>
+                    <form asp-controller="Cart" asp-action="Add" asp-route-id="@product.Id" method="post"
+                          style="display:inline;">
+                        <button type="submit" class="btn btn-buy">Buy</button>
+                    </form>
                     <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" class="btn btn-details">Details</a>
-                    <a asp-controller="Product" asp-action="Edit" asp-route-id="@product.Id" class="btn btn-edit">Edit</a>
-                    <form asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id" method="post" style="display:inline;">
+                    <a asp-controller="Product" asp-action="Edit" asp-route-id="@product.Id"
+                       class="btn btn-edit">Edit</a>
+                    <form asp-controller="Product" asp-action="Delete" asp-route-id="@product.Id" method="post"
+                          style="display:inline;">
                         <button type="submit" class="btn btn-delete">Delete</button>
                     </form>
                 </div>
             </div>
         }
-        <button id="deleteSelelectedProductsButton" type="button" class="btn btn-danger mt-3" style="display:none;" onclick="deleteSecletedProducts()">Delete Selected</button>
+
+        <button id="deleteSelelectedProductsButton" type="button" class="btn btn-danger mt-3" style="display:none;"
+                onclick="deleteSecletedProducts()">Delete Selected
+        </button>
     }
     else
     {
@@ -234,7 +244,7 @@
         $.ajax({
             type: 'POST',
             url: url,
-            data: JSON.stringify({ productId: productId }),
+            data: JSON.stringify({productId: productId}),
             contentType: 'application/json',
             success: function (response) {
                 if (response.isFavorite) {
