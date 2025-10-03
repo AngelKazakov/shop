@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RandomShop.Data.Models;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Cart;
@@ -16,6 +17,7 @@ public class CartController : Controller
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> ViewCart()
     {
         var userId = this.User.Id();
@@ -25,5 +27,16 @@ public class CartController : Controller
         var model = new CartViewModel() { Items = cartItems };
 
         return View(model);
+    }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> Add(int id)
+    {
+        string userId = this.User.Id();
+
+        await this.cartService.AddToCart(userId, id);
+
+        return RedirectToAction("ViewCart");
     }
 }
