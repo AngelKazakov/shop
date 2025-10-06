@@ -53,4 +53,15 @@ public class CartController : Controller
 
         return RedirectToAction("ViewCart");
     }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> Clear()
+    {
+        string userId = this.User.Id();
+
+        await this.cartService.ClearCart(userId);
+
+        return RedirectToAction("ViewCart");
+    }
 }

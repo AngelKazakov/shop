@@ -27,8 +27,7 @@ else
         {
             <tr>
                 <td>
-                    <form asp-controller="Cart" asp-action="Remove" asp-route-id="@item.ProductItemId" method="post"
-                          style="display:inline;">
+                    <form asp-controller="Cart" asp-action="Remove" asp-route-id="@item.ProductItemId" method="post" style="display:inline;">
                         <button type="submit" class="btn btn-link text-danger p-0" title="Remove item">
                             <i class="fas fa-times"></i> <!-- Font Awesome X icon -->
                         </button>
@@ -48,4 +47,13 @@ else
         </tr>
         </tfoot>
     </table>
+
+    <!-- ✅ Clear Cart button -->
+    <div class="text-end mt-3">
+        <form asp-controller="Cart" asp-action="Clear" method="post" style="display:inline;">
+            <button type="submit" class="btn btn-warning">
+                <i class="fas fa-trash-alt"></i> Clear Cart
+            </button>
+        </form>
+    </div>
 }
