@@ -1,12 +1,13 @@
 ﻿<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>@ViewData["Title"] - RandomShop</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/RandomShop.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="~/RandomShop.styles.css" asp-append-version="true"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         /* Styling for the nested dropdowns */
         .dropdown-menu .nested-dropdown:hover > .dropdown-menu {
@@ -20,96 +21,98 @@
             position: relative; /* For nested dropdown positioning */
         }
 
-            .dropdown-menu .nested-dropdown {
-                position: relative; /* Ensures hover state works for parent and child dropdowns */
-            }
+        .dropdown-menu .nested-dropdown {
+            position: relative; /* Ensures hover state works for parent and child dropdowns */
+        }
 
-                /* Prevent dropdown from collapsing when navigating */
-                .dropdown-menu .nested-dropdown > .dropdown-menu {
-                    display: none;
-                }
+        /* Prevent dropdown from collapsing when navigating */
+        .dropdown-menu .nested-dropdown > .dropdown-menu {
+            display: none;
+        }
 
-                .dropdown-menu .nested-dropdown:hover > .dropdown-menu {
-                    display: block;
-                }
+        .dropdown-menu .nested-dropdown:hover > .dropdown-menu {
+            display: block;
+        }
     </style>
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RandomShop</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <div class="dropdown">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="categoriesDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                                Categories
-                            </button>
-                            <div class="dropdown-menu" id="categoriesDropdownContent"></div>
-                        </div>
-                    </ul>
-                    <partial name="_LoginPartial" />
-                </div>
+<header>
+    <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
+        <div class="container-fluid">
+            <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">RandomShop</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse"
+                    aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                <ul class="navbar-nav flex-grow-1">
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                    </li>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary dropdown-toggle" type="button" id="categoriesDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            Categories
+                        </button>
+                        <div class="dropdown-menu" id="categoriesDropdownContent"></div>
+                    </div>
+                </ul>
+                <partial name="_LoginPartial"/>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2023 - RandomShop - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script>
-                document.getElementById("categoriesDropdown").addEventListener("mouseenter", function () {
-            fetch('/Category/MainCategories')
-                .then(response => response.json())
-                .then(categories => {
-                    const dropdownContent = document.getElementById("categoriesDropdownContent");
-                    dropdownContent.innerHTML = ''; // Clear existing items
+    </nav>
+</header>
+<div class="container">
+    <main role="main" class="pb-3">
+        @RenderBody()
+    </main>
+</div>
 
-                    categories.forEach(category => {
-                        const mainCategoryItem = document.createElement("a");
-                        mainCategoryItem.className = "dropdown-item nested-dropdown";
-                        mainCategoryItem.href = `/Product/GetByCategory/${category.id}`;
-                        mainCategoryItem.textContent = category.name;
+<footer class="border-top footer text-muted">
+    <div class="container">
+        &copy; 2023 - RandomShop - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    </div>
+</footer>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<script>
+    document.getElementById("categoriesDropdown").addEventListener("mouseenter", function () {
+        fetch('/Category/MainCategories')
+            .then(response => response.json())
+            .then(categories => {
+                const dropdownContent = document.getElementById("categoriesDropdownContent");
+                dropdownContent.innerHTML = ''; // Clear existing items
 
-                        if (category.subCategories && category.subCategories.length > 0) {
-                            // Nested dropdown menu for subcategories
-                            const subCategoryMenu = document.createElement("div");
-                            subCategoryMenu.className = "dropdown-menu";
-                            mainCategoryItem.appendChild(subCategoryMenu);
+                categories.forEach(category => {
+                    const mainCategoryItem = document.createElement("a");
+                    mainCategoryItem.className = "dropdown-item nested-dropdown";
+                    mainCategoryItem.href = `/Product/GetByCategory/${category.id}`;
+                    mainCategoryItem.textContent = category.name;
 
-                            // Add subcategories to the nested menu
-                            category.subCategories.forEach(subCategory => {
-                                const subCategoryLink = document.createElement("a");
-                                subCategoryLink.className = "dropdown-item";
-                                subCategoryLink.href = `/Product/GetByCategory/${subCategory.id}`;
-                                subCategoryLink.textContent = subCategory.name;
-                                subCategoryMenu.appendChild(subCategoryLink);
-                            });
-                        }
+                    if (category.subCategories && category.subCategories.length > 0) {
+                        // Nested dropdown menu for subcategories
+                        const subCategoryMenu = document.createElement("div");
+                        subCategoryMenu.className = "dropdown-menu";
+                        mainCategoryItem.appendChild(subCategoryMenu);
 
-                        dropdownContent.appendChild(mainCategoryItem);
-                    });
-                })
-                .catch(error => console.error('Error loading categories:', error));
-        });
-    </script>
-    @await RenderSectionAsync("Scripts", required: false)
+                        // Add subcategories to the nested menu
+                        category.subCategories.forEach(subCategory => {
+                            const subCategoryLink = document.createElement("a");
+                            subCategoryLink.className = "dropdown-item";
+                            subCategoryLink.href = `/Product/GetByCategory/${subCategory.id}`;
+                            subCategoryLink.textContent = subCategory.name;
+                            subCategoryMenu.appendChild(subCategoryLink);
+                        });
+                    }
+
+                    dropdownContent.appendChild(mainCategoryItem);
+                });
+            })
+            .catch(error => console.error('Error loading categories:', error));
+    });
+</script>
+@await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

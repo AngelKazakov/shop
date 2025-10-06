@@ -12,9 +12,10 @@
 }
 else
 {
-    <table class="table">
+    <table class="table align-middle">
         <thead>
         <tr>
+            <th></th> <!-- Column for Remove icon -->
             <th>Product</th>
             <th>Unit Price</th>
             <th>Quantity</th>
@@ -25,6 +26,14 @@ else
         @foreach (var item in Model.Items)
         {
             <tr>
+                <td>
+                    <form asp-controller="Cart" asp-action="Remove" asp-route-id="@item.ProductItemId" method="post"
+                          style="display:inline;">
+                        <button type="submit" class="btn btn-link text-danger p-0" title="Remove item">
+                            <i class="fas fa-times"></i> <!-- Font Awesome X icon -->
+                        </button>
+                    </form>
+                </td>
                 <td>@item.ProductName</td>
                 <td>@item.UnitPrice.ToString("C")</td>
                 <td>@item.Quantity</td>
@@ -34,7 +43,7 @@ else
         </tbody>
         <tfoot>
         <tr>
-            <td colspan="3" class="text-right"><strong>Grand Total:</strong></td>
+            <td colspan="4" class="text-end"><strong>Grand Total:</strong></td>
             <td>@Model.GrandTotal.ToString("C")</td>
         </tr>
         </tfoot>
