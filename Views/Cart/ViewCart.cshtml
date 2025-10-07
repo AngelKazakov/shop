@@ -37,7 +37,14 @@ else
                         </button>
                     </form>
                 </td>
-                <td>@item.ProductName</td>
+                <td>
+                    <a asp-controller="Product"
+                       asp-action="Details"
+                       asp-route-id="@item.ProductItemId"
+                       class="text-decoration-none text-dark fw-semibold">
+                        @item.ProductName
+                    </a>
+                </td>
                 <td class="unit-price">@item.UnitPrice.ToString("C")</td>
                 <td>
                     <input type="number"
@@ -81,9 +88,7 @@ else
                     const quantity = parseInt(e.target.value);
                     const token = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]').value;
 
-                    // If user sets quantity to 0 → update totals + remove row visually + update backend
                     if (quantity === 0) {
-                        // ✅ 1. Recalculate grand total before removing the row
                         const itemTotalText = row.querySelector('.item-total').textContent;
                         const itemTotal = parseFloat(itemTotalText.replace(/[^0-9.]/g, '')) || 0;
 
@@ -93,14 +98,12 @@ else
                         const newGrandTotal = Math.max(0, currentGrandTotal - itemTotal);
                         grandTotalCell.textContent = "$" + newGrandTotal.toFixed(2);
 
-                        // ✅ 2. Fade out and remove the row
                         row.style.transition = "opacity 0.3s";
                         row.style.opacity = "0";
 
                         setTimeout(() => {
                             row.remove();
 
-                            // ✅ 3. If no rows remain, hide table & show empty message
                             const remainingRows = document.querySelectorAll('tbody tr');
                             if (remainingRows.length === 0) {
                                 const table = document.querySelector('table');
@@ -116,7 +119,6 @@ else
                             }
                         }, 300);
 
-                        // ✅ 4. Notify backend (no need to wait for response)
                         try {
                             await fetch('/Cart/UpdateQuantity', {
                                 method: 'POST',
@@ -130,10 +132,9 @@ else
                             console.error(err);
                         }
 
-                        return; // stop further logic for this case
+                        return;
                     }
 
-                    // Normal quantity update
                     try {
                         const response = await fetch('/Cart/UpdateQuantity', {
                             method: 'POST',
@@ -164,7 +165,5 @@ else
                 });
             });
         });
-
-
     </script>
 }
