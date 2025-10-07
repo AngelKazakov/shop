@@ -13,7 +13,6 @@
 else
 {
     <form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
-    <!-- Hidden CSRF token -->
 
     <table class="table align-middle">
         <thead>
@@ -41,14 +40,11 @@ else
                 <td>@item.ProductName</td>
                 <td class="unit-price">@item.UnitPrice.ToString("C")</td>
                 <td>
-                    <div class="d-flex align-items-center">
-                        <input type="number" class="form-control form-control-sm quantity-input"
-                               value="@item.Quantity" min="1"
-                               style="width:70px; margin-right:6px;"/>
-                        <button type="button" class="btn btn-sm btn-outline-primary update-btn" title="Update quantity">
-                            <i class="fas fa-sync-alt"></i>
-                        </button>
-                    </div>
+                    <input type="number"
+                           class="form-control form-control-sm quantity-input"
+                           value="@item.Quantity"
+                           min="1"
+                           style="width:80px;"/>
                 </td>
                 <td class="item-total">@item.TotalPrice.ToString("C")</td>
             </tr>
@@ -76,37 +72,41 @@ else
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const buttons = document.querySelectorAll('.update-btn');
+            const quantityInputs = document.querySelectorAll('.quantity-input');
 
-            buttons.forEach(button => {
-                button.addEventListener('click', async (e) => {
+            quantityInputs.forEach(input => {
+                input.addEventListener('change', async (e) => {
                     const row = e.target.closest('tr');
                     const itemId = row.dataset.itemId;
-                    const quantity = row.querySelector('.quantity-input').value;
+                    const quantity = e.target.value;
 
                     const token = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]').value;
 
-                    const response = await fetch('/Cart/UpdateQuantity', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                            'RequestVerificationToken': token
-                        },
-                        body: `id=${itemId}&quantity=${quantity}`
-                    });
+                    try {
+                        const response = await fetch('/Cart/UpdateQuantity', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded',
+                                'RequestVerificationToken': token
+                            },
+                            body: `id=${itemId}&quantity=${quantity}`
+                        });
 
-                    if (response.ok) {
-                        const data = await response.json();
+                        if (response.ok) {
+                            const data = await response.json();
 
-                        if (data.success) {
-                            // Update totals in the DOM
-                            row.querySelector('.item-total').textContent = data.itemTotal.toFixed(2) + " лв";
-                            document.querySelector('#grandTotal').textContent = data.grandTotal.toFixed(2) + " лв";
+                            if (data.success) {
+                                row.querySelector('.item-total').textContent = "$ " + data.itemTotal.toFixed(2);
+                                document.querySelector('#grandTotal').textContent = "$ " + data.grandTotal.toFixed(2);
+                            } else {
+                                alert(data.message || "Error updating quantity.");
+                            }
                         } else {
-                            alert(data.message || "Error updating quantity.");
+                            alert("Request failed. Please try again.");
                         }
-                    } else {
-                        alert("Request failed. Please try again.");
+                    } catch (error) {
+                        console.error(error);
+                        alert("Something went wrong. Please try again.");
                     }
                 });
             });
