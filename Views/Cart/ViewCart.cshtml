@@ -15,7 +15,7 @@ else
     <table class="table align-middle">
         <thead>
         <tr>
-            <th></th> <!-- Column for Remove icon -->
+            <th></th>
             <th>Product</th>
             <th>Unit Price</th>
             <th>Quantity</th>
@@ -27,15 +27,28 @@ else
         {
             <tr>
                 <td>
-                    <form asp-controller="Cart" asp-action="Remove" asp-route-id="@item.ProductItemId" method="post" style="display:inline;">
+                    <form asp-controller="Cart" asp-action="Remove" asp-route-id="@item.ProductItemId" method="post"
+                          style="display:inline;">
                         <button type="submit" class="btn btn-link text-danger p-0" title="Remove item">
-                            <i class="fas fa-times"></i> <!-- Font Awesome X icon -->
+                            <i class="fas fa-times"></i>
                         </button>
                     </form>
                 </td>
                 <td>@item.ProductName</td>
                 <td>@item.UnitPrice.ToString("C")</td>
-                <td>@item.Quantity</td>
+                <td>
+                    <!-- Quantity update form -->
+                    <form asp-controller="Cart" asp-action="UpdateQuantity" method="post"
+                          style="display:inline-flex; align-items:center;">
+                        <input type="hidden" name="id" value="@item.ProductItemId"/>
+                        <input type="number" name="quantity" value="@item.Quantity" min="1"
+                               class="form-control form-control-sm"
+                               style="width:70px; margin-right:6px;"/>
+                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Update quantity">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </form>
+                </td>
                 <td>@item.TotalPrice.ToString("C")</td>
             </tr>
         }
@@ -48,7 +61,7 @@ else
         </tfoot>
     </table>
 
-    <!-- ✅ Clear Cart button -->
+    <!--  Clear Cart button -->
     <div class="text-end mt-3">
         <form asp-controller="Cart" asp-action="Clear" method="post" style="display:inline;">
             <button type="submit" class="btn btn-warning">

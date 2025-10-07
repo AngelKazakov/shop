@@ -64,4 +64,16 @@ public class CartController : Controller
 
         return RedirectToAction("ViewCart");
     }
+
+    [HttpPost]
+    [Authorize]
+    public async Task<IActionResult> UpdateQuantity(int id, int quantity)
+    {
+        //Try not to redirect or reload the whole page, just to update the number of quantity per product...
+        string userId = this.User.Id();
+
+        await this.cartService.UpdateQuantity(userId, id, quantity);
+
+        return RedirectToAction("ViewCart");
+    }
 }

@@ -100,7 +100,7 @@ public class CartService : ICartService
     public async Task RemoveFromCart(string userId, int productItemId)
     {
         ShoppingCart cart = await GetOrCreateCartAsync(userId);
-        
+
         ShoppingCartItem? cartItem = cart.Items.FirstOrDefault(x => x.ProductItemId == productItemId);
 
         if (cartItem != null)
