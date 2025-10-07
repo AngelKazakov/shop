@@ -78,10 +78,62 @@ else
                 input.addEventListener('change', async (e) => {
                     const row = e.target.closest('tr');
                     const itemId = row.dataset.itemId;
-                    const quantity = e.target.value;
-
+                    const quantity = parseInt(e.target.value);
                     const token = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]').value;
 
+                    // If user sets quantity to 0 → update totals + remove row visually + update backend
+                    if (quantity === 0) {
+                        // ✅ 1. Recalculate grand total before removing the row
+                        const itemTotalText = row.querySelector('.item-total').textContent;
+                        const itemTotal = parseFloat(itemTotalText.replace(/[^0-9.]/g, '')) || 0;
+
+                        const grandTotalCell = document.querySelector('#grandTotal');
+                        const currentGrandTotal = parseFloat(grandTotalCell.textContent.replace(/[^0-9.]/g, '')) || 0;
+
+                        const newGrandTotal = Math.max(0, currentGrandTotal - itemTotal);
+                        grandTotalCell.textContent = "$" + newGrandTotal.toFixed(2);
+
+                        // ✅ 2. Fade out and remove the row
+                        row.style.transition = "opacity 0.3s";
+                        row.style.opacity = "0";
+
+                        setTimeout(() => {
+                            row.remove();
+
+                            // ✅ 3. If no rows remain, hide table & show empty message
+                            const remainingRows = document.querySelectorAll('tbody tr');
+                            if (remainingRows.length === 0) {
+                                const table = document.querySelector('table');
+                                if (table) table.remove();
+
+                                const clearBtn = document.querySelector('.btn-warning');
+                                if (clearBtn) clearBtn.closest('form').remove();
+
+                                const cartContainer = document.querySelector('h2').parentElement;
+                                const emptyMessage = document.createElement('p');
+                                emptyMessage.textContent = "Your cart is empty.";
+                                cartContainer.appendChild(emptyMessage);
+                            }
+                        }, 300);
+
+                        // ✅ 4. Notify backend (no need to wait for response)
+                        try {
+                            await fetch('/Cart/UpdateQuantity', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded',
+                                    'RequestVerificationToken': token
+                                },
+                                body: `id=${itemId}&quantity=0`
+                            });
+                        } catch (err) {
+                            console.error(err);
+                        }
+
+                        return; // stop further logic for this case
+                    }
+
+                    // Normal quantity update
                     try {
                         const response = await fetch('/Cart/UpdateQuantity', {
                             method: 'POST',
@@ -96,20 +148,23 @@ else
                             const data = await response.json();
 
                             if (data.success) {
-                                row.querySelector('.item-total').textContent = "$ " + data.itemTotal.toFixed(2);
-                                document.querySelector('#grandTotal').textContent = "$ " + data.grandTotal.toFixed(2);
-                            } else {
-                                alert(data.message || "Error updating quantity.");
+                                if (quantity > 0) {
+                                    row.querySelector('.item-total').textContent = "$" + data.itemTotal.toFixed(2);
+                                }
+
+                                const grandTotalCell = document.querySelector('#grandTotal');
+                                if (grandTotalCell) {
+                                    grandTotalCell.textContent = "$" + data.grandTotal.toFixed(2);
+                                }
                             }
-                        } else {
-                            alert("Request failed. Please try again.");
                         }
                     } catch (error) {
                         console.error(error);
-                        alert("Something went wrong. Please try again.");
                     }
                 });
             });
         });
+
+
     </script>
 }
