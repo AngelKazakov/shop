@@ -157,6 +157,23 @@ public class CartService : ICartService
         return true;
     }
 
+    public async Task<(bool Success, string? Message, decimal ItemTotal, decimal GrandTotal)>
+        UpdateQuantityAndGetTotals(string userId, int productItemId, int quantity)
+    {
+        await UpdateQuantity(userId, productItemId, quantity);
+
+        ICollection<CartItemViewModel> cartItems = await GetCartItemsAsync(userId);
+
+        CartItemViewModel? updatedItem = cartItems.FirstOrDefault(ci => ci.ProductItemId == productItemId);
+
+        if (updatedItem == null)
+        {
+            return (false, "Item not found", 0, 0);
+        }
+
+        return (true, null, updatedItem.TotalPrice, cartItems.Sum(ci => ci.TotalPrice));
+    }
+
     private async Task<ShoppingCart?> GetCartWithItemsAsync(string userId)
     {
         var cart = await context.ShoppingCarts

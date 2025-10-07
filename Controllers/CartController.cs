@@ -70,27 +70,20 @@ public class CartController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateQuantity(int id, int quantity)
     {
-        //Try not to redirect or reload the whole page, just to update the number of quantity per product...
         string userId = this.User.Id();
 
-        await this.cartService.UpdateQuantity(userId, id, quantity);
+        var result = await this.cartService.UpdateQuantityAndGetTotals(userId, id, quantity);
 
-        var cartItems = await this.cartService.GetCartItemsAsync(userId);
-        var updatedItems = cartItems.FirstOrDefault(ci => ci.ProductItemId == id);
-
-        if (updatedItems == null)
+        if (!result.Success)
         {
-            return Json(new { success = false, message = "Item not found" });
+            return Json(new { success = false, message = result.Message });
         }
 
-        var response = new
+        return Json(new
         {
             success = true,
-            itemTotal = updatedItems.TotalPrice,
-            grandTotal = cartItems.Sum(ci => ci.TotalPrice),
-        };
-
-
-        return Json(response);
+            itemTotal = result.ItemTotal,
+            grandTotal = result.GrandTotal
+        });
     }
 }

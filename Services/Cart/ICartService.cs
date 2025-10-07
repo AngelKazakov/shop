@@ -23,5 +23,8 @@ public interface ICartService
 
     public Task<bool> ValidateCart(string userId);
 
+    public Task<(bool Success, string? Message, decimal ItemTotal, decimal GrandTotal)> UpdateQuantityAndGetTotals(
+        string userId, int productItemId, int quantity);
+
     //Implement merge cart. Guest cart merge after user logged in.
 }
