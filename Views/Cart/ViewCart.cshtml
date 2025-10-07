@@ -12,10 +12,13 @@
 }
 else
 {
+    <form id="antiForgeryForm">@Html.AntiForgeryToken()</form>
+    <!-- Hidden CSRF token -->
+
     <table class="table align-middle">
         <thead>
         <tr>
-            <th></th>
+            <th></th> <!-- Remove icon -->
             <th>Product</th>
             <th>Unit Price</th>
             <th>Quantity</th>
@@ -25,48 +28,88 @@ else
         <tbody>
         @foreach (var item in Model.Items)
         {
-            <tr>
+            <tr data-item-id="@item.ProductItemId">
                 <td>
                     <form asp-controller="Cart" asp-action="Remove" asp-route-id="@item.ProductItemId" method="post"
                           style="display:inline;">
+                        @Html.AntiForgeryToken()
                         <button type="submit" class="btn btn-link text-danger p-0" title="Remove item">
                             <i class="fas fa-times"></i>
                         </button>
                     </form>
                 </td>
                 <td>@item.ProductName</td>
-                <td>@item.UnitPrice.ToString("C")</td>
+                <td class="unit-price">@item.UnitPrice.ToString("C")</td>
                 <td>
-                    <!-- Quantity update form -->
-                    <form asp-controller="Cart" asp-action="UpdateQuantity" method="post"
-                          style="display:inline-flex; align-items:center;">
-                        <input type="hidden" name="id" value="@item.ProductItemId"/>
-                        <input type="number" name="quantity" value="@item.Quantity" min="1"
-                               class="form-control form-control-sm"
+                    <div class="d-flex align-items-center">
+                        <input type="number" class="form-control form-control-sm quantity-input"
+                               value="@item.Quantity" min="1"
                                style="width:70px; margin-right:6px;"/>
-                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Update quantity">
+                        <button type="button" class="btn btn-sm btn-outline-primary update-btn" title="Update quantity">
                             <i class="fas fa-sync-alt"></i>
                         </button>
-                    </form>
+                    </div>
                 </td>
-                <td>@item.TotalPrice.ToString("C")</td>
+                <td class="item-total">@item.TotalPrice.ToString("C")</td>
             </tr>
         }
         </tbody>
         <tfoot>
         <tr>
             <td colspan="4" class="text-end"><strong>Grand Total:</strong></td>
-            <td>@Model.GrandTotal.ToString("C")</td>
+            <td id="grandTotal">@Model.GrandTotal.ToString("C")</td>
         </tr>
         </tfoot>
     </table>
 
-    <!--  Clear Cart button -->
+    <!-- Clear Cart -->
     <div class="text-end mt-3">
         <form asp-controller="Cart" asp-action="Clear" method="post" style="display:inline;">
+            @Html.AntiForgeryToken()
             <button type="submit" class="btn btn-warning">
                 <i class="fas fa-trash-alt"></i> Clear Cart
             </button>
         </form>
     </div>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const buttons = document.querySelectorAll('.update-btn');
+
+            buttons.forEach(button => {
+                button.addEventListener('click', async (e) => {
+                    const row = e.target.closest('tr');
+                    const itemId = row.dataset.itemId;
+                    const quantity = row.querySelector('.quantity-input').value;
+
+                    const token = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]').value;
+
+                    const response = await fetch('/Cart/UpdateQuantity', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                            'RequestVerificationToken': token
+                        },
+                        body: `id=${itemId}&quantity=${quantity}`
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+
+                        if (data.success) {
+                            // Update totals in the DOM
+                            row.querySelector('.item-total').textContent = data.itemTotal.toFixed(2) + " лв";
+                            document.querySelector('#grandTotal').textContent = data.grandTotal.toFixed(2) + " лв";
+                        } else {
+                            alert(data.message || "Error updating quantity.");
+                        }
+                    } else {
+                        alert("Request failed. Please try again.");
+                    }
+                });
+            });
+        });
+    </script>
 }

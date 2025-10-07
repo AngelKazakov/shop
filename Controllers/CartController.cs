@@ -67,6 +67,7 @@ public class CartController : Controller
 
     [HttpPost]
     [Authorize]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> UpdateQuantity(int id, int quantity)
     {
         //Try not to redirect or reload the whole page, just to update the number of quantity per product...
@@ -74,6 +75,22 @@ public class CartController : Controller
 
         await this.cartService.UpdateQuantity(userId, id, quantity);
 
-        return RedirectToAction("ViewCart");
+        var cartItems = await this.cartService.GetCartItemsAsync(userId);
+        var updatedItems = cartItems.FirstOrDefault(ci => ci.ProductItemId == id);
+
+        if (updatedItems == null)
+        {
+            return Json(new { success = false, message = "Item not found" });
+        }
+
+        var response = new
+        {
+            success = true,
+            itemTotal = updatedItems.TotalPrice,
+            grandTotal = cartItems.Sum(ci => ci.TotalPrice),
+        };
+
+
+        return Json(response);
     }
 }
