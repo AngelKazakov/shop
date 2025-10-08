@@ -86,4 +86,13 @@ public class CartController : Controller
             grandTotal = result.GrandTotal
         });
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetCartCount()
+    {
+        string userId = this.User.Id();
+        int count = await this.cartService.GetCartTotalQuantity(userId);
+
+        return Json(new { count });
+    }
 }

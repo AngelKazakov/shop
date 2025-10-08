@@ -157,6 +157,10 @@ else
                                 if (grandTotalCell) {
                                     grandTotalCell.textContent = "$" + data.grandTotal.toFixed(2);
                                 }
+                                // Refresh cart badge after quantity update
+                                if (typeof updateCartBadge === 'function') {
+                                    await updateCartBadge();
+                                }
                             }
                         }
                     } catch (error) {
