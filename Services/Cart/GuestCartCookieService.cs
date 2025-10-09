@@ -18,4 +18,25 @@ public class GuestCartCookieService : IGuestCartCookieService
 
         response.Cookies.Append("GuestCart", json, options);
     }
+
+    public List<CartCookieItem> ReadGuestCart(HttpRequest request)
+    {
+        string? cookie = request.Cookies["GuestCart"];
+
+        if (string.IsNullOrEmpty(cookie))
+        {
+            return new List<CartCookieItem>();
+        }
+
+        try
+        {
+            var items = JsonSerializer.Deserialize<List<CartCookieItem>>(cookie);
+
+            return items ?? new List<CartCookieItem>();
+        }
+        catch (JsonException)
+        {
+            return new List<CartCookieItem>();
+        }
+    }
 }

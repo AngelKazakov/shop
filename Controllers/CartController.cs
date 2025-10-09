@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NuGet.Protocol;
 using RandomShop.Data.Models;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Cart;
@@ -111,5 +112,12 @@ public class CartController : Controller
         this.guestCartCookieService.WriteGuestCart(Response, items);
 
         return Ok("Cookie written");
+    }
+
+    public IActionResult TestReadCart()
+    {
+        var items = this.guestCartCookieService.ReadGuestCart(Request);
+
+        return Ok("Cookie read:" + items);
     }
 }
