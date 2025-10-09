@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RandomShop.Data.Models;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Cart;
+using RandomShop.Models.Cookie;
 using RandomShop.Services.Cart;
 
 namespace RandomShop.Controllers;
@@ -10,10 +11,12 @@ namespace RandomShop.Controllers;
 public class CartController : Controller
 {
     private readonly ICartService cartService;
+    private readonly IGuestCartCookieService guestCartCookieService;
 
-    public CartController(ICartService cartService)
+    public CartController(ICartService cartService, IGuestCartCookieService guestCartCookieService)
     {
         this.cartService = cartService;
+        this.guestCartCookieService = guestCartCookieService;
     }
 
     [HttpGet]
@@ -94,5 +97,19 @@ public class CartController : Controller
         int count = await this.cartService.GetCartTotalQuantity(userId);
 
         return Json(new { count });
+    }
+
+    [HttpGet]
+    public IActionResult TestWriteCart()
+    {
+        var items = new List<CartCookieItem>()
+        {
+            new CartCookieItem() { ProductItemId = 3, Quantity = 1 },
+            new CartCookieItem() { ProductItemId = 4, Quantity = 2 },
+        };
+
+        this.guestCartCookieService.WriteGuestCart(Response, items);
+
+        return Ok("Cookie written");
     }
 }
