@@ -39,4 +39,23 @@ public class GuestCartCookieService : IGuestCartCookieService
             return new List<CartCookieItem>();
         }
     }
+
+    public void AddOrUpdateGuestCart(HttpRequest request, HttpResponse response, int productItemId, int quantity)
+    {
+        List<CartCookieItem> items = ReadGuestCart(request);
+
+        CartCookieItem? existingProduct = items.FirstOrDefault(x => x.ProductItemId == productItemId);
+
+        if (existingProduct != null)
+        {
+            existingProduct.Quantity = Math.Clamp(existingProduct.Quantity + quantity, 1, 99);
+        }
+        else
+        {
+            int validQuantity = Math.Clamp(quantity, 1, 99);
+            items.Add(new CartCookieItem { ProductItemId = productItemId, Quantity = validQuantity });
+        }
+
+        WriteGuestCart(response, items);
+    }
 }

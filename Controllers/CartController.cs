@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using NuGet.Protocol;
-using RandomShop.Data.Models;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Cart;
 using RandomShop.Models.Cookie;
@@ -119,5 +117,14 @@ public class CartController : Controller
         var items = this.guestCartCookieService.ReadGuestCart(Request);
 
         return Ok("Cookie read:" + items);
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult AddToGuestCart(int id, int quantity)
+    {
+        this.guestCartCookieService.AddOrUpdateGuestCart(Request, Response, id, quantity);
+
+        return Ok("Guest cart updated successfully.");
     }
 }

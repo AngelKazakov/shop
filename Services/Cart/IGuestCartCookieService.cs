@@ -6,4 +6,6 @@ public interface IGuestCartCookieService
 {
     public void WriteGuestCart(HttpResponse response, List<CartCookieItem> items);
     public List<CartCookieItem> ReadGuestCart(HttpRequest request);
+
+    public void AddOrUpdateGuestCart(HttpRequest request, HttpResponse response, int productItemId, int quantity);
 }
