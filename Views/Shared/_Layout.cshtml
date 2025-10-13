@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
     <style>
-        /* Styling for nested dropdowns */
+        /* Nested dropdowns styling */
         .dropdown-menu .nested-dropdown:hover > .dropdown-menu {
             display: block;
             position: absolute;
@@ -36,6 +36,7 @@
         }
     </style>
 </head>
+
 <body>
 <header>
     <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
@@ -52,6 +53,7 @@
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                     </li>
+
                     <div class="dropdown">
                         <button class="btn btn-secondary dropdown-toggle" type="button" id="categoriesDropdown"
                                 data-bs-toggle="dropdown" aria-expanded="false">
@@ -61,7 +63,7 @@
                     </div>
                 </ul>
 
-                <!-- Cart icon with live badge -->
+                <!-- 🛒 Cart icon with live badge -->
                 <div class="d-flex align-items-center me-3">
                     <a asp-controller="Cart" asp-action="ViewCart" class="nav-link position-relative">
                         <i class="fas fa-shopping-cart fa-lg"></i>
@@ -96,7 +98,7 @@
 <script src="~/js/site.js" asp-append-version="true"></script>
 
 <script>
-    // Load and update categories dropdown
+    // Load dynamic categories dropdown
     document.getElementById("categoriesDropdown").addEventListener("mouseenter", function () {
         fetch('/Category/MainCategories')
             .then(response => response.json())
@@ -111,16 +113,16 @@
                     mainCategoryItem.textContent = category.name;
 
                     if (category.subCategories && category.subCategories.length > 0) {
-                        const subCategoryMenu = document.createElement("div");
-                        subCategoryMenu.className = "dropdown-menu";
-                        mainCategoryItem.appendChild(subCategoryMenu);
+                        const subMenu = document.createElement("div");
+                        subMenu.className = "dropdown-menu";
+                        mainCategoryItem.appendChild(subMenu);
 
                         category.subCategories.forEach(subCategory => {
                             const subCategoryLink = document.createElement("a");
                             subCategoryLink.className = "dropdown-item";
                             subCategoryLink.href = `/Product/GetByCategory/${subCategory.id}`;
                             subCategoryLink.textContent = subCategory.name;
-                            subCategoryMenu.appendChild(subCategoryLink);
+                            subMenu.appendChild(subCategoryLink);
                         });
                     }
 
@@ -130,7 +132,7 @@
             .catch(error => console.error('Error loading categories:', error));
     });
 
-    // Update cart badge on page load
+    // Update cart badge (both guest and logged-in users)
     async function updateCartBadge() {
         try {
             const response = await fetch('/Cart/GetCartCount');

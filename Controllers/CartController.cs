@@ -19,7 +19,6 @@ public class CartController : Controller
     }
 
     [HttpGet]
-    [Authorize]
     public async Task<IActionResult> ViewCart()
     {
         //Check if only user is logged in then create a cart.
@@ -92,10 +91,18 @@ public class CartController : Controller
     [HttpGet]
     public async Task<IActionResult> GetCartCount()
     {
-        string userId = this.User.Id();
-        int count = await this.cartService.GetCartTotalQuantity(userId);
+        if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            string userId = this.User.Id();
+            int count = await this.cartService.GetCartTotalQuantity(userId);
 
-        return Json(new { count });
+            return Json(new { count });
+        }
+
+        var guestItems = this.guestCartCookieService.ReadGuestCart(Request);
+        int guestItemCount = guestItems.Sum(x => x.Quantity);
+
+        return Json(new { count = guestItemCount });
     }
 
     [HttpGet]

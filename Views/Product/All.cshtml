@@ -1,6 +1,5 @@
 ﻿@model ICollection<ProductListViewModel>
 
-
 <style>
     .product-list-container {
         max-width: 900px;
@@ -144,7 +143,6 @@
     .favorite-icon.outlined {
         color: gray;
     }
-
 </style>
 
 <div class="product-list-container">
@@ -180,7 +178,7 @@
                 <div class="action-buttons">
                     <form asp-controller="Cart" asp-action="Add" asp-route-id="@product.Id" method="post"
                           style="display:inline;">
-                        <button type="submit" class="btn btn-buy">Buy</button>
+                        <button type="button" class="btn btn-buy" data-product-id="@product.Id">Buy</button>
                     </form>
                     <a asp-controller="Product" asp-action="Details" asp-route-id="@product.Id" class="btn btn-details">Details</a>
                     <a asp-controller="Product" asp-action="Edit" asp-route-id="@product.Id"
@@ -207,7 +205,6 @@
     function toggleDeleteButton() {
         const checkboxes = document.querySelectorAll('.product-checkbox');
         const deleteButton = document.querySelector('#deleteSelelectedProductsButton');
-        console.log(deleteButton);
         const anySelected = Array.from(checkboxes).some(checkbox => checkbox.checked);
         deleteButton.style.display = anySelected ? 'inline-block' : 'none';
     }
@@ -217,17 +214,15 @@
             return $(this).val();
         }).toArray();
 
-        console.log('selected items:' + selectedIds);
-
         $.ajax({
             type: 'POST',
             url: '/Product/DeleteSelected',
             data: JSON.stringify(selectedIds),
             contentType: 'application/json',
-            success: function (result) {
-                console.log('success!');
+            success: function () {
+                location.reload();
             },
-            error: function (err, result) {
+            error: function (err) {
                 alert("Error in delete: " + err.responseText);
             }
         });
@@ -262,4 +257,40 @@
             }
         });
     }
+
+    //  Guest Cart / Logged-In Cart Integration
+    document.addEventListener('DOMContentLoaded', function () {
+        const buyButtons = document.querySelectorAll('.btn-buy');
+        const isLoggedIn = '@User.Identity.IsAuthenticated'.toLowerCase() === 'true';
+
+        buyButtons.forEach(button => {
+            button.addEventListener('click', function (e) {
+                const productId = button.getAttribute('data-product-id');
+
+                if (isLoggedIn) {
+                    const form = button.closest('form');
+                    form.submit(); // logged-in users → DB cart
+                } else {
+                    // guest users → use cookie-based AddToGuestCart
+                    fetch(`/Cart/AddToGuestCart?id=${productId}&quantity=1`, {
+                        method: 'GET'
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                button.textContent = "Added ✓";
+                                updateCartBadge();
+                                button.disabled = true;
+                                setTimeout(() => {
+                                    button.textContent = "Buy";
+                                    button.disabled = false;
+                                }, 1500);
+                            } else {
+                                alert("Failed to add item to guest cart.");
+                            }
+                        })
+                        .catch(err => console.error("Error updating guest cart:", err));
+                }
+            });
+        });
+    });
 </script>
