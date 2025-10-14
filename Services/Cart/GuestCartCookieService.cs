@@ -1,10 +1,21 @@
 ﻿using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
+using RandomShop.Data;
+using RandomShop.Data.Models;
+using RandomShop.Models.Cart;
 using RandomShop.Models.Cookie;
 
 namespace RandomShop.Services.Cart;
 
 public class GuestCartCookieService : IGuestCartCookieService
 {
+    private readonly ShopContext context;
+
+    public GuestCartCookieService(ShopContext context)
+    {
+        this.context = context;
+    }
+
     public void WriteGuestCart(HttpResponse response, List<CartCookieItem> items)
     {
         string json = JsonSerializer.Serialize(items);
@@ -57,5 +68,31 @@ public class GuestCartCookieService : IGuestCartCookieService
         }
 
         WriteGuestCart(response, items);
+    }
+
+    public async Task<CartViewModel> GetGuestCart(List<CartCookieItem>? guestItems)
+    {
+        if (guestItems == null || !guestItems.Any())
+        {
+            return new CartViewModel { Items = new List<CartItemViewModel>() };
+        }
+
+        List<int> productItemIds = guestItems.Select(x => x.ProductItemId).ToList();
+
+        List<ProductItem> productItems = await this.context.ProductItems.Include(pi => pi.Product)
+            .Where(pi => productItemIds.Contains(pi.Id))
+            .ToListAsync();
+
+        List<CartItemViewModel> productItemsViewModels = productItems.Select(x => new CartItemViewModel()
+            {
+                ProductItemId = x.Id,
+                ProductName = x.Product.Name,
+                UnitPrice = x.Price,
+                Quantity = guestItems.FirstOrDefault(i => i.ProductItemId == x.Id)?.Quantity ?? 0,
+            })
+            .Where(vm => vm.Quantity > 0)
+            .ToList();
+
+        return new CartViewModel() { Items = productItemsViewModels };
     }
 }
