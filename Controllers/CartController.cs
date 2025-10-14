@@ -19,18 +19,26 @@ public class CartController : Controller
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<IActionResult> ViewCart()
     {
         //Check if only user is logged in then create a cart.
         //Now it creates a cart always it doesn't matter if user is logged in...!
         //Check correct applying promotion in shopping cart. Getting the original one not the discounted.
-        var userId = this.User.Id();
 
-        var cartItems = await this.cartService.GetCartItemsAsync(userId);
+        if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            var userId = this.User.Id();
+            var cartItems = await this.cartService.GetCartItemsAsync(userId);
+            var model = new CartViewModel() { Items = cartItems };
 
-        var model = new CartViewModel() { Items = cartItems };
+            return View(model);
+        }
 
-        return View(model);
+        var guestItems = this.guestCartCookieService.ReadGuestCart(Request);
+        var guestCartItems = await this.guestCartCookieService.GetGuestCart(guestItems);
+
+        return View(guestCartItems);
     }
 
     [HttpPost]
