@@ -29,9 +29,16 @@ else
         {
             <tr data-item-id="@item.ProductItemId">
                 <td>
-                    <form asp-controller="Cart" asp-action="Remove" asp-route-id="@item.ProductItemId" method="post"
-                          style="display:inline;">
-                        @Html.AntiForgeryToken()
+                    @{
+                        bool isLoggedIn = User.Identity.IsAuthenticated;
+                        string removeAction = isLoggedIn ? "Remove" : "RemoveFromGuestCart";
+                    }
+                    <form asp-controller="Cart" asp-action="@removeAction" asp-route-id="@item.ProductItemId"
+                          method="post" style="display:inline;">
+                        @if (isLoggedIn)
+                        {
+                            @Html.AntiForgeryToken()
+                        }
                         <button type="submit" class="btn btn-link text-danger p-0" title="Remove item">
                             <i class="fas fa-times"></i>
                         </button>

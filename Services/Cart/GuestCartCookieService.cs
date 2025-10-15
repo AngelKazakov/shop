@@ -115,4 +115,11 @@ public class GuestCartCookieService : IGuestCartCookieService
             WriteGuestCart(response, items);
         }
     }
+
+    public void RemoveFromGuestCart(HttpRequest request, HttpResponse response, int productItemId)
+    {
+        var items = ReadGuestCart(request);
+        items.RemoveAll(i => i.ProductItemId == productItemId);
+        WriteGuestCart(response, items);
+    }
 }

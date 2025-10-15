@@ -64,6 +64,15 @@ public class CartController : Controller
     }
 
     [HttpPost]
+    [AllowAnonymous]
+    public IActionResult RemoveFromGuestCart(int id)
+    {
+        this.guestCartCookieService.RemoveFromGuestCart(Request, Response, id);
+
+        return RedirectToAction("ViewCart");
+    }
+
+    [HttpPost]
     [Authorize]
     public async Task<IActionResult> Clear()
     {

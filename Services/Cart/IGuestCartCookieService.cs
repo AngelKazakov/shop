@@ -13,4 +13,6 @@ public interface IGuestCartCookieService
     public Task<CartViewModel> GetGuestCart(List<CartCookieItem>? guestItems);
     
     public void UpdateGuestQuantity(HttpRequest request, HttpResponse response, int productItemId, int quantity);
+    
+    public void RemoveFromGuestCart(HttpRequest request, HttpResponse response, int productItemId);
 }
