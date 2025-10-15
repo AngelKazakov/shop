@@ -80,27 +80,31 @@ else
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const quantityInputs = document.querySelectorAll('.quantity-input');
+            const isLoggedIn = '@User.Identity.IsAuthenticated'.toLowerCase() === 'true';
+            const tokenElement = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]');
+            const token = tokenElement ? tokenElement.value : null;
 
             quantityInputs.forEach(input => {
                 input.addEventListener('change', async (e) => {
                     const row = e.target.closest('tr');
                     const itemId = row.dataset.itemId;
                     const quantity = parseInt(e.target.value);
-                    const token = document.querySelector('#antiForgeryForm input[name="__RequestVerificationToken"]').value;
 
+                    const updateUrl = isLoggedIn ? '/Cart/UpdateQuantity' : '/Cart/UpdateGuestQuantity';
+
+                    //  Case 1: User sets quantity to 0 
                     if (quantity === 0) {
                         const itemTotalText = row.querySelector('.item-total').textContent;
                         const itemTotal = parseFloat(itemTotalText.replace(/[^0-9.]/g, '')) || 0;
 
                         const grandTotalCell = document.querySelector('#grandTotal');
                         const currentGrandTotal = parseFloat(grandTotalCell.textContent.replace(/[^0-9.]/g, '')) || 0;
-
                         const newGrandTotal = Math.max(0, currentGrandTotal - itemTotal);
                         grandTotalCell.textContent = "$" + newGrandTotal.toFixed(2);
 
+                        // Smooth fade-out and remove
                         row.style.transition = "opacity 0.3s";
                         row.style.opacity = "0";
-
                         setTimeout(() => {
                             row.remove();
 
@@ -119,12 +123,13 @@ else
                             }
                         }, 300);
 
+                        // Tell backend to remove the item (works for both user types)
                         try {
-                            await fetch('/Cart/UpdateQuantity', {
+                            await fetch(updateUrl, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/x-www-form-urlencoded',
-                                    'RequestVerificationToken': token
+                                    ...(isLoggedIn && {'RequestVerificationToken': token})
                                 },
                                 body: `id=${itemId}&quantity=0`
                             });
@@ -132,35 +137,51 @@ else
                             console.error(err);
                         }
 
+                        // Refresh badge
+                        if (typeof updateCartBadge === 'function') {
+                            await updateCartBadge();
+                        }
                         return;
                     }
 
+                    // Case 2: Normal quantity update
                     try {
-                        const response = await fetch('/Cart/UpdateQuantity', {
+                        const response = await fetch(updateUrl, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/x-www-form-urlencoded',
-                                'RequestVerificationToken': token
+                                ...(isLoggedIn && {'RequestVerificationToken': token})
                             },
                             body: `id=${itemId}&quantity=${quantity}`
                         });
 
                         if (response.ok) {
-                            const data = await response.json();
+                            // Try to read JSON only if logged in (guest might return empty)
+                            const data = isLoggedIn ? await response.json() : null;
 
-                            if (data.success) {
-                                if (quantity > 0) {
-                                    row.querySelector('.item-total').textContent = "$" + data.itemTotal.toFixed(2);
-                                }
-
+                            if (isLoggedIn && data?.success) {
+                                // Logged user → update prices from server
+                                row.querySelector('.item-total').textContent = "$" + data.itemTotal.toFixed(2);
                                 const grandTotalCell = document.querySelector('#grandTotal');
-                                if (grandTotalCell) {
-                                    grandTotalCell.textContent = "$" + data.grandTotal.toFixed(2);
-                                }
-                                // Refresh cart badge after quantity update
-                                if (typeof updateCartBadge === 'function') {
-                                    await updateCartBadge();
-                                }
+                                if (grandTotalCell) grandTotalCell.textContent = "$" + data.grandTotal.toFixed(2);
+                            } else {
+                                // Guest user → calculate total locally
+                                const unitPrice = parseFloat(row.querySelector('.unit-price').textContent.replace(/[^0-9.]/g, '')) || 0;
+                                const itemTotal = unitPrice * quantity;
+                                row.querySelector('.item-total').textContent = "$" + itemTotal.toFixed(2);
+
+                                // Recalculate grand total manually
+                                let total = 0;
+                                document.querySelectorAll('.item-total').forEach(cell => {
+                                    total += parseFloat(cell.textContent.replace(/[^0-9.]/g, '')) || 0;
+                                });
+                                const grandTotalCell = document.querySelector('#grandTotal');
+                                if (grandTotalCell) grandTotalCell.textContent = "$" + total.toFixed(2);
+                            }
+
+                            // Refresh cart badge
+                            if (typeof updateCartBadge === 'function') {
+                                await updateCartBadge();
                             }
                         }
                     } catch (error) {

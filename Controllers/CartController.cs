@@ -96,6 +96,15 @@ public class CartController : Controller
         });
     }
 
+    [HttpPost]
+    [AllowAnonymous]
+    public IActionResult UpdateGuestQuantity(int id, int quantity)
+    {
+        this.guestCartCookieService.UpdateGuestQuantity(Request, Response, id, quantity);
+
+        return Ok("Quantity updated");
+    }
+
     [HttpGet]
     public async Task<IActionResult> GetCartCount()
     {

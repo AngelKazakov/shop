@@ -95,4 +95,24 @@ public class GuestCartCookieService : IGuestCartCookieService
 
         return new CartViewModel() { Items = productItemsViewModels };
     }
+
+    public void UpdateGuestQuantity(HttpRequest request, HttpResponse response, int productItemId, int quantity)
+    {
+        List<CartCookieItem> items = ReadGuestCart(request);
+        CartCookieItem? product = items.FirstOrDefault(x => x.ProductItemId == productItemId);
+
+        if (product != null)
+        {
+            if (quantity <= 0)
+            {
+                items.Remove(product);
+            }
+            else
+            {
+                product.Quantity = quantity;
+            }
+
+            WriteGuestCart(response, items);
+        }
+    }
 }
