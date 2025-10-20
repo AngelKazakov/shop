@@ -73,12 +73,20 @@ public class CartController : Controller
     }
 
     [HttpPost]
-    [Authorize]
+    [AllowAnonymous]
     public async Task<IActionResult> Clear()
     {
-        string userId = this.User.Id();
+        if (User.Identity != null && User.Identity.IsAuthenticated)
+        {
+            string userId = this.User.Id();
 
-        await this.cartService.ClearCart(userId);
+            await this.cartService.ClearCart(userId);
+        }
+        else
+        {
+            this.guestCartCookieService.ClearGuestCart(Response);
+        }
+
 
         return RedirectToAction("ViewCart");
     }

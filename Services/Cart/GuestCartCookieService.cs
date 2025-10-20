@@ -122,4 +122,9 @@ public class GuestCartCookieService : IGuestCartCookieService
         items.RemoveAll(i => i.ProductItemId == productItemId);
         WriteGuestCart(response, items);
     }
+
+    public void ClearGuestCart(HttpResponse response)
+    {
+        response.Cookies.Delete("GuestCart");
+    }
 }
