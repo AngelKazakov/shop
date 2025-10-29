@@ -127,4 +127,41 @@ public class GuestCartCookieService : IGuestCartCookieService
     {
         response.Cookies.Delete("GuestCart");
     }
+
+    public async Task MergeGuestCartToUserCart(string userId, HttpRequest request, HttpResponse response)
+    {
+        List<CartCookieItem> guestCartItems = ReadGuestCart(request);
+        if (!guestCartItems.Any()) return;
+
+        ShoppingCart? userCart =
+            await this.context.ShoppingCarts.Include(x => x.Items).FirstOrDefaultAsync(s => s.UserId == userId);
+
+        if (userCart == null)
+        {
+            userCart = new ShoppingCart { UserId = userId, Items = new List<ShoppingCartItem>() };
+            context.ShoppingCarts.Add(userCart);
+        }
+
+        foreach (CartCookieItem guestCartItem in guestCartItems)
+        {
+            ShoppingCartItem? existing =
+                userCart.Items.FirstOrDefault(x => x.ProductItemId == guestCartItem.ProductItemId);
+
+            if (existing != null)
+            {
+                existing.Quantity += guestCartItem.Quantity;
+            }
+            else
+            {
+                userCart.Items.Add(new ShoppingCartItem
+                {
+                    ProductItemId = guestCartItem.ProductItemId,
+                    Quantity = guestCartItem.Quantity,
+                });
+            }
+        }
+
+        await this.context.SaveChangesAsync();
+        response.Cookies.Delete("GuestCart");
+    }
 }

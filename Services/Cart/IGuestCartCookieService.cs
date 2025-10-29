@@ -17,4 +17,6 @@ public interface IGuestCartCookieService
     public void RemoveFromGuestCart(HttpRequest request, HttpResponse response, int productItemId);
 
     public void ClearGuestCart(HttpResponse response);
+
+    public Task MergeGuestCartToUserCart(string userId, HttpRequest request, HttpResponse response);
 }
