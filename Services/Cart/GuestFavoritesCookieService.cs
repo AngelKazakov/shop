@@ -39,4 +39,9 @@ public class GuestFavoritesCookieService : IGuestFavoritesCookieService
 
         response.Cookies.Append("GuestFavorites", json, options);
     }
+
+    public void ClearGuestFavorites(HttpResponse response)
+    {
+        response.Cookies.Delete("GuestFavorites");
+    }
 }
