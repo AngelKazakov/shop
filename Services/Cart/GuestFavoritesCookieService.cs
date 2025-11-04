@@ -24,4 +24,19 @@ public class GuestFavoritesCookieService : IGuestFavoritesCookieService
             return new List<int>();
         }
     }
+
+    public void WriteGuestFavorites(HttpResponse response, ICollection<int> productIds)
+    {
+        var json = JsonSerializer.Serialize(productIds);
+
+        CookieOptions options = new CookieOptions()
+        {
+            Expires = DateTime.Now.AddDays(7),
+            HttpOnly = false,
+            Secure = true,
+            SameSite = SameSiteMode.Lax,
+        };
+
+        response.Cookies.Append("GuestFavorites", json, options);
+    }
 }
