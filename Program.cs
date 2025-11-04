@@ -38,6 +38,7 @@ builder.Services.AddTransient<IReviewEligibilityService, ReviewEligibilityServic
 builder.Services.AddTransient<IReviewInteractionService, ReviewInteractionService>();
 builder.Services.AddTransient<ICartService, CartService>();
 builder.Services.AddTransient<IGuestCartCookieService, GuestCartCookieService>();
+builder.Services.AddTransient<IGuestFavoritesCookieService, GuestFavoritesCookieService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
