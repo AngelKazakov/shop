@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Product;
 using RandomShop.Models.Variation;
+using RandomShop.Services.Cart;
 using RandomShop.Services.Products;
 using RandomShop.Services.Variation;
 
@@ -12,11 +13,14 @@ namespace RandomShop.Controllers
     {
         private readonly IProductService productService;
         private readonly IVariationService variationService;
+        private readonly IGuestFavoritesCookieService guestCartCookieService;
 
-        public ProductController(IProductService productService, IVariationService variationService)
+        public ProductController(IProductService productService, IVariationService variationService,
+            IGuestCartCookieService guestCartCookieService, IGuestFavoritesCookieService guestCartCookieService1)
         {
             this.productService = productService;
             this.variationService = variationService;
+            this.guestCartCookieService = guestCartCookieService1;
         }
 
         [HttpGet]
@@ -92,11 +96,22 @@ namespace RandomShop.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> All()
         {
             string? userId = this.User?.Id();
 
             ICollection<ProductListViewModel> productList = await this.productService.GetAllProducts(userId);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                var guestFavorites = this.guestCartCookieService.ReadGuestFavorites(Request);
+
+                foreach (var product in productList)
+                {
+                    product.IsFavorite = guestFavorites.Contains(product.Id);
+                }
+            }
 
             return View(productList);
         }
