@@ -21,7 +21,9 @@ namespace RandomShop.Services.User
 
         public async Task<bool> RemoveProductFromFavorite(string userId, int productId)
         {
-            UserFavoriteProduct? productForRemoval = await this.context.UserFavoriteProducts.FirstOrDefaultAsync(x => x.UserId == userId && x.ProductId == productId);
+            UserFavoriteProduct? productForRemoval =
+                await this.context.UserFavoriteProducts.FirstOrDefaultAsync(x =>
+                    x.UserId == userId && x.ProductId == productId);
 
             if (productForRemoval != null)
             {
@@ -54,6 +56,22 @@ namespace RandomShop.Services.User
             return favoriteProducts;
         }
 
+        public async Task<bool> ToggleFavoriteAsync(string userId, int productId)
+        {
+            bool isAlreadyFavorite = await CheckIfProductIsAlreadyFavorite(userId, productId);
+
+            if (isAlreadyFavorite)
+            {
+                await RemoveProductFromFavorite(userId, productId);
+                return false;
+            }
+            else
+            {
+                await AddProductToFavorite(userId, productId);
+                return true;
+            }
+        }
+
         private async Task<bool> CreateUserFavoriteProduct(string userId, int productId)
         {
             if (!await CheckIfProductIsAlreadyFavorite(userId, productId))
@@ -83,7 +101,9 @@ namespace RandomShop.Services.User
 
         public async Task<bool> CheckIfProductIsAlreadyFavorite(string userId, int productId)
         {
-            UserFavoriteProduct isAlreadyFavoriteProduct = await this.context.UserFavoriteProducts.FirstOrDefaultAsync(x => x.UserId == userId && x.ProductId == productId);
+            UserFavoriteProduct isAlreadyFavoriteProduct =
+                await this.context.UserFavoriteProducts.FirstOrDefaultAsync(x =>
+                    x.UserId == userId && x.ProductId == productId);
 
             if (isAlreadyFavoriteProduct == null)
             {
@@ -96,7 +116,8 @@ namespace RandomShop.Services.User
 
         public bool CheckIfProductIsAlreadyFavoriteSync(string userId, int productId)
         {
-            UserFavoriteProduct isAlreadyFavoriteProduct = this.context.UserFavoriteProducts.FirstOrDefault(x => x.UserId == userId && x.ProductId == productId);
+            UserFavoriteProduct isAlreadyFavoriteProduct =
+                this.context.UserFavoriteProducts.FirstOrDefault(x => x.UserId == userId && x.ProductId == productId);
 
             if (isAlreadyFavoriteProduct == null)
             {

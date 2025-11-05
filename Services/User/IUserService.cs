@@ -13,5 +13,7 @@ namespace RandomShop.Services.User
         public bool CheckIfProductIsAlreadyFavoriteSync(string userId, int productId);
 
         public Task<ICollection<ProductListViewModel>> GetFavoriteProducts(string userId);
+
+        public Task<bool> ToggleFavoriteAsync(string userId, int productId);
     }
 }

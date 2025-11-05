@@ -230,23 +230,20 @@
 
     function toggleFavorite(icon) {
         const productId = icon.getAttribute('data-product-id');
-        const isCurrentlyFavorite = icon.classList.contains('filled');
-
-        const url = isCurrentlyFavorite
-            ? '/User/RemoveFavorite'
-            : '/User/AddFavorite';
 
         $.ajax({
             type: 'POST',
-            url: url,
+            url: '/Favorite/ToggleFavorite',
             data: JSON.stringify({productId: productId}),
             contentType: 'application/json',
             success: function (response) {
                 if (response.isFavorite) {
+                    // Product added to favorites
                     icon.textContent = '❤️';
                     icon.classList.remove('outlined');
                     icon.classList.add('filled');
                 } else {
+                    // Product removed from favorites
                     icon.textContent = '🤍';
                     icon.classList.remove('filled');
                     icon.classList.add('outlined');
@@ -257,6 +254,7 @@
             }
         });
     }
+
 
     //  Guest Cart / Logged-In Cart Integration
     document.addEventListener('DOMContentLoaded', function () {

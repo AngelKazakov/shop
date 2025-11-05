@@ -14,26 +14,6 @@ namespace RandomShop.Controllers
             this.userService = userService;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> RemoveFavorite([FromBody] FavoriteActionRequest request)
-        {
-            string? userId = this.User.Id();
-            if (string.IsNullOrEmpty(userId)) return Unauthorized();
-
-            bool removed = await userService.RemoveProductFromFavorite(userId, request.ProductId);
-            return Ok(new { isFavorite = !removed ? true : false });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> AddFavorite([FromBody] FavoriteActionRequest request)
-        {
-            string? userId = this.User.Id();
-            if (string.IsNullOrEmpty(userId)) return Unauthorized();
-
-            bool added = await userService.AddProductToFavorite(userId, request.ProductId);
-            return Ok(new { isFavorite = added });
-        }
-
         [HttpGet]
         public async Task<IActionResult> MyFavorites()
         {
