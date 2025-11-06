@@ -22,7 +22,7 @@ builder.Services.AddDbContext<ShopContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
-    .AddDefaultIdentity<RandomShop.Data.Models.User>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddDefaultIdentity<RandomShop.Data.Models.User>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ShopContext>();
 builder.Services.AddControllersWithViews();
 

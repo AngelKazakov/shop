@@ -134,7 +134,8 @@ public class GuestCartCookieService : IGuestCartCookieService
         if (!guestCartItems.Any()) return;
 
         ShoppingCart? userCart =
-            await this.context.ShoppingCarts.Include(x => x.Items).FirstOrDefaultAsync(s => s.UserId == userId);
+            await this.context.ShoppingCarts.Include(x => x.Items)
+                .FirstOrDefaultAsync(s => s.UserId == userId);
 
         if (userCart == null)
         {
