@@ -25,13 +25,15 @@ namespace RandomShop.Areas.Identity.Pages.Account
         private readonly SignInManager<User> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly IGuestCartCookieService _guestCartCookieService;
+        private readonly IGuestFavoritesCookieService _guestFavoritesCookieService;
 
         public LoginModel(SignInManager<User> signInManager, ILogger<LoginModel> logger,
-            IGuestCartCookieService guestCartCookieService)
+            IGuestCartCookieService guestCartCookieService, IGuestFavoritesCookieService guestFavoritesCookieService)
         {
             _signInManager = signInManager;
             _logger = logger;
             _guestCartCookieService = guestCartCookieService;
+            _guestFavoritesCookieService = guestFavoritesCookieService;
         }
 
         /// <summary>
@@ -126,6 +128,7 @@ namespace RandomShop.Areas.Identity.Pages.Account
                     if (user != null)
                     {
                         await _guestCartCookieService.MergeGuestCartToUserCart(user.Id, Request, Response);
+                        await _guestFavoritesCookieService.MergeGuestFavorites(user.Id, Request, Response);
                     }
 
                     _logger.LogInformation("User logged in.");

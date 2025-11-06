@@ -9,4 +9,6 @@ public interface IGuestFavoritesCookieService
     public void ClearGuestFavorites(HttpResponse response);
 
     public bool ToggleFavorite(HttpRequest request, HttpResponse response, int productId);
+
+    public Task MergeGuestFavorites(string userId, HttpRequest request, HttpResponse response);
 }
