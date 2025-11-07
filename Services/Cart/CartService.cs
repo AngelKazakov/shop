@@ -118,18 +118,12 @@ public class CartService : ICartService
     {
         ShoppingCart cart = await GetOrCreateCartAsync(userId);
 
-        this.context.ShoppingCartItems.RemoveRange(cart.Items);
-
-        await this.context.SaveChangesAsync();
-
-        //ShoppingCart cart = await GetOrCreateCartAsync(userId);
-
-        //if (cart != null)
-        //{
-        //    this.context.ShoppingCartItems.RemoveRange(cart.Items);
-        //    context.ShoppingCarts.Remove(cart);
-        //    await context.SaveChangesAsync();
-        //}
+        if (cart != null)
+        {
+            this.context.ShoppingCartItems.RemoveRange(cart.Items);
+            context.ShoppingCarts.Remove(cart);
+            await context.SaveChangesAsync();
+        }
     }
 
     public async Task<decimal> GetCartTotal(string userId)
