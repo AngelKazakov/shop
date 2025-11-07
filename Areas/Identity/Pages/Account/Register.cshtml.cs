@@ -34,13 +34,15 @@ namespace RandomShop.Areas.Identity.Pages.Account
         private readonly IEmailSender _emailSender;
 
         private readonly IGuestCartCookieService _guestCartCookieService;
+        private readonly IGuestFavoritesCookieService _guestFavoritesCookieService;
 
         public RegisterModel(
             UserManager<User> userManager,
             IUserStore<User> userStore,
             SignInManager<User> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender, IGuestCartCookieService guestCartCookieService)
+            IEmailSender emailSender, IGuestCartCookieService guestCartCookieService,
+            IGuestFavoritesCookieService guestFavoritesCookieService)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -49,6 +51,7 @@ namespace RandomShop.Areas.Identity.Pages.Account
             _logger = logger;
             _emailSender = emailSender;
             _guestCartCookieService = guestCartCookieService;
+            _guestFavoritesCookieService = guestFavoritesCookieService;
         }
 
         /// <summary>
@@ -151,7 +154,8 @@ namespace RandomShop.Areas.Identity.Pages.Account
                         await _signInManager.SignInAsync(user, isPersistent: false);
 
                         //Merge data after successful sign-in...
-                        await this._guestCartCookieService.MergeGuestCartToUserCart(userId, Request, Response);
+                        await _guestCartCookieService.MergeGuestCartToUserCart(userId, Request, Response);
+                        await _guestFavoritesCookieService.MergeGuestFavorites(userId, Request, Response);
 
                         return LocalRedirect(returnUrl);
                     }
