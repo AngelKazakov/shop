@@ -3,25 +3,116 @@
 @inject SignInManager<User> SignInManager
 @inject UserManager<User> UserManager
 
+<style>
+    /* === NAVBAR DROPDOWN USER STYLE === */
+    .user-dropdown img {
+        border: 2px solid #ddd;
+        transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .user-dropdown:hover img {
+        border-color: #0d6efd;
+        transform: scale(1.05);
+    }
+
+    .dropdown-menu {
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        min-width: 190px;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px;
+        transition: background-color 0.2s ease;
+    }
+
+    .dropdown-item:hover {
+        background-color: #f0f8ff;
+    }
+
+    .navbar-nav .nav-link {
+        font-weight: 500;
+        color: #333 !important;
+        transition: color 0.2s ease;
+    }
+
+    .navbar-nav .nav-link:hover {
+        color: #0d6efd !important;
+    }
+
+    .guest-links {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+</style>
+
 <ul class="navbar-nav">
-@if (SignInManager.IsSignedIn(User))
-{
-    <li class="nav-item">
-        <a  class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
-    </li>
-    <li class="nav-item">
-        <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button  type="submit" class="nav-link btn btn-link text-dark">Logout</button>
-        </form>
-    </li>
-}
-else
-{
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
-    </li>
-}
+    @if (SignInManager.IsSignedIn(User))
+    {
+        <!-- ✅ Logged-in User Dropdown -->
+        <li class="nav-item dropdown user-dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown"
+               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <img src="~/images/default-user.jpg" alt="User" class="rounded-circle" width="32" height="32" />
+                <span class="ms-2">@User.Identity?.Name</span>
+            </a>
+
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                <!-- Manage Account (default ASP.NET Identity area) -->
+                <li>
+                    <a class="dropdown-item" asp-area="Identity" asp-page="/Account/Manage/Index">
+                        <i class="fas fa-user-cog text-primary"></i> Manage Account
+                    </a>
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+
+                <!-- Favorites -->
+                <li>
+                    <a class="dropdown-item" asp-controller="User" asp-action="Favorites">
+                        <i class="fas fa-heart text-danger"></i> Favorites
+                    </a>
+                </li>
+
+                <!-- My Orders -->
+                <li>
+                    <a class="dropdown-item" asp-controller="Order" asp-action="MyOrders">
+                        <i class="fas fa-box"></i> My Orders
+                    </a>
+                </li>
+
+                <li><hr class="dropdown-divider" /></li>
+
+                <!-- Logout -->
+                <li>
+                    <form asp-area="Identity" asp-page="/Account/Logout"
+                          asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })"
+                          method="post" class="dropdown-item p-0">
+                        <button type="submit" class="btn w-100 text-start text-danger">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    }
+    else
+    {
+        <!-- 🚪 Guest User (Login / Register) -->
+        <div class="guest-links">
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">
+                    <i class="fas fa-user-plus"></i> Register
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </a>
+            </li>
+        </div>
+    }
 </ul>
