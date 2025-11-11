@@ -7,6 +7,7 @@ using RandomShop.Infrastructure;
 using RandomShop.Services.Cart;
 using RandomShop.Services.Categories;
 using RandomShop.Services.Images;
+using RandomShop.Services.Order;
 using RandomShop.Services.Products;
 using RandomShop.Services.Promotions;
 using RandomShop.Services.Review;
@@ -39,6 +40,7 @@ builder.Services.AddTransient<IReviewInteractionService, ReviewInteractionServic
 builder.Services.AddTransient<ICartService, CartService>();
 builder.Services.AddTransient<IGuestCartCookieService, GuestCartCookieService>();
 builder.Services.AddTransient<IGuestFavoritesCookieService, GuestFavoritesCookieService>();
+builder.Services.AddTransient<IOrderService, OrderService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
