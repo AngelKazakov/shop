@@ -12,7 +12,9 @@ public class CheckoutViewModel
 
     // public ICollection<AddressViewModel> Addresses { get; set; } = new List<AddressViewModel>();
 
-    public ICollection<OrderInfoViewModel> OrderInfos { get; set; } = new List<OrderInfoViewModel>();
+    // public ICollection<OrderInfoViewModel> OrderInfos { get; set; } = new List<OrderInfoViewModel>();
+
+    public OrderInfoViewModel OrderInfo { get; set; }
 
     public ICollection<ShippingMethod> ShippingMethods { get; set; } = new List<ShippingMethod>();
 

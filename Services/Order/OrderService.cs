@@ -58,7 +58,7 @@ public class OrderService : IOrderService
     public async Task<CheckoutViewModel> GetCheckoutDataAsync(string userId)
     {
         ICollection<CartItemViewModel> cartItems = await this.cartService.GetCartItemsAsync(userId);
-        var subTotal = cartItems.Sum(x => x.TotalPrice);
+        decimal subTotal = cartItems.Sum(x => x.TotalPrice);
 
         var shippingMethods = await this.context.ShippingMethods.AsNoTracking().ToListAsync();
         var paymentTypes = await this.context.PaymentTypes.AsNoTracking().ToListAsync();
@@ -70,16 +70,34 @@ public class OrderService : IOrderService
             .Where(ua => ua.UserId == userId)
             .ToListAsync();
 
-        var savedAddresses = userAddresses.Select(ua => new AddressOptionViewModel()
+        var savedAddresses = userAddresses
+            .Select(ua => new AddressOptionViewModel
+            {
+                AddressId = ua.AddressId,
+                DisplayText =
+                    $"{ua.Address.StreetNumber}, {ua.Address.AddressLine1}, {ua.Address.PostalCode}, {ua.Address.Country.Name}",
+                IsDefault = ua.IsDefault,
+            })
+            .ToList();
+
+        // Correct shipping logic
+        decimal shippingPrice;
+        if (subTotal >= DataConstants.freeShippingMinPrice)
         {
-            AddressId = ua.AddressId,
-            DisplayText =
-                $"{ua.Address.StreetNumber}, {ua.Address.AddressLine1}, {ua.Address.PostalCode}, {ua.Address.Country.Name}",
-            IsDefault = ua.IsDefault,
-        }).ToList();
+            shippingPrice = 0m;
+        }
+        else
+        {
+            shippingPrice = DataConstants.defaultShippingPrice;
+        }
 
+        var orderInfo = new OrderInfoViewModel
+        {
+            TotalPrice = subTotal,
+            ShippingPrice = shippingPrice
+        };
 
-        var model = new CheckoutViewModel()
+        var model = new CheckoutViewModel
         {
             SubTotal = subTotal,
             ShippingMethods = shippingMethods,
@@ -87,8 +105,10 @@ public class OrderService : IOrderService
             SavedAddresses = savedAddresses,
             SelectedAddressId = savedAddresses.FirstOrDefault(a => a.IsDefault)?.AddressId,
             CartItems = cartItems,
+            OrderInfo = orderInfo
         };
 
         return model;
     }
+
 }

@@ -46,7 +46,10 @@
             public const double priceMax = double.MaxValue;
 
             public const string productNameErrorMessage = "Product name require length between 1 and 1024.";
-            public const string productDescriptionErrorMessage = $"Product description require length between 1 and 2147483647 symbols.";
+
+            public const string productDescriptionErrorMessage =
+                $"Product description require length between 1 and 2147483647 symbols.";
+
             public const string productPriceErrorMessage = "Price should be between 0 and 2147483647";
             public const string productSKUErrorMessage = $"SKU length should be between 1 and 64";
             public const string productQuantityErrorMessage = "Product quantity should be between 0 and 2147483647";
@@ -63,7 +66,6 @@
         {
             public const int nameMinLength = 1;
             public const int nameMaxLength = 256;
-
         }
 
         public static class Promotion
@@ -81,7 +83,9 @@
         public const int shippingMethodNameMinLength = 1;
         public const int shippingMethodNameMaxLength = 64;
         public const int shippingMethodMinPrice = 0;
-        public const double shippingMethodMaxPrice = 1024 * 2;
+        public const decimal shippingMethodMaxPrice = 1024 * 2;
+        public const decimal freeShippingMinPrice = 64;
+        public const decimal defaultShippingPrice = 7.90m;
 
         public const double orderlTotalMinValue = 0;
         public const double orderTotalMaxValue = double.MaxValue;
@@ -99,6 +103,5 @@
 
         public const int variationOptionValueMinLength = 1;
         public const int variationOptionValueMaxLength = 512;
-
     }
 }
