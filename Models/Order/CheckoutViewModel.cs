@@ -10,30 +10,15 @@ public class CheckoutViewModel
 
     public decimal SubTotal { get; set; }
 
-    // public ICollection<AddressViewModel> Addresses { get; set; } = new List<AddressViewModel>();
-
-    // public ICollection<OrderInfoViewModel> OrderInfos { get; set; } = new List<OrderInfoViewModel>();
-
     public OrderInfoViewModel OrderInfo { get; set; }
 
     public ICollection<ShippingMethod> ShippingMethods { get; set; } = new List<ShippingMethod>();
+
+    public int SelectedShippingMethodId { get; set; }
 
     public ICollection<PaymentType> PaymentTypes { get; set; } = new List<PaymentType>();
 
     public ICollection<AddressOptionViewModel> SavedAddresses { get; set; } = new List<AddressOptionViewModel>();
 
     public int? SelectedAddressId { get; set; }
-
-    //Prefilled values for the form (optional)
-    //public int? StreetNumber { get; set; }
-
-    //public string? AddressLine1 { get; set; }
-
-    //public string? AddressLine2 { get; set; }
-
-    //public int? PostalCode { get; set; }
-
-    //public int? CountryId { get; set; }
-
-    //public int? PaymentTypeId { get; set; }
 }

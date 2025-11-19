@@ -80,7 +80,6 @@ public class OrderService : IOrderService
             })
             .ToList();
 
-        // Correct shipping logic
         decimal shippingPrice;
         if (subTotal >= DataConstants.freeShippingMinPrice)
         {
@@ -110,5 +109,4 @@ public class OrderService : IOrderService
 
         return model;
     }
-
 }
