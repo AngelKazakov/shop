@@ -82,8 +82,8 @@
 
         public const int shippingMethodNameMinLength = 1;
         public const int shippingMethodNameMaxLength = 64;
-        public const int shippingMethodMinPrice = 0;
-        public const decimal shippingMethodMaxPrice = 1024 * 2;
+        public const double shippingMethodMinPrice = 0;
+        public const double shippingMethodMaxPrice = 1024 * 2;
         public const decimal freeShippingMinPrice = 64;
         public const decimal defaultShippingPrice = 7.90m;
 

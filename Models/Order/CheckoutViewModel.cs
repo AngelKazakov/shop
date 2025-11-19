@@ -18,6 +18,8 @@ public class CheckoutViewModel
 
     public ICollection<PaymentType> PaymentTypes { get; set; } = new List<PaymentType>();
 
+    public int SelectedPaymentTypeId { get; set; }
+
     public ICollection<AddressOptionViewModel> SavedAddresses { get; set; } = new List<AddressOptionViewModel>();
 
     public int? SelectedAddressId { get; set; }

@@ -1,0 +1,196 @@
+﻿@model RandomShop.Models.Order.CheckoutViewModel
+
+@{
+    ViewData["Title"] = "Checkout";
+    var grandTotal = Model.SubTotal + (Model.OrderInfo?.ShippingPrice ?? 0m);
+}
+
+<h2 class="mb-4">Checkout</h2>
+
+@if (!Model.CartItems.Any())
+{
+    <p>Your cart is empty.</p>
+}
+else
+{
+    <form asp-controller="Order" asp-action="PlaceOrder" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="row">
+            <!-- LEFT: Cart + Shipping + Payment -->
+            <div class="col-md-8">
+
+                <!-- Cart Items -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <strong>Your Items</strong>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table mb-0">
+                            <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-end">Unit Price</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            @foreach (var item in Model.CartItems)
+                            {
+                                <tr>
+                                    <td>@item.ProductName</td>
+                                    <td class="text-end">@item.UnitPrice.ToString("C")</td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-end">@item.TotalPrice.ToString("C")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer text-end">
+                        <strong>Subtotal: @Model.SubTotal.ToString("C")</strong>
+                    </div>
+                </div>
+
+                <!-- Shipping Methods -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <strong>Shipping Method</strong>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.ShippingMethods != null && Model.ShippingMethods.Any())
+                        {
+                            @foreach (var method in Model.ShippingMethods)
+                            {
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           asp-for="SelectedShippingMethodId"
+                                           value="@method.Id"
+                                           checked="@(Model.SelectedShippingMethodId == null && method == Model.ShippingMethods.First() || Model.SelectedShippingMethodId == method.Id)"/>
+
+                                    <label class="form-check-label">
+                                        @method.Name
+                                        @if (Model.OrderInfo != null && Model.OrderInfo.ShippingPrice == 0)
+                                        {
+                                            <span class="badge bg-success ms-2">FREE</span>
+                                        }
+                                    </label>
+                                </div>
+                            }
+
+                            <span asp-validation-for="SelectedShippingMethodId" class="text-danger"></span>
+                        }
+                        else
+                        {
+                            <p>No shipping methods available.</p>
+                        }
+                    </div>
+                </div>
+
+                <!-- Payment Methods -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <strong>Payment Method</strong>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.PaymentTypes != null && Model.PaymentTypes.Any())
+                        {
+                            @foreach (var payment in Model.PaymentTypes)
+                            {
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input"
+                                           type="radio"
+                                           name="PaymentTypeId"
+                                           value="@payment.Id"/>
+                                    <label class="form-check-label">
+                                        @payment.Value
+                                    </label>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p>No payment methods available.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Address + Invoice + Summary -->
+            <div class="col-md-4">
+
+                <!-- Address selection  -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <strong>Delivery Address</strong>
+                    </div>
+                    <div class="card-body">
+                        @if (Model.SavedAddresses != null && Model.SavedAddresses.Any())
+                        {
+                            <label class="form-label">Choose saved address:</label>
+                            <select asp-for="SelectedAddressId"
+                                    asp-items="@(new SelectList(Model.SavedAddresses, "AddressId", "DisplayText"))"
+                                    class="form-select">
+                                <option value="">-- Select address --</option>
+                            </select>
+                            <span asp-validation-for="SelectedAddressId" class="text-danger"></span>
+
+                            @* Later I should add "Use new address" UI here *@
+                        }
+                        else
+                        {
+                            <p>No saved addresses found.</p>
+                            <p class="text-muted mb-0">
+                                (Later you can add fields here to enter a new address.)
+                            </p>
+                        }
+
+                        @* <div class="form-check mt-3"> *@
+                        @*     <input asp-for="RequestInvoice" class="form-check-input"/> *@
+                        @*     <label asp-for="RequestInvoice" class="form-check-label"> *@
+                        @*         Invoice (Фактура) *@
+                        @*     </label> *@
+                        @* </div> *@
+                    </div>
+                </div>
+
+                <!-- Order summary -->
+                <div class="card">
+                    <div class="card-header">
+                        <strong>Order Summary</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span>@Model.SubTotal.ToString("C")</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Shipping:</span>
+                            <span>
+                                @if (Model.OrderInfo != null && Model.OrderInfo.ShippingPrice == 0)
+                                {
+                                    @:Free
+                                }
+                                else
+                                {
+                                    @(Model.OrderInfo?.ShippingPrice.ToString("C") ?? "-")
+                                }
+                            </span>
+                        </div>
+                        <hr/>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <strong>@grandTotal.ToString("C")</strong>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100">
+                            Place Order
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+}
