@@ -39,7 +39,15 @@ else
                             @foreach (var item in Model.CartItems)
                             {
                                 <tr>
-                                    <td>@item.ProductName</td>
+                                    <td>
+                                        <a asp-controller="Product"
+                                           asp-action="Details"
+                                           asp-route-id="@item.ProductItemId"
+                                           class="text-decoration-none">
+                                            @item.ProductName
+                                        </a>
+                                    </td>
+
                                     <td class="text-end">@item.UnitPrice.ToString("C")</td>
                                     <td class="text-center">@item.Quantity</td>
                                     <td class="text-end">@item.TotalPrice.ToString("C")</td>
