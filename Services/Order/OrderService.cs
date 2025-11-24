@@ -109,4 +109,9 @@ public class OrderService : IOrderService
 
         return model;
     }
+
+    public async Task<int> PlaceOrderAsync(string userId, CheckoutFormModel model)
+    {
+        throw new NotImplementedException();
+    }
 }

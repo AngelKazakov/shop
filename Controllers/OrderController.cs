@@ -25,4 +25,37 @@ public class OrderController : Controller
 
         return View(data);
     }
+
+    [HttpGet]
+    [ValidateAntiForgeryToken]
+    [Authorize]
+    public async Task<IActionResult> PlaceOrder(CheckoutFormModel model)
+    {
+        string userId = this.User.Id();
+
+        if (!ModelState.IsValid)
+        {
+            var vm = await this.orderService.GetCheckoutDataAsync(userId);
+            return View("Checkout", vm);
+        }
+
+        var validation = await this.orderService.ValidateCartAsync(userId);
+        if (validation.Errors.Any())
+        {
+            foreach (var error in validation.Errors)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
+
+            var vm = await this.orderService.GetCheckoutDataAsync(userId);
+            return View("Checkout", vm);
+        }
+
+        var orderId = await this.orderService.PlaceOrderAsync(userId, model);
+
+        //Optional confirmation.
+        //return RedirectToAction("Confirmation", new { id = orderId });
+
+        return RedirectToAction("Index", "Home");
+    }
 }
