@@ -23,4 +23,18 @@ public class CheckoutViewModel
     public ICollection<AddressOptionViewModel> SavedAddresses { get; set; } = new List<AddressOptionViewModel>();
 
     public int? SelectedAddressId { get; set; }
+
+    public ICollection<Country> Countries { get; set; } = new List<Country>();
+
+    public bool UseNewAddress { get; set; }
+
+    public int? StreetNumber { get; set; }
+
+    public string? AddressLine1 { get; set; }
+
+    public string? AddressLine2 { get; set; }
+
+    public int? PostalCode { get; set; }
+
+    public int? CountryId { get; set; }
 }

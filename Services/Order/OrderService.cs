@@ -103,8 +103,10 @@ public class OrderService : IOrderService
             PaymentTypes = paymentTypes,
             SavedAddresses = savedAddresses,
             SelectedAddressId = savedAddresses.FirstOrDefault(a => a.IsDefault)?.AddressId,
+            Countries = countries,
             CartItems = cartItems,
-            OrderInfo = orderInfo
+            OrderInfo = orderInfo,
+            UseNewAddress = false,
         };
 
         return model;

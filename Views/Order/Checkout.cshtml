@@ -26,9 +26,10 @@ else
                         <strong>Your Items</strong>
                     </div>
                     <div class="card-body p-0">
-                        <table class="table mb-0">
+                        <table class="table mb-0 align-middle">
                             <thead>
                             <tr>
+                                <th style="width:70px;">Image</th>
                                 <th>Product</th>
                                 <th class="text-end">Unit Price</th>
                                 <th class="text-center">Qty</th>
@@ -40,6 +41,13 @@ else
                             {
                                 <tr>
                                     <td>
+                                        <img
+                                            src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?fm=jpg&q=60&w=3000&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cHJvZHVjdHxlbnwwfHwwfHx8MA%3D%3D"
+                                            alt="Default Image"
+                                            class="img-thumbnail"
+                                            style="width:60px; height:60px; object-fit:cover;"/>
+                                    </td>
+                                    <td>
                                         <a asp-controller="Product"
                                            asp-action="Details"
                                            asp-route-id="@item.ProductItemId"
@@ -47,7 +55,6 @@ else
                                             @item.ProductName
                                         </a>
                                     </td>
-
                                     <td class="text-end">@item.UnitPrice.ToString("C")</td>
                                     <td class="text-center">@item.Quantity</td>
                                     <td class="text-end">@item.TotalPrice.ToString("C")</td>
@@ -126,7 +133,7 @@ else
                 </div>
             </div>
 
-            <!-- RIGHT: Address + Invoice + Summary -->
+            <!-- RIGHT: Address + Summary -->
             <div class="col-md-4">
 
                 <!-- Address selection  -->
@@ -135,34 +142,88 @@ else
                         <strong>Delivery Address</strong>
                     </div>
                     <div class="card-body">
-                        @if (Model.SavedAddresses != null && Model.SavedAddresses.Any())
-                        {
-                            <label class="form-label">Choose saved address:</label>
-                            <select asp-for="SelectedAddressId"
-                                    asp-items="@(new SelectList(Model.SavedAddresses, "AddressId", "DisplayText"))"
-                                    class="form-select">
-                                <option value="">-- Select address --</option>
-                            </select>
-                            <span asp-validation-for="SelectedAddressId" class="text-danger"></span>
 
-                            @* Later I should add "Use new address" UI here *@
-                        }
-                        else
-                        {
-                            <p>No saved addresses found.</p>
-                            <p class="text-muted mb-0">
-                                (Later you can add fields here to enter a new address.)
-                            </p>
-                        }
+                        <!-- Radio: Saved vs New address -->
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="UseNewAddress"
+                                       value="false"
+                                       checked="@(Model.UseNewAddress == false)"/>
+                                <label class="form-check-label">
+                                    Use saved address
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="UseNewAddress"
+                                       value="true"
+                                       checked="@(Model.UseNewAddress == true)"/>
+                                <label class="form-check-label">
+                                    Use new address
+                                </label>
+                            </div>
+                        </div>
 
-                        @* <div class="form-check mt-3"> *@
-                        @*     <input asp-for="RequestInvoice" class="form-check-input"/> *@
-                        @*     <label asp-for="RequestInvoice" class="form-check-label"> *@
-                        @*         Invoice (Фактура) *@
-                        @*     </label> *@
-                        @* </div> *@
+                        <!-- Saved addresses dropdown -->
+                        <div id="savedAddressSection" style="display:@(Model.UseNewAddress ? "none" : "block")">
+                            @if (Model.SavedAddresses != null && Model.SavedAddresses.Any())
+                            {
+                                <label class="form-label">Choose saved address:</label>
+                                <select asp-for="SelectedAddressId"
+                                        asp-items="@(new SelectList(Model.SavedAddresses, "AddressId", "DisplayText"))"
+                                        class="form-select">
+                                    <option value="">-- Select address --</option>
+                                </select>
+                                <span asp-validation-for="SelectedAddressId" class="text-danger"></span>
+                            }
+                            else
+                            {
+                                <p>No saved addresses found.</p>
+                            }
+                        </div>
+
+                        <!-- New address form -->
+                        <div id="newAddressSection" style="display:@(Model.UseNewAddress ? "block" : "none")"
+                             class="mt-3">
+                            <div class="mb-2">
+                                <label class="form-label">Street number</label>
+                                <input asp-for="StreetNumber" class="form-control"/>
+                                <span asp-validation-for="StreetNumber" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Address line 1</label>
+                                <input asp-for="AddressLine1" class="form-control"/>
+                                <span asp-validation-for="AddressLine1" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Address line 2 (optional)</label>
+                                <input asp-for="AddressLine2" class="form-control"/>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Postal code</label>
+                                <input asp-for="PostalCode" class="form-control"/>
+                                <span asp-validation-for="PostalCode" class="text-danger"></span>
+                            </div>
+
+                            <div class="mb-2">
+                                <label class="form-label">Country</label>
+                                <select asp-for="CountryId"
+                                        asp-items="@(new SelectList(Model.Countries, "Id", "Name"))"
+                                        class="form-select">
+                                    <option value="">-- Select country --</option>
+                                </select>
+                                <span asp-validation-for="CountryId" class="text-danger"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
 
                 <!-- Order summary -->
                 <div class="card">
@@ -202,3 +263,27 @@ else
         </div>
     </form>
 }
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const radios = document.querySelectorAll('input[name="UseNewAddress"]');
+            const savedSection = document.getElementById('savedAddressSection');
+            const newSection = document.getElementById('newAddressSection');
+
+            radios.forEach(r => {
+                r.addEventListener('change', function () {
+                    const useNew = this.value === 'true';
+                    if (useNew) {
+                        savedSection.style.display = 'none';
+                        newSection.style.display = 'block';
+                    } else {
+                        savedSection.style.display = 'block';
+                        newSection.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}
+
