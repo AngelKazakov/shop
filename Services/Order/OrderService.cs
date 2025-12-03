@@ -55,6 +55,43 @@ public class OrderService : IOrderService
         return result;
     }
 
+    public Dictionary<string, string> ValidateAddressSelection(CheckoutFormModel model)
+    {
+        var errors = new Dictionary<string, string>();
+
+        if (model.UseNewAddress)
+        {
+            if (model.StreetNumber == null)
+            {
+                errors.Add(nameof(model.StreetNumber), "Street number is required.");
+            }
+
+            if (string.IsNullOrWhiteSpace(model.AddressLine1))
+            {
+                errors.Add(nameof(model.AddressLine1), "Address line 1 is required.");
+            }
+
+            if (!model.PostalCode.HasValue)
+            {
+                errors.Add(nameof(model.PostalCode), "Postal code is required.");
+            }
+
+            if (!model.CountryId.HasValue)
+            {
+                errors.Add(nameof(model.CountryId), "Country ID is required.");
+            }
+            else
+            {
+                if (!model.SelectedAddressId.HasValue)
+                {
+                    errors.Add(nameof(model.SelectedAddressId), "Please choose a saved address.");
+                }
+            }
+        }
+
+        return errors;
+    }
+
     public async Task<CheckoutViewModel> GetCheckoutDataAsync(string userId)
     {
         ICollection<CartItemViewModel> cartItems = await this.cartService.GetCartItemsAsync(userId);
