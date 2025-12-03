@@ -82,7 +82,7 @@ else
                                     <input class="form-check-input"
                                            type="radio"
                                            asp-for="SelectedShippingMethodId"
-                                           value="@method.Id"
+                                           value="@method.Id" required="required"
                                            checked="@(Model.SelectedShippingMethodId == null && method == Model.ShippingMethods.First() || Model.SelectedShippingMethodId == method.Id)"/>
 
                                     <label class="form-check-label">
@@ -118,7 +118,7 @@ else
                                     <input class="form-check-input"
                                            type="radio"
                                            name="PaymentTypeId"
-                                           value="@payment.Id"/>
+                                           value="@payment.Id" required="required"/>
                                     <label class="form-check-label">
                                         @payment.Value
                                     </label>
@@ -190,13 +190,13 @@ else
                              class="mt-3">
                             <div class="mb-2">
                                 <label class="form-label">Street number</label>
-                                <input asp-for="StreetNumber" class="form-control"/>
+                                <input asp-for="StreetNumber" class="form-control new-address-input"/>
                                 <span asp-validation-for="StreetNumber" class="text-danger"></span>
                             </div>
 
                             <div class="mb-2">
                                 <label class="form-label">Address line 1</label>
-                                <input asp-for="AddressLine1" class="form-control"/>
+                                <input asp-for="AddressLine1" class="form-control new-address-input"/>
                                 <span asp-validation-for="AddressLine1" class="text-danger"></span>
                             </div>
 
@@ -207,7 +207,7 @@ else
 
                             <div class="mb-2">
                                 <label class="form-label">Postal code</label>
-                                <input asp-for="PostalCode" class="form-control"/>
+                                <input asp-for="PostalCode" class="form-control new-address-input"/>
                                 <span asp-validation-for="PostalCode" class="text-danger"></span>
                             </div>
 
@@ -215,7 +215,7 @@ else
                                 <label class="form-label">Country</label>
                                 <select asp-for="CountryId"
                                         asp-items="@(new SelectList(Model.Countries, "Id", "Name"))"
-                                        class="form-select">
+                                        class="form-select new-address-input">
                                     <option value="">-- Select country --</option>
                                 </select>
                                 <span asp-validation-for="CountryId" class="text-danger"></span>
@@ -254,7 +254,7 @@ else
                             <strong>@grandTotal.ToString("C")</strong>
                         </div>
 
-                        <button type="submit" class="btn btn-primary w-100">
+                        <button type="submit" class="btn btn-primary w-100" asp-action="PlaceOrder">
                             Place Order
                         </button>
                     </div>
@@ -267,23 +267,81 @@ else
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // --- 1. Get References ---
+            const form = document.querySelector('form');
+            const useNewAddressRadio = document.querySelector('input[name="UseNewAddress"][value="true"]');
             const radios = document.querySelectorAll('input[name="UseNewAddress"]');
-            const savedSection = document.getElementById('savedAddressSection');
-            const newSection = document.getElementById('newAddressSection');
 
+            const savedAddressSelect = document.getElementById('SelectedAddressId'); // THE DROPDOWN
+            const newAddressInputs = document.querySelectorAll('#newAddressSection .new-address-input'); // ALL NEW INPUTS
+
+            // --- 2. Function to Control Requirements (The brain of the operation) ---
+            function toggleAddressRequirements(useNew) {
+
+                // A) Control New Address Inputs
+                newAddressInputs.forEach(input => {
+                    if (useNew) {
+                        input.setAttribute('required', 'required'); // NEW: Required
+                    } else {
+                        input.removeAttribute('required'); // SAVED: Not Required
+                        input.value = ''; // Clear for safety
+                        input.classList.remove('is-invalid'); // Clear visual errors
+                    }
+                });
+
+                // B) Control Saved Address Dropdown
+                if (savedAddressSelect) { // Check if the dropdown exists on the page
+                    if (useNew) {
+                        savedAddressSelect.removeAttribute('required'); // NEW: Not Required
+                        savedAddressSelect.value = ''; // Clear selection
+                        savedAddressSelect.classList.remove('is-invalid');
+                    } else {
+                        savedAddressSelect.setAttribute('required', 'required'); // SAVED: Required
+                    }
+                }
+
+                // Also toggle visibility for a complete user experience
+                document.getElementById('savedAddressSection').style.display = useNew ? 'none' : 'block';
+                document.getElementById('newAddressSection').style.display = useNew ? 'block' : 'none';
+            }
+
+            // --- 3. Attach Listeners ---
+
+            // Run the function once when the page loads to set the initial state
+            toggleAddressRequirements(useNewAddressRadio.checked);
+
+            // Run the function whenever the radio button changes
             radios.forEach(r => {
                 r.addEventListener('change', function () {
                     const useNew = this.value === 'true';
-                    if (useNew) {
-                        savedSection.style.display = 'none';
-                        newSection.style.display = 'block';
-                    } else {
-                        savedSection.style.display = 'block';
-                        newSection.style.display = 'none';
-                    }
+                    toggleAddressRequirements(useNew);
                 });
+            });
+
+            // --- 4. Intercept Form Submission (The Security Guard) ---
+            form.addEventListener('submit', function (event) {
+
+                // This command checks ALL inputs that have the 'required' attribute currently set
+                if (!form.checkValidity()) {
+
+                    // !!! THE KEY STEP !!!
+                    // Stop the request from going to the server
+                    event.preventDefault();
+
+                    // Tell Bootstrap to display the red validation messages for all failed fields
+                    form.classList.add('was-validated');
+
+                    // Focus on the first invalid field to guide the user
+                    const firstInvalid = form.querySelector(':invalid');
+                    if (firstInvalid) {
+                        firstInvalid.focus();
+                    }
+                }
+                // If it passes checkValidity(), the form continues and sends the HTTP request.
             });
         });
     </script>
+}
+
 }
 
