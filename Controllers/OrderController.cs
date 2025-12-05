@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Cart;
@@ -10,10 +11,12 @@ namespace RandomShop.Controllers;
 public class OrderController : Controller
 {
     private readonly IOrderService orderService;
+    private readonly IMapper mapper;
 
-    public OrderController(IOrderService orderService)
+    public OrderController(IOrderService orderService, IMapper mapper)
     {
         this.orderService = orderService;
+        this.mapper = mapper;
     }
 
     [HttpGet]
@@ -40,7 +43,7 @@ public class OrderController : Controller
         {
             viewModel = await this.orderService.GetCheckoutDataAsync(userId);
 
-            RepopulateViewModel(viewModel, model);
+            this.mapper.Map(model, viewModel);
 
             return View("Checkout", viewModel);
         }
@@ -55,7 +58,7 @@ public class OrderController : Controller
             }
 
             viewModel = await this.orderService.GetCheckoutDataAsync(userId);
-            RepopulateViewModel(viewModel, model);
+            this.mapper.Map(model, viewModel);
 
             return View("Checkout", viewModel);
         }
@@ -70,7 +73,7 @@ public class OrderController : Controller
             }
 
             viewModel = await this.orderService.GetCheckoutDataAsync(userId);
-            RepopulateViewModel(viewModel, model);
+            this.mapper.Map(model, viewModel);
 
             return View("Checkout", viewModel);
         }
@@ -80,20 +83,5 @@ public class OrderController : Controller
         //Optional confirmation.
         //return RedirectToAction("Confirmation", new { id = orderId });
         return RedirectToAction("Index", "Home");
-    }
-
-    private void RepopulateViewModel(CheckoutViewModel viewModel, CheckoutFormModel formModel)
-    {
-        viewModel.SelectedShippingMethodId = formModel.SelectedShippingMethodId;
-        viewModel.SelectedPaymentTypeId = formModel.PaymentTypeId;
-
-        viewModel.SelectedAddressId = formModel.SelectedAddressId;
-        viewModel.UseNewAddress = formModel.UseNewAddress;
-
-        viewModel.StreetNumber = formModel.StreetNumber;
-        viewModel.AddressLine1 = formModel.AddressLine1;
-        viewModel.AddressLine2 = formModel.AddressLine2;
-        viewModel.PostalCode = formModel.PostalCode;
-        viewModel.CountryId = formModel.CountryId;
     }
 }

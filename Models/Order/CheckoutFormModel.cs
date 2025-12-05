@@ -10,7 +10,7 @@ public class CheckoutFormModel
 
     public int? SelectedAddressId { get; set; }
 
-    [Required] public int PaymentTypeId { get; set; }
+    [Required] public int SelectedPaymentTypeId { get; set; }
 
     public bool UseNewAddress { get; set; }
 
