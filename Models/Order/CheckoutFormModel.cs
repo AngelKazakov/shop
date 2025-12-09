@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
-using RandomShop.Data;
+using RandomShop.Models.Address;
 
 namespace RandomShop.Models.Order;
 
@@ -14,24 +13,9 @@ public class CheckoutFormModel
 
     public bool UseNewAddress { get; set; }
 
-    public int? CountryId { get; set; }
+    public AddressInputModel AddressInputModel { get; set; }
 
-    [Required]
-    [Range(DataConstants.Address.StreetNumberMin, DataConstants.Address.StreetNumberMax)]
-    public int? StreetNumber { get; set; }
-
-    [Required]
-    [StringLength(DataConstants.Address.addressLineMaxLength)]
-    public string? AddressLine1 { get; set; }
-
-    [StringLength(DataConstants.Address.addressLineMaxLength)]
-    public string? AddressLine2 { get; set; }
-
-    [Required]
-    [Range(DataConstants.Address.postalCodeMin, DataConstants.Address.postalCodeMax)]
-    public int? PostalCode { get; set; }
+    public decimal OrderTotal { get; set; }
 
     // public string? Provider { get; set; }
-
-    // public decimal OrderTotal { get; set; }
 }
