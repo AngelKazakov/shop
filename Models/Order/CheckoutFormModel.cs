@@ -15,6 +15,8 @@ public class CheckoutFormModel
 
     public AddressInputModel AddressInputModel { get; set; }
 
+    public bool SaveShippingAddress { get; set; }
+
     public decimal OrderTotal { get; set; }
 
     // public string? Provider { get; set; }

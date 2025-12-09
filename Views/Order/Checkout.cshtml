@@ -225,6 +225,20 @@ else
                                 </select>
                                 <span asp-validation-for="CountryId" class="text-danger"></span>
                             </div>
+                            <!--  Save shipping address checkbox  -->
+                            <div class="form-check mb-3">
+                                <input type="checkbox"
+                                       name="SaveShippingAddress"
+                                       id="SaveShippingAddress"
+                                       class="form-check-input"
+                                       value="true"/>
+                                <input type="hidden"
+                                       name="SaveShippingAddress"
+                                       value="false"/>
+                                <label class="form-check-label" for="SaveShippingAddress">
+                                    Save this address to my address book
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
