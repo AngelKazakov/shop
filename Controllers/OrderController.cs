@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using RandomShop.Infrastructure;
 using RandomShop.Models.Cart;
 using RandomShop.Models.Order;
+using RandomShop.Services.Address;
+using RandomShop.Services.Cart;
 using RandomShop.Services.Order;
 
 namespace RandomShop.Controllers;
@@ -11,12 +13,14 @@ namespace RandomShop.Controllers;
 public class OrderController : Controller
 {
     private readonly IOrderService orderService;
+    private readonly IAddressService addressService;
     private readonly IMapper mapper;
 
-    public OrderController(IOrderService orderService, IMapper mapper)
+    public OrderController(IOrderService orderService, IMapper mapper, IAddressService addressService)
     {
         this.orderService = orderService;
         this.mapper = mapper;
+        this.addressService = addressService;
     }
 
     [HttpGet]
@@ -48,7 +52,9 @@ public class OrderController : Controller
             return View("Checkout", viewModel);
         }
 
-        var addressErrors = this.orderService.ValidateAddressSelection(model);
+        Dictionary<string, string> addressErrors =
+            this.addressService.ValidateAddressSelection(model.AddressInputModel, model.UseNewAddress,
+                model.SelectedAddressId);
 
         if (addressErrors.Any())
         {
@@ -78,10 +84,11 @@ public class OrderController : Controller
             return View("Checkout", viewModel);
         }
 
-        var orderId = await this.orderService.PlaceOrderAsync(userId, model);
+        int orderId = await this.orderService.PlaceOrderAsync(userId, model);
 
         //Optional confirmation.
         //return RedirectToAction("Confirmation", new { id = orderId });
+
         return RedirectToAction("Index", "Home");
     }
 }

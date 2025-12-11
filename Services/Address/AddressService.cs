@@ -14,11 +14,11 @@ public class AddressService : IAddressService
     }
 
     public async Task<int> HandleOrderAddressAsync(string userId, AddressInputModel model, bool saveToAddressBook,
-        int selectedAddressId)
+        int selectedAddressId, bool useNewAddress)
     {
         int addressId;
 
-        if (saveToAddressBook)
+        if (saveToAddressBook || useNewAddress)
         {
             Data.Models.Address newAddress = new Data.Models.Address()
             {
@@ -26,13 +26,13 @@ public class AddressService : IAddressService
                 AddressLine1 = model.AddressLine1,
                 AddressLine2 = model.AddressLine2,
                 CountryId = model.CountryId.Value,
-                PostalCode = model.PostalCode.Value,
+                PostalCode = model.PostalCode,
             };
 
             await this.context.Addresses.AddAsync(newAddress);
             await this.context.SaveChangesAsync();
 
-            var userAddressLink = new UserAddress()
+            UserAddress userAddressLink = new UserAddress()
             {
                 AddressId = newAddress.Id,
                 UserId = userId,
@@ -54,5 +54,36 @@ public class AddressService : IAddressService
         }
 
         return addressId;
+    }
+
+    public Dictionary<string, string> ValidateAddressSelection(AddressInputModel? model,bool useNewAddress, int? selectedAddressId)
+    {
+        var errors = new Dictionary<string, string>();
+        const string modelPrefix = nameof(AddressInputModel);
+
+        if (useNewAddress)
+        {
+            if (model == null)
+            {
+                errors.Add(modelPrefix, "New address details are required.");
+                return errors;
+            }
+
+            if (string.IsNullOrWhiteSpace(model.PostalCode))
+                errors.Add($"{modelPrefix}.{nameof(model.PostalCode)}", "Postal code is required.");
+
+            if (!model.StreetNumber.HasValue)
+                errors.Add($"{modelPrefix}.{nameof(model.StreetNumber)}", "Street number is required.");
+
+        }
+        else 
+        {
+            if (!selectedAddressId.HasValue || selectedAddressId.Value <= 0)
+            {
+                errors.Add(nameof(selectedAddressId), "Please choose a saved address.");
+            }
+        }
+
+        return errors;
     }
 }
