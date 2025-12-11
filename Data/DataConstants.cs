@@ -5,7 +5,7 @@
         public static class Address
         {
             public const int StreetNumberMin = 1;
-            public const int StreetNumberMax = 8;
+            public const int StreetNumberMax = 9999;
             public const int addressLineMinLength = 4;
             public const int addressLineMaxLength = 128;
             public const int postalCodeMin = 4;

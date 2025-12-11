@@ -34,7 +34,8 @@ public class CheckoutViewModel
 
     public string? AddressLine2 { get; set; }
 
-    public int? PostalCode { get; set; }
+    public string? PostalCode { get; set; }
+    //public int? PostalCode { get; set; }
 
     public int? CountryId { get; set; }
 }

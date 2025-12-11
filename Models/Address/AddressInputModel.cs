@@ -12,19 +12,14 @@ public class AddressInputModel
     public int? StreetNumber { get; set; }
 
     [Required]
-    [StringLength(DataConstants.Address.addressLineMaxLength)]
+     [StringLength(DataConstants.Address.addressLineMaxLength, MinimumLength = DataConstants.Address.addressLineMinLength)]
     public string? AddressLine1 { get; set; }
 
-    [StringLength(DataConstants.Address.addressLineMaxLength)]
+    [StringLength(DataConstants.Address.addressLineMaxLength,
+        MinimumLength = DataConstants.Address.addressLineMinLength)]
     public string? AddressLine2 { get; set; }
 
-    //Set the Postal Code as String and change the everywhere where is still INT.
-    //ADD Migration to apply changes in DB Tables.
     [Required]
     [StringLength(8, MinimumLength = 4, ErrorMessage = "Postal code must be between 4 and 8 characters.")]
     public string? PostalCode { get; set; }
-
-    //[Required]
-    //[Range(DataConstants.Address.postalCodeMin, DataConstants.Address.postalCodeMax)]
-    // public int? PostalCode { get; set; }
 }
