@@ -19,89 +19,19 @@ public class AddressService : IAddressService
     {
         if (!useNewAddress && selectedAddressId == null)
         {
-            throw new InvalidOperationException(
-                "Must select a saved address or provide a new address.");
+            throw new InvalidOperationException("Must select a saved address or provide new address.");
         }
 
         if (useNewAddress)
         {
-            AddressSnapshotModel snapshot = new AddressSnapshotModel
-            {
-                StreetNumber = model.StreetNumber,
-                AddressLine1 = model.AddressLine1,
-                AddressLine2 = model.AddressLine2,
-                PostalCode = model.PostalCode,
-                CountryId = model.CountryId
-            };
-
-            if (saveToAddressBook)
-            {
-                if (snapshot.StreetNumber == null ||
-                    snapshot.CountryId == null ||
-                    string.IsNullOrWhiteSpace(snapshot.AddressLine1) ||
-                    string.IsNullOrWhiteSpace(snapshot.PostalCode))
-                {
-                    throw new InvalidOperationException(
-                        "New address details are incomplete.");
-                }
-
-                await using var tx = await context.Database.BeginTransactionAsync();
-
-                try
-                {
-                    var newAddress = new RandomShop.Data.Models.Address
-                    {
-                        StreetNumber = snapshot.StreetNumber.Value,
-                        AddressLine1 = snapshot.AddressLine1,
-                        AddressLine2 = snapshot.AddressLine2,
-                        PostalCode = snapshot.PostalCode,
-                        CountryId = snapshot.CountryId.Value
-                    };
-
-                    context.Addresses.Add(newAddress);
-
-                    UserAddress userAddressLink = new UserAddress
-                    {
-                        UserId = userId,
-                        Address = newAddress,
-                        IsDefault = false // decide later if I want to set default
-                    };
-
-                    context.UserAddresses.Add(userAddressLink);
-
-                    await context.SaveChangesAsync();
-                    await tx.CommitAsync();
-                }
-                catch
-                {
-                    await tx.RollbackAsync();
-                    throw;
-                }
-            }
-
+            AddressSnapshotModel snapshot = await HandleNewAddressAsync(userId, model, saveToAddressBook);
             return snapshot;
         }
-
-        AddressSnapshotModel? savedSnapshot = await context.UserAddresses
-            .AsNoTracking()
-            .Where(ua => ua.UserId == userId && ua.AddressId == selectedAddressId!.Value)
-            .Select(ua => new AddressSnapshotModel
-            {
-                StreetNumber = ua.Address.StreetNumber,
-                AddressLine1 = ua.Address.AddressLine1,
-                AddressLine2 = ua.Address.AddressLine2,
-                PostalCode = ua.Address.PostalCode,
-                CountryId = ua.Address.CountryId
-            })
-            .FirstOrDefaultAsync();
-
-        if (savedSnapshot == null)
+        else
         {
-            throw new ArgumentException(
-                $"Saved address {selectedAddressId} not found for this user.");
+            AddressSnapshotModel snapshot = await HandleSavedAddressAsync(userId, selectedAddressId!.Value);
+            return snapshot;
         }
-
-        return savedSnapshot;
     }
 
 
@@ -134,5 +64,90 @@ public class AddressService : IAddressService
         }
 
         return errors;
+    }
+
+    private async Task<AddressSnapshotModel> HandleNewAddressAsync(string userId, AddressInputModel model,
+        bool saveToAddressBook)
+    {
+        AddressSnapshotModel snapshot = new AddressSnapshotModel()
+        {
+            StreetNumber = model.StreetNumber,
+            AddressLine1 = model.AddressLine1,
+            AddressLine2 = model.AddressLine2,
+            PostalCode = model.PostalCode,
+            CountryId = model.CountryId,
+        };
+
+        if (saveToAddressBook)
+        {
+            await PersistNewAddressAsync(userId, snapshot);
+        }
+
+        return snapshot;
+    }
+
+    private async Task<AddressSnapshotModel> HandleSavedAddressAsync(string userId, int addressId)
+    {
+        AddressSnapshotModel? savedSnapshot = await this.context.UserAddresses.AsNoTracking()
+            .Where(ua => ua.UserId == userId && ua.AddressId == addressId)
+            .Select(ua => new AddressSnapshotModel()
+            {
+                StreetNumber = ua.Address.StreetNumber,
+                AddressLine1 = ua.Address.AddressLine1,
+                AddressLine2 = ua.Address.AddressLine2,
+                CountryId = ua.Address.CountryId,
+                PostalCode = ua.Address.PostalCode,
+            })
+            .FirstOrDefaultAsync();
+
+        if (savedSnapshot == null)
+        {
+            throw new ArgumentException($"Saved address {addressId} not found for this user.");
+        }
+
+        return savedSnapshot;
+    }
+
+    private async Task PersistNewAddressAsync(string userId, AddressSnapshotModel snapshot)
+    {
+        if (snapshot.StreetNumber == null || snapshot.CountryId == null ||
+            string.IsNullOrWhiteSpace(snapshot.AddressLine1)
+            || string.IsNullOrWhiteSpace(snapshot.PostalCode))
+        {
+            throw new InvalidOperationException("Cannot save incomplete address details.");
+        }
+
+        await using var tx = await this.context.Database.BeginTransactionAsync();
+
+        try
+        {
+            Data.Models.Address newAddress = new Data.Models.Address()
+            {
+                StreetNumber = snapshot.StreetNumber.Value,
+                AddressLine1 = snapshot.AddressLine1,
+                AddressLine2 = snapshot.AddressLine2,
+                CountryId = snapshot.CountryId.Value,
+                PostalCode = snapshot.PostalCode,
+            };
+
+            await this.context.Addresses.AddAsync(newAddress);
+
+            UserAddress userAddressLink = new UserAddress()
+            {
+                UserId = userId,
+                Address = newAddress,
+                IsDefault = false, //Decide later how to implement it.
+            };
+
+            await this.context.UserAddresses.AddAsync(userAddressLink);
+
+            await this.context.SaveChangesAsync();
+            await tx.CommitAsync();
+        }
+        catch (Exception)
+        {
+            await tx.RollbackAsync();
+            throw;
+        }
     }
 }
