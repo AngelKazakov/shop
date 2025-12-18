@@ -17,7 +17,7 @@ namespace RandomShop.Data.Models
 
         [StringLength(DataConstants.Address.addressLineMaxLength,
             ErrorMessage = "Make sure you entered correctly your address.")]
-        public string AddressLine2 { get; set; }
+        public string? AddressLine2 { get; set; }
 
         [Required] public int CountryId { get; set; }
 
