@@ -7,11 +7,9 @@ public class AddressInputModel
 {
     public int? CountryId { get; set; }
 
-    [Required]
     [Range(DataConstants.Address.StreetNumberMin, DataConstants.Address.StreetNumberMax)]
     public int? StreetNumber { get; set; }
 
-    [Required]
      [StringLength(DataConstants.Address.addressLineMaxLength, MinimumLength = DataConstants.Address.addressLineMinLength)]
     public string? AddressLine1 { get; set; }
 
@@ -19,7 +17,6 @@ public class AddressInputModel
         MinimumLength = DataConstants.Address.addressLineMinLength)]
     public string? AddressLine2 { get; set; }
 
-    [Required]
     [StringLength(8, MinimumLength = 4, ErrorMessage = "Postal code must be between 4 and 8 characters.")]
     public string? PostalCode { get; set; }
 }

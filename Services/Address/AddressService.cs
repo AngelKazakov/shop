@@ -117,7 +117,7 @@ public class AddressService : IAddressService
             throw new InvalidOperationException("Cannot save incomplete address details.");
         }
 
-        await using var tx = await this.context.Database.BeginTransactionAsync();
+        // await using var tx = await this.context.Database.BeginTransactionAsync();
 
         try
         {
@@ -142,12 +142,12 @@ public class AddressService : IAddressService
             await this.context.UserAddresses.AddAsync(userAddressLink);
 
             await this.context.SaveChangesAsync();
-            await tx.CommitAsync();
+            // await tx.CommitAsync();
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            await tx.RollbackAsync();
-            throw;
+            // await tx.RollbackAsync();
+            throw e;
         }
     }
 }

@@ -1,3 +1,5 @@
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +16,7 @@ using RandomShop.Services.Promotions;
 using RandomShop.Services.Review;
 using RandomShop.Services.User;
 using RandomShop.Services.Variation;
+using RandomShop.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +30,9 @@ builder.Services
     .AddDefaultIdentity<RandomShop.Data.Models.User>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ShopContext>();
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<CheckoutFormModelValidator>();
 
 builder.Services.AddAutoMapper(typeof(Program));
 builder.Services.AddTransient<ICategoryService, CategoryService>();
