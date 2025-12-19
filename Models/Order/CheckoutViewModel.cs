@@ -1,4 +1,5 @@
-﻿using RandomShop.Data.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using RandomShop.Data.Models;
 using RandomShop.Models.Address;
 using RandomShop.Models.Cart;
 
@@ -28,14 +29,7 @@ public class CheckoutViewModel
 
     public bool UseNewAddress { get; set; }
 
-    public int? StreetNumber { get; set; }
-
-    public string? AddressLine1 { get; set; }
-
-    public string? AddressLine2 { get; set; }
-
-    public string? PostalCode { get; set; }
-    //public int? PostalCode { get; set; }
+    public AddressInputModel Address { get; set; }
 
     public int? CountryId { get; set; }
 }

@@ -17,6 +17,11 @@ namespace RandomShop.Infrastructure
 
             this.CreateMap<PromotionViewModel, PromotionAddEditFormModel>();
             this.CreateMap<CheckoutFormModel, CheckoutViewModel>();
+
+            CreateMap<CheckoutFormModel, CheckoutViewModel>()
+                .ForMember(a => a.Address, opt => opt.MapFrom(s => s.AddressInputModel));
+
+            //.ForMember(d => d.AddressInputModel, opt => opt.MapFrom(s => s.AddressInputModel));
         }
     }
 }

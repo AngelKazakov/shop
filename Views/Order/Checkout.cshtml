@@ -191,29 +191,30 @@ else
                              class="mt-3">
                             <div class="mb-2">
                                 <label class="form-label">Street number</label>
-                                <input asp-for="StreetNumber" name="AddressInputModel.StreetNumber"
+                                <input asp-for="Address.StreetNumber" name="AddressInputModel.StreetNumber"
                                        class="form-control new-address-input"/>
-                                <span asp-validation-for="StreetNumber" class="text-danger"></span>
+                                <span asp-validation-for="Address.StreetNumber" class="text-danger"></span>
                             </div>
 
                             <div class="mb-2">
                                 <label class="form-label">Address line 1</label>
-                                <input asp-for="AddressLine1" name="AddressInputModel.AddressLine1"
+                                <input asp-for="Address.AddressLine1" name="AddressInputModel.AddressLine1"
                                        class="form-control new-address-input"/>
-                                <span asp-validation-for="AddressLine1" class="text-danger"></span>
+                                <span asp-validation-for="Address.AddressLine1" class="text-danger"></span>
                             </div>
 
                             <div class="mb-2">
                                 <label class="form-label">Address line 2 (optional)</label>
-                                <input asp-for="AddressLine2" name="AddressInputModel.AddressLine2"
+                                <input asp-for="Address.AddressLine2" name="AddressInputModel.AddressLine2"
                                        class="form-control"/>
+                                <span asp-validation-for="Address.AddressLine2" class="text-danger"></span>
                             </div>
 
                             <div class="mb-2">
                                 <label class="form-label">Postal code</label>
-                                <input asp-for="PostalCode" name="AddressInputModel.PostalCode"
-                                       class="form-control new-address-input"/>
-                                <span asp-validation-for="PostalCode" class="text-danger"></span>
+                                <input asp-for="Address.PostalCode" name="AddressInputModel.PostalCode"
+                                       class="form-control new-address-input" required/>
+                                <span asp-validation-for="Address.PostalCode" class="text-danger"></span>
                             </div>
 
                             <div class="mb-2">
@@ -281,6 +282,7 @@ else
                 </div>
             </div>
         </div>
+
     </form>
 }
 
