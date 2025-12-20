@@ -19,7 +19,7 @@ namespace RandomShop.Infrastructure
             this.CreateMap<CheckoutFormModel, CheckoutViewModel>();
 
             CreateMap<CheckoutFormModel, CheckoutViewModel>()
-                .ForMember(a => a.Address, opt => opt.MapFrom(s => s.AddressInputModel));
+                .ForMember(a => a.Address, opt => opt.MapFrom(s => s.Address));
 
             //.ForMember(d => d.AddressInputModel, opt => opt.MapFrom(s => s.AddressInputModel));
         }

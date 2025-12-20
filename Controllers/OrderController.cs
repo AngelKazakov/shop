@@ -46,14 +46,12 @@ public class OrderController : Controller
         if (!ModelState.IsValid)
         {
             viewModel = await this.orderService.GetCheckoutDataAsync(userId);
-
             this.mapper.Map(model, viewModel);
-
             return View("Checkout", viewModel);
         }
 
         Dictionary<string, string> addressErrors =
-            this.addressService.ValidateAddressSelection(model.AddressInputModel, model.UseNewAddress,
+            this.addressService.ValidateAddressSelection(model.Address, model.UseNewAddress,
                 model.SelectedAddressId);
 
         if (addressErrors.Any())

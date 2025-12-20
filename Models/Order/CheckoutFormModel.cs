@@ -13,7 +13,7 @@ public class CheckoutFormModel
 
     public bool UseNewAddress { get; set; }
 
-    public AddressInputModel? AddressInputModel { get; set; }
+    public AddressInputModel? Address { get; set; }
 
     public bool SaveShippingAddress { get; set; }
 
