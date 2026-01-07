@@ -117,78 +117,89 @@ public class OrderService : IOrderService
 
     public async Task<int> PlaceOrderAsync(string userId, CheckoutFormModel model)
     {
-        ICollection<CartItemViewModel> cartItems = await this.cartService.GetCartItemsAsync(userId);
+        using var transaction = await this.context.Database.BeginTransactionAsync();
 
-        int defaultStatusId = await this.context.OrderStatuses.Where(s => s.Status == "Pending Payment")
-            .Select(s => s.Id).FirstOrDefaultAsync();
-
-        var adressId = await this.addressService.HandleOrderAddressAsync(userId, model.AddressInputModel,
-            model.SaveShippingAddress,
-            2, model.UseNewAddress);
-
-        //Create enum for statuses and set
-        // This line tells EF Core to store the enum value as a string
-        // modelBuilder.Entity<ShopOrder>()
-        //     .Property(o => o.Status)
-        //     .HasConversion<string>(); // Use HasConversion<string>()
-
-
-        ShopOrder shopOrder = new ShopOrder()
+        try
         {
-            UserId = userId,
-            OrderDate = DateTime.Now,
-            StreetNumber = model.AddressInputModel.StreetNumber.Value,
-            AddressLine1 = model.AddressInputModel.AddressLine1,
-            AddressLine2 = model.AddressInputModel.AddressLine2,
-            CountryId = model.AddressInputModel.CountryId.Value,
-            PostalCode = model.AddressInputModel.PostalCode,
-            ShippingMethodId = model.SelectedShippingMethodId,
-            OrderTotal = model.OrderTotal,
-            OrderStatusId = defaultStatusId,
-        };
+            ICollection<CartItemViewModel> cartItems = await this.cartService.GetCartItemsAsync(userId);
+            //Set default const status name and use it instead of hard coded one...
+            int defaultStatusId = await this.context.OrderStatuses.Where(s => s.Status == "Pending Payment")
+                .Select(s => s.Id).FirstOrDefaultAsync();
 
-        await this.context.ShopOrders.AddAsync(shopOrder);
+            AddressSnapshotModel addressSnapshotModel = await this.addressService.HandleOrderAddressAsync(userId,
+                model.Address,
+                model.SaveShippingAddress,
+                model.SelectedAddressId, model.UseNewAddress);
 
-        var orderLines = new List<OrderLine>();
+            //Create enum for statuses and set
+            // This line tells EF Core to store the enum value as a string
+            // modelBuilder.Entity<ShopOrder>()
+            //     .Property(o => o.Status)
+            //     .HasConversion<string>(); // Use HasConversion<string>()
 
-        foreach (var cartItem in cartItems)
-        {
-            OrderLine orderLine = new OrderLine()
+            ShopOrder shopOrder = new ShopOrder()
             {
-                Price = cartItem.TotalPrice,
-                Quantity = cartItem.Quantity,
-                ProductItemId = cartItem.ProductItemId,
-                ShopOrder = shopOrder,
+                UserId = userId,
+                OrderDate = DateTime.Now,
+                StreetNumber = addressSnapshotModel.StreetNumber.Value,
+                AddressLine1 = addressSnapshotModel.AddressLine1,
+                AddressLine2 = addressSnapshotModel.AddressLine2,
+                CountryId = addressSnapshotModel.CountryId.Value,
+                PostalCode = addressSnapshotModel.PostalCode,
+                ShippingMethodId = model.SelectedShippingMethodId,
+                OrderTotal = model.OrderTotal,
+                OrderStatusId = defaultStatusId,
             };
 
-            orderLines.Add(orderLine);
-        }
+            await this.context.ShopOrders.AddAsync(shopOrder);
 
-        await this.context.OrderLines.AddRangeAsync(orderLines);
-        await this.context.SaveChangesAsync();
+            var orderLines = new List<OrderLine>();
 
-
-        foreach (var orderLine in shopOrder.OrderLines)
-        {
-            ProductItem? productItem = await this.context.ProductItems.FindAsync(orderLine.ProductItemId);
-
-            if (productItem != null)
+            foreach (var cartItem in cartItems)
             {
-                productItem.QuantityInStock -= orderLine.Quantity;
+                OrderLine orderLine = new OrderLine()
+                {
+                    Price = cartItem.UnitPrice,
+                    Quantity = cartItem.Quantity,
+                    ProductItemId = cartItem.ProductItemId,
+                    ShopOrder = shopOrder,
+                };
+
+                orderLines.Add(orderLine);
             }
+
+            shopOrder.OrderLines = orderLines;
+            await this.context.OrderLines.AddRangeAsync(orderLines);
+            await this.context.SaveChangesAsync();
+
+
+            foreach (var orderLine in shopOrder.OrderLines)
+            {
+                ProductItem? productItem = await this.context.ProductItems.FindAsync(orderLine.ProductItemId);
+
+                if (productItem != null)
+                {
+                    productItem.QuantityInStock -= orderLine.Quantity;
+                }
+            }
+
+            await this.context.SaveChangesAsync();
+            //  Clear user's shopping cart here.
+            ShoppingCart cartToClear = await this.cartService.GetOrCreateCartAsync(userId);
+
+            if (cartToClear != null)
+            {
+                await this.cartService.ClearCart(userId);
+            }
+
+            await transaction.CommitAsync();
+
+            return shopOrder.Id;
         }
-
-        await this.context.SaveChangesAsync();
-
-        //  Clear user's shopping cart here.
-
-        ShoppingCart cart = await this.cartService.GetOrCreateCartAsync(userId);
-
-        if (cart != null)
+        catch (Exception e)
         {
-            await this.cartService.ClearCart(userId);
+            await transaction.RollbackAsync();
+            throw; // Re-throw the exception to notify the controller/caller
         }
-
-        throw new NotImplementedException();
     }
 }
