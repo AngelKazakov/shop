@@ -93,6 +93,7 @@ public class OrderService : IOrderService
             shippingPrice = DataConstants.defaultShippingPrice;
         }
 
+        //Use it in the Checkout view to show the user what the shipping price will cost.
         var orderInfo = new OrderInfoViewModel
         {
             TotalPrice = subTotal,
@@ -137,6 +138,10 @@ public class OrderService : IOrderService
             //     .Property(o => o.Status)
             //     .HasConversion<string>(); // Use HasConversion<string>()
 
+            decimal subtotal = cartItems.Sum(i => i.UnitPrice * i.Quantity);
+            // later calculate properly   shippingPrice and add it to order total and visualize in the UI.
+            decimal orderTotal = subtotal; // or subtotal + shippingPrice
+
             ShopOrder shopOrder = new ShopOrder()
             {
                 UserId = userId,
@@ -147,7 +152,7 @@ public class OrderService : IOrderService
                 CountryId = addressSnapshotModel.CountryId.Value,
                 PostalCode = addressSnapshotModel.PostalCode,
                 ShippingMethodId = model.SelectedShippingMethodId,
-                OrderTotal = model.OrderTotal,
+                OrderTotal = orderTotal,
                 OrderStatusId = defaultStatusId,
             };
 
