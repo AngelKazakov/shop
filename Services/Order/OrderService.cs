@@ -118,14 +118,28 @@ public class OrderService : IOrderService
 
     public async Task<int> PlaceOrderAsync(string userId, CheckoutFormModel model)
     {
-        using var transaction = await this.context.Database.BeginTransactionAsync();
+        await using var transaction =
+            await this.context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
 
         try
         {
             ICollection<CartItemViewModel> cartItems = await this.cartService.GetCartItemsAsync(userId);
+
+            if (cartItems == null || cartItems.Count == 0)
+            {
+                throw new InvalidOperationException("Cart is empty.");
+            }
+
             //Set default const status name and use it instead of hard coded one...
-            int defaultStatusId = await this.context.OrderStatuses.Where(s => s.Status == "Pending Payment")
-                .Select(s => s.Id).FirstOrDefaultAsync();
+            int defaultStatusId = await this.context.OrderStatuses
+                .Where(s => s.Status == "Pending Payment")
+                .Select(s => s.Id)
+                .FirstOrDefaultAsync();
+
+            if (defaultStatusId == 0)
+            {
+                throw new InvalidOperationException("Order status 'Pending Payment' was not found.");
+            }
 
             AddressSnapshotModel addressSnapshotModel = await this.addressService.HandleOrderAddressAsync(userId,
                 model.Address,
@@ -145,7 +159,7 @@ public class OrderService : IOrderService
             ShopOrder shopOrder = new ShopOrder()
             {
                 UserId = userId,
-                OrderDate = DateTime.Now,
+                OrderDate = DateTime.UtcNow,
                 StreetNumber = addressSnapshotModel.StreetNumber.Value,
                 AddressLine1 = addressSnapshotModel.AddressLine1,
                 AddressLine2 = addressSnapshotModel.AddressLine2,
@@ -156,49 +170,56 @@ public class OrderService : IOrderService
                 OrderStatusId = defaultStatusId,
             };
 
-            await this.context.ShopOrders.AddAsync(shopOrder);
-
-            var orderLines = new List<OrderLine>();
-
-            foreach (var cartItem in cartItems)
+            List<OrderLine> orderLines = cartItems.Select(ci => new OrderLine()
             {
-                OrderLine orderLine = new OrderLine()
-                {
-                    Price = cartItem.UnitPrice,
-                    Quantity = cartItem.Quantity,
-                    ProductItemId = cartItem.ProductItemId,
-                    ShopOrder = shopOrder,
-                };
-
-                orderLines.Add(orderLine);
-            }
+                Price = ci.UnitPrice,
+                Quantity = ci.Quantity,
+                ProductItemId = ci.ProductItemId,
+                ShopOrder = shopOrder,
+            }).ToList();
 
             shopOrder.OrderLines = orderLines;
-            await this.context.OrderLines.AddRangeAsync(orderLines);
-            await this.context.SaveChangesAsync();
 
+            // Stock check & subtract
+            Dictionary<int, int> needed = orderLines
+                .GroupBy(ol => ol.ProductItemId)
+                .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
 
-            foreach (var orderLine in shopOrder.OrderLines)
+            List<int> ids = needed.Keys.ToList();
+
+            List<ProductItem> productItems = await this.context.ProductItems
+                .Where(p => ids.Contains(p.Id))
+                .ToListAsync();
+
+            if (productItems.Count != ids.Count)
             {
-                ProductItem? productItem = await this.context.ProductItems.FindAsync(orderLine.ProductItemId);
+                throw new InvalidOperationException("One or more products in the cart no longer exist.");
+            }
 
-                if (productItem != null)
+            foreach (var pi in productItems)
+            {
+                int reqQty = needed[pi.Id];
+                if (pi.QuantityInStock < reqQty)
                 {
-                    productItem.QuantityInStock -= orderLine.Quantity;
+                    throw new InvalidOperationException(
+                        $"Not enough stock for ProductItem {pi.Id}. Requested {reqQty}, available {pi.QuantityInStock}");
                 }
             }
 
-            await this.context.SaveChangesAsync();
-            //  Clear user's shopping cart here.
-            ShoppingCart cartToClear = await this.cartService.GetOrCreateCartAsync(userId);
-
-            if (cartToClear != null)
+            foreach (var pi in productItems)
             {
-                await this.cartService.ClearCart(userId);
+                pi.QuantityInStock -= needed[pi.Id];
             }
 
-            await transaction.CommitAsync();
+            // Persist order + lines (EF sees the relationship via ShopOrder reference)
+            await this.context.ShopOrders.AddAsync(shopOrder);
 
+            await this.context.SaveChangesAsync();
+
+            // Clear cart (ideally ClearCart shouldn't create a cart)
+            await this.cartService.ClearCart(userId);
+
+            await transaction.CommitAsync();
             return shopOrder.Id;
         }
         catch (Exception e)
