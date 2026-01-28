@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
@@ -227,5 +228,45 @@ public class OrderService : IOrderService
             await transaction.RollbackAsync();
             throw; // Re-throw the exception to notify the controller/caller
         }
+    }
+
+    public async Task<OrderConfirmationViewModel> GetOrderDetailsAsync(int orderId, string userId)
+    {
+        ShopOrder? order = await this.context.ShopOrders.AsNoTracking()
+            .Where(x => x.Id == orderId && x.UserId == userId)
+            .Include(x => x.OrderStatus)
+            .Include(x => x.ShippingMethod)
+            .Include(x => x.OrderLines)
+            .ThenInclude(x => x.ProductItem)
+            .ThenInclude(x => x.Product)
+            .FirstOrDefaultAsync();
+
+        //Add payment type information in the models!
+        List<OrderConfirmationItemViewModel> items = order.OrderLines.Select(x => new OrderConfirmationItemViewModel()
+        {
+            ProductItemId = x.ProductItemId,
+            ProductName = x.ProductItem.Product.Name,
+            Quantity = x.Quantity,
+            UnitPrice = x.Price,
+            LineTotal = x.Price * x.Quantity,
+        }).ToList();
+
+        decimal subTotal = items.Sum(x => x.LineTotal);
+
+        var confirmationModel = new OrderConfirmationViewModel()
+        {
+            OrderId = orderId,
+            OrderDate = order.OrderDate,
+            Status = order.OrderStatus.Status,
+            ShippingMethodName = order.ShippingMethod.Name,
+            AddressDisplay = $"{order.StreetNumber} {order.AddressLine1}"
+                             + (string.IsNullOrWhiteSpace(order.AddressLine2) ? "" : $", {order.AddressLine2}")
+                             + $", {order.PostalCode}",
+            Subtotal = subTotal,
+            //ShippingPrice = Add it later.
+            Items = items
+        };
+
+        return confirmationModel;
     }
 }

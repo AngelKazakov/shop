@@ -87,6 +87,22 @@ public class OrderController : Controller
         //Optional confirmation.
         //return RedirectToAction("Confirmation", new { id = orderId });
 
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction(nameof(Confirmation), new { orderId = orderId });
+    }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> Confirmation(int orderId)
+    {
+        string userId = this.User.Id();
+
+        OrderConfirmationViewModel model = await this.orderService.GetOrderDetailsAsync(orderId, userId);
+
+        if (model == null)
+        {
+            return NotFound(); //Or make custom error view and return it.
+        }
+
+        return View(model);
     }
 }

@@ -10,4 +10,6 @@ public interface IOrderService
     public Task<CheckoutViewModel> GetCheckoutDataAsync(string userId);
 
     public Task<int> PlaceOrderAsync(string userId, CheckoutFormModel model);
+
+    Task<OrderConfirmationViewModel> GetOrderDetailsAsync(int orderId, string userId);
 }
