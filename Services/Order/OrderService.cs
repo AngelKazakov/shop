@@ -212,15 +212,10 @@ public class OrderService : IOrderService
                 pi.QuantityInStock -= needed[pi.Id];
             }
 
-            // Persist order + lines (EF sees the relationship via ShopOrder reference)
-            var tmp = Guid.NewGuid().ToString("N")[..12];
-            shopOrder.OrderNumber = $"TMP-{tmp}";
+            var suffix = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
+            shopOrder.OrderNumber = $"RS-{suffix}";
+
             await this.context.ShopOrders.AddAsync(shopOrder);
-
-            await this.context.SaveChangesAsync();
-
-            shopOrder.OrderNumber = $"RS-{shopOrder.Id:D8}";
-
             await this.context.SaveChangesAsync();
 
             // Clear cart (ideally ClearCart shouldn't create a cart)
