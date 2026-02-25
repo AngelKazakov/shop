@@ -146,8 +146,8 @@ namespace RandomShop.Data
                 .IsRequired();
 
             builder.Entity<ShopOrder>()
-                .HasIndex(x => x.OrderNumber);
-            // .IsUnique();
+                .HasIndex(x => x.OrderNumber)
+                .IsUnique();
         }
     }
 }
