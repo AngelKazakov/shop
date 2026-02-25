@@ -139,6 +139,10 @@ namespace RandomShop.Data
                 .WithMany(x => x.UserReviewLikes)
                 .HasForeignKey(x => x.ReviewId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<ShopOrder>()
+                .HasIndex(x => x.OrderNumber);
+            // .IsUnique();
         }
     }
 }

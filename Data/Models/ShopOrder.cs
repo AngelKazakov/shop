@@ -48,6 +48,8 @@ namespace RandomShop.Data.Models
 
         public OrderStatus OrderStatus { get; set; }
 
+        public string OrderNumber { get; set; } = null!;
+
         public ICollection<UserPaymentMethod> UserPaymentMethods { get; set; } = new List<UserPaymentMethod>();
 
         public ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
