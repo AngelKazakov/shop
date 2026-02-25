@@ -141,6 +141,11 @@ namespace RandomShop.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<ShopOrder>()
+                .Property(x => x.OrderNumber)
+                .HasMaxLength(32)
+                .IsRequired();
+
+            builder.Entity<ShopOrder>()
                 .HasIndex(x => x.OrderNumber);
             // .IsUnique();
         }
