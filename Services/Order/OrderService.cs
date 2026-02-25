@@ -212,8 +212,8 @@ public class OrderService : IOrderService
                 pi.QuantityInStock -= needed[pi.Id];
             }
 
-            var suffix = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
-            shopOrder.OrderNumber = $"RS-{suffix}";
+            var suffix = GenerateOrderNumber();
+            shopOrder.OrderNumber = suffix;
 
             await this.context.ShopOrders.AddAsync(shopOrder);
             await this.context.SaveChangesAsync();
@@ -263,5 +263,11 @@ public class OrderService : IOrderService
         model.Subtotal = model.Items.Sum(i => i.LineTotal);
         // model.ShippingPrice = ... later
         return model;
+    }
+
+    private static string GenerateOrderNumber()
+    {
+        var suffix = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
+        return $"RS-{suffix}";
     }
 }
