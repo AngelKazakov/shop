@@ -213,7 +213,13 @@ public class OrderService : IOrderService
             }
 
             // Persist order + lines (EF sees the relationship via ShopOrder reference)
+            var tmp = Guid.NewGuid().ToString("N")[..12];
+            shopOrder.OrderNumber = $"TMP-{tmp}";
             await this.context.ShopOrders.AddAsync(shopOrder);
+
+            await this.context.SaveChangesAsync();
+
+            shopOrder.OrderNumber = $"RS-{shopOrder.Id:D8}";
 
             await this.context.SaveChangesAsync();
 
@@ -230,43 +236,37 @@ public class OrderService : IOrderService
         }
     }
 
-    public async Task<OrderConfirmationViewModel> GetOrderDetailsAsync(int orderId, string userId)
+    public async Task<OrderConfirmationViewModel?> GetOrderDetailsAsync(int orderId, string userId)
     {
-        ShopOrder? order = await this.context.ShopOrders.AsNoTracking()
-            .Where(x => x.Id == orderId && x.UserId == userId)
-            .Include(x => x.OrderStatus)
-            .Include(x => x.ShippingMethod)
-            .Include(x => x.OrderLines)
-            .ThenInclude(x => x.ProductItem)
-            .ThenInclude(x => x.Product)
+        OrderConfirmationViewModel? model = await this.context.ShopOrders
+            .AsNoTracking()
+            .Where(o => o.Id == orderId && o.UserId == userId)
+            .Select(o => new OrderConfirmationViewModel
+            {
+                OrderId = o.Id,
+                OrderDate = o.OrderDate,
+                Status = o.OrderStatus.Status,
+                ShippingMethodName = o.ShippingMethod.Name,
+                AddressDisplay =
+                    o.StreetNumber + " " + o.AddressLine1 +
+                    (string.IsNullOrWhiteSpace(o.AddressLine2) ? "" : ", " + o.AddressLine2) +
+                    ", " + o.PostalCode,
+
+                Items = o.OrderLines.Select(ol => new OrderConfirmationItemViewModel
+                {
+                    ProductItemId = ol.ProductItemId,
+                    ProductName = ol.ProductItem.Product.Name,
+                    Quantity = ol.Quantity,
+                    UnitPrice = ol.Price,
+                    LineTotal = ol.Price * ol.Quantity
+                }).ToList()
+            })
             .FirstOrDefaultAsync();
 
-        //Add payment type information in the models!
-        List<OrderConfirmationItemViewModel> items = order.OrderLines.Select(x => new OrderConfirmationItemViewModel()
-        {
-            ProductItemId = x.ProductItemId,
-            ProductName = x.ProductItem.Product.Name,
-            Quantity = x.Quantity,
-            UnitPrice = x.Price,
-            LineTotal = x.Price * x.Quantity,
-        }).ToList();
+        if (model == null) return null;
 
-        decimal subTotal = items.Sum(x => x.LineTotal);
-
-        var confirmationModel = new OrderConfirmationViewModel()
-        {
-            OrderId = orderId,
-            OrderDate = order.OrderDate,
-            Status = order.OrderStatus.Status,
-            ShippingMethodName = order.ShippingMethod.Name,
-            AddressDisplay = $"{order.StreetNumber} {order.AddressLine1}"
-                             + (string.IsNullOrWhiteSpace(order.AddressLine2) ? "" : $", {order.AddressLine2}")
-                             + $", {order.PostalCode}",
-            Subtotal = subTotal,
-            //ShippingPrice = Add it later.
-            Items = items
-        };
-
-        return confirmationModel;
+        model.Subtotal = model.Items.Sum(i => i.LineTotal);
+        // model.ShippingPrice = ... later
+        return model;
     }
 }
