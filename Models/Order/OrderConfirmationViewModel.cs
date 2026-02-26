@@ -16,6 +16,16 @@ public class OrderConfirmationViewModel
 
     public decimal Total { get; set; }
 
+    public int StreetNumber { get; set; }
+
+    public string AddressLine1 { get; set; }
+
+    public string? AddressLine2 { get; set; }
+
+    public string PostalCode { get; set; }
+
+    public string CountryName { get; set; }
+
     public string AddressDisplay { get; set; }
 
     public List<OrderConfirmationItemViewModel> Items { get; set; } = new List<OrderConfirmationItemViewModel>();

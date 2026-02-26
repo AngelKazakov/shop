@@ -1,0 +1,128 @@
+@model RandomShop.Models.Order.OrderConfirmationViewModel
+
+@{
+    ViewData["Title"] = "Order Confirmation";
+    var total = Model.Total > 0 ? Model.Total : Model.Subtotal + Model.ShippingPrice;
+}
+
+<div class="container py-4">
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h2 class="mb-2">Thank you for your order</h2>
+            <p class="text-muted mb-0">Order #@Model.OrderId placed on @Model.OrderDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <strong>Order Items</strong>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.Items == null || !Model.Items.Any())
+                    {
+                        <div class="p-3">No items found for this order.</div>
+                    }
+                    else
+                    {
+                        <div class="table-responsive">
+                            <table class="table mb-0 align-middle">
+                                <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th class="text-end">Unit Price</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Line Total</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach (var item in Model.Items)
+                                {
+                                    <tr>
+                                        <td>
+                                            <a asp-controller="Product"
+                                               asp-action="Details"
+                                               asp-route-id="@item.ProductItemId"
+                                               class="text-decoration-none">
+                                                @item.ProductName
+                                            </a>
+                                        </td>
+                                        <td class="text-end">@item.UnitPrice.ToString("C")</td>
+                                        <td class="text-center">@item.Quantity</td>
+                                        <td class="text-end">@item.LineTotal.ToString("C")</td>
+                                    </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <strong>Order Summary</strong>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Status:</span>
+                        <span>@Model.Status</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Subtotal:</span>
+                        <span>@Model.Subtotal.ToString("C")</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Shipping:</span>
+                        <span>@(Model.ShippingPrice == 0 ? "Free" : Model.ShippingPrice.ToString("C"))</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>Shipping Method:</span>
+                        <span>@Model.ShippingMethodName</span>
+                    </div>
+                    <hr />
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span>@total.ToString("C")</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-3">
+                <div class="card-header">
+                    <strong>Shipping Address</strong>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Street:</span>
+                        <span>@Model.StreetNumber</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Address Line 1:</span>
+                        <span>@Model.AddressLine1</span>
+                    </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.AddressLine2))
+                    {
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Address Line 2:</span>
+                            <span>@Model.AddressLine2</span>
+                        </div>
+                    }
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Postal Code:</span>
+                        <span>@Model.PostalCode</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Country:</span>
+                        <span>@Model.CountryName</span>
+                    </div>
+                </div>
+            </div>
+
+            <a asp-controller="Product" asp-action="All" class="btn btn-primary w-100">Continue Shopping</a>
+        </div>
+    </div>
+</div>

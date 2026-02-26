@@ -238,10 +238,15 @@ public class OrderService : IOrderService
                 Status = o.OrderStatus.Status,
                 ShippingMethodName = o.ShippingMethod.Name,
                 Total = o.OrderTotal,
+                StreetNumber = o.StreetNumber,
+                AddressLine1 = o.AddressLine1,
+                AddressLine2 = o.AddressLine2,
+                PostalCode = o.PostalCode,
+                CountryName = o.Country.Name,
                 AddressDisplay =
                     o.StreetNumber + " " + o.AddressLine1 +
                     (string.IsNullOrWhiteSpace(o.AddressLine2) ? "" : ", " + o.AddressLine2) +
-                    ", " + o.PostalCode,
+                    ", " + o.PostalCode + ", " + o.Country.Name,
 
                 Items = o.OrderLines.Select(ol => new OrderConfirmationItemViewModel
                 {
