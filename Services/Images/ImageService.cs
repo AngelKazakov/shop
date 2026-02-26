@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Models.Image;
@@ -63,23 +63,30 @@ namespace RandomShop.Services.Images
         public async Task<List<ProductImageViewModel>> CreateProductImageViewModelAsync(int productId)
         {
             List<ProductImage>? productImages = await GetProductImagesByProductId(productId);
-
-            List<byte[]>? imageBytesListFromFileSystem = await ReadImagesAsByteArrayAsync(productId);
-
-            // Ensure one-to-one mapping between product images and byte arrays
-            if (productImages.Count != imageBytesListFromFileSystem.Count)
-            {
-                throw new InvalidOperationException("Mismatch between product images and image bytes in the file system.");
-            }
-
             List<ProductImageViewModel>? productImageViewModels = new List<ProductImageViewModel>();
+            string productDirectory = Path.Combine(DataConstants.ImagesPath, $"Product{productId}");
 
-            for (int i = 0; i < productImages.Count; i++)
+            foreach (ProductImage productImage in productImages.OrderBy(pi => pi.Id))
             {
+                string? imagePath = productImage.FullPath;
+
+                if (string.IsNullOrWhiteSpace(imagePath) || !File.Exists(imagePath))
+                {
+                    imagePath = Path.Combine(productDirectory, productImage.UniqueName ?? string.Empty);
+                }
+
+                // Keep the edit page working even if some files are missing on disk.
+                if (!File.Exists(imagePath))
+                {
+                    continue;
+                }
+
+                byte[] imageBytes = await File.ReadAllBytesAsync(imagePath);
+
                 productImageViewModels.Add(new ProductImageViewModel()
                 {
-                    ProductImageId = productImages[i].Id,
-                    bytes = imageBytesListFromFileSystem[i],
+                    ProductImageId = productImage.Id,
+                    bytes = imageBytes,
                 });
             }
 
