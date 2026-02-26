@@ -14,7 +14,7 @@ public class OrderConfirmationViewModel
 
     public decimal Subtotal { get; set; }
 
-    // public decimal Total { get; set; }
+    public decimal Total { get; set; }
 
     public string AddressDisplay { get; set; }
 

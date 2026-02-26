@@ -45,7 +45,7 @@ public class OrderController : Controller
 
         if (!ModelState.IsValid)
         {
-            viewModel = await this.orderService.GetCheckoutDataAsync(userId);
+            viewModel = await this.orderService.GetCheckoutDataAsync(userId, model.SelectedShippingMethodId);
             this.mapper.Map(model, viewModel);
             return View("Checkout", viewModel);
         }
@@ -61,7 +61,7 @@ public class OrderController : Controller
                 ModelState.AddModelError(kvp.Key, kvp.Value);
             }
 
-            viewModel = await this.orderService.GetCheckoutDataAsync(userId);
+            viewModel = await this.orderService.GetCheckoutDataAsync(userId, model.SelectedShippingMethodId);
             this.mapper.Map(model, viewModel);
 
             return View("Checkout", viewModel);
@@ -76,7 +76,7 @@ public class OrderController : Controller
                 ModelState.AddModelError(string.Empty, error);
             }
 
-            viewModel = await this.orderService.GetCheckoutDataAsync(userId);
+            viewModel = await this.orderService.GetCheckoutDataAsync(userId, model.SelectedShippingMethodId);
             this.mapper.Map(model, viewModel);
 
             return View("Checkout", viewModel);
@@ -96,7 +96,7 @@ public class OrderController : Controller
     {
         string userId = this.User.Id();
 
-        OrderConfirmationViewModel model = await this.orderService.GetOrderDetailsAsync(orderId, userId);
+        OrderConfirmationViewModel? model = await this.orderService.GetOrderDetailsAsync(orderId, userId);
 
         if (model == null)
         {

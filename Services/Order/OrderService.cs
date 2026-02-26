@@ -1,5 +1,3 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices;
 using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
@@ -59,7 +57,7 @@ public class OrderService : IOrderService
         return result;
     }
 
-    public async Task<CheckoutViewModel> GetCheckoutDataAsync(string userId)
+    public async Task<CheckoutViewModel> GetCheckoutDataAsync(string userId, int? selectedShippingMethodId = null)
     {
         ICollection<CartItemViewModel> cartItems = await this.cartService.GetCartItemsAsync(userId);
         decimal subTotal = cartItems.Sum(x => x.TotalPrice);
@@ -84,17 +82,12 @@ public class OrderService : IOrderService
             })
             .ToList();
 
-        decimal shippingPrice;
-        if (subTotal >= DataConstants.freeShippingMinPrice)
-        {
-            shippingPrice = 0m;
-        }
-        else
-        {
-            shippingPrice = DataConstants.defaultShippingPrice;
-        }
+        int resolvedShippingMethodId = selectedShippingMethodId
+            ?? shippingMethods.FirstOrDefault()?.Id
+            ?? 0;
 
-        //Use it in the Checkout view to show the user what the shipping price will cost.
+        decimal shippingPrice = CalculateShippingPrice(subTotal, resolvedShippingMethodId, shippingMethods);
+
         var orderInfo = new OrderInfoViewModel
         {
             TotalPrice = subTotal,
@@ -108,6 +101,7 @@ public class OrderService : IOrderService
             PaymentTypes = paymentTypes,
             SavedAddresses = savedAddresses,
             SelectedAddressId = savedAddresses.FirstOrDefault(a => a.IsDefault)?.AddressId,
+            SelectedShippingMethodId = resolvedShippingMethodId,
             Countries = countries,
             CartItems = cartItems,
             OrderInfo = orderInfo,
@@ -126,12 +120,11 @@ public class OrderService : IOrderService
         {
             ICollection<CartItemViewModel> cartItems = await this.cartService.GetCartItemsAsync(userId);
 
-            if (cartItems == null || cartItems.Count == 0)
+            if (cartItems.Count == 0)
             {
                 throw new InvalidOperationException("Cart is empty.");
             }
 
-            //Set default const status name and use it instead of hard coded one...
             int defaultStatusId = await this.context.OrderStatuses
                 .Where(s => s.Status == "Pending Payment")
                 .Select(s => s.Id)
@@ -147,15 +140,19 @@ public class OrderService : IOrderService
                 model.SaveShippingAddress,
                 model.SelectedAddressId, model.UseNewAddress);
 
-            //Create enum for statuses and set
-            // This line tells EF Core to store the enum value as a string
-            // modelBuilder.Entity<ShopOrder>()
-            //     .Property(o => o.Status)
-            //     .HasConversion<string>(); // Use HasConversion<string>()
-
             decimal subtotal = cartItems.Sum(i => i.UnitPrice * i.Quantity);
-            // later calculate properly   shippingPrice and add it to order total and visualize in the UI.
-            decimal orderTotal = subtotal; // or subtotal + shippingPrice
+
+            ShippingMethod shippingMethod = await this.context.ShippingMethods
+                .AsNoTracking()
+                .FirstOrDefaultAsync(sm => sm.Id == model.SelectedShippingMethodId)
+                ?? throw new InvalidOperationException("Selected shipping method was not found.");
+
+            decimal shippingPrice = CalculateShippingPrice(
+                subtotal,
+                model.SelectedShippingMethodId,
+                new List<ShippingMethod> { shippingMethod });
+
+            decimal orderTotal = subtotal + shippingPrice;
 
             ShopOrder shopOrder = new ShopOrder()
             {
@@ -181,7 +178,6 @@ public class OrderService : IOrderService
 
             shopOrder.OrderLines = orderLines;
 
-            // Stock check & subtract
             Dictionary<int, int> needed = orderLines
                 .GroupBy(ol => ol.ProductItemId)
                 .ToDictionary(g => g.Key, g => g.Sum(x => x.Quantity));
@@ -218,16 +214,15 @@ public class OrderService : IOrderService
             await this.context.ShopOrders.AddAsync(shopOrder);
             await this.context.SaveChangesAsync();
 
-            // Clear cart (ideally ClearCart shouldn't create a cart)
             await this.cartService.ClearCart(userId);
 
             await transaction.CommitAsync();
             return shopOrder.Id;
         }
-        catch (Exception e)
+        catch
         {
             await transaction.RollbackAsync();
-            throw; // Re-throw the exception to notify the controller/caller
+            throw;
         }
     }
 
@@ -242,6 +237,7 @@ public class OrderService : IOrderService
                 OrderDate = o.OrderDate,
                 Status = o.OrderStatus.Status,
                 ShippingMethodName = o.ShippingMethod.Name,
+                Total = o.OrderTotal,
                 AddressDisplay =
                     o.StreetNumber + " " + o.AddressLine1 +
                     (string.IsNullOrWhiteSpace(o.AddressLine2) ? "" : ", " + o.AddressLine2) +
@@ -261,8 +257,24 @@ public class OrderService : IOrderService
         if (model == null) return null;
 
         model.Subtotal = model.Items.Sum(i => i.LineTotal);
-        // model.ShippingPrice = ... later
+        model.ShippingPrice = Math.Max(0m, model.Total - model.Subtotal);
         return model;
+    }
+
+    private static decimal CalculateShippingPrice(
+        decimal subtotal,
+        int selectedShippingMethodId,
+        IReadOnlyCollection<ShippingMethod> shippingMethods)
+    {
+        if (subtotal >= DataConstants.freeShippingMinPrice)
+        {
+            return 0m;
+        }
+
+        ShippingMethod? selectedShippingMethod = shippingMethods
+            .FirstOrDefault(sm => sm.Id == selectedShippingMethodId);
+
+        return selectedShippingMethod?.Price ?? DataConstants.defaultShippingPrice;
     }
 
     private static string GenerateOrderNumber()

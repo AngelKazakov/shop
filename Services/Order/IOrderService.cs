@@ -7,9 +7,9 @@ public interface IOrderService
 {
     public Task<CartValidationResult> ValidateCartAsync(string userId);
 
-    public Task<CheckoutViewModel> GetCheckoutDataAsync(string userId);
+    public Task<CheckoutViewModel> GetCheckoutDataAsync(string userId, int? selectedShippingMethodId = null);
 
     public Task<int> PlaceOrderAsync(string userId, CheckoutFormModel model);
 
-    Task<OrderConfirmationViewModel> GetOrderDetailsAsync(int orderId, string userId);
+    Task<OrderConfirmationViewModel?> GetOrderDetailsAsync(int orderId, string userId);
 }
