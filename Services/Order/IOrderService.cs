@@ -12,4 +12,6 @@ public interface IOrderService
     public Task<int> PlaceOrderAsync(string userId, CheckoutFormModel model);
 
     Task<OrderConfirmationViewModel?> GetOrderDetailsAsync(int orderId, string userId);
+
+    public Task<ICollection<OrderHistoryViewModel>> GetOrderHistoryByUserIdAsync(string userId);
 }

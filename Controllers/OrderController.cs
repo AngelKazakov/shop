@@ -105,4 +105,15 @@ public class OrderController : Controller
 
         return View(model);
     }
+
+    [HttpGet]
+    [Authorize]
+    public async Task<IActionResult> History()
+    {
+        string userId = this.User.Id();
+
+        ICollection<OrderHistoryViewModel> orders = await this.orderService.GetOrderHistoryByUserIdAsync(userId);
+
+        return View(orders);
+    }
 }

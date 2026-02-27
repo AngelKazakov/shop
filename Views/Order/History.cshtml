@@ -1,0 +1,251 @@
+@model ICollection<RandomShop.Models.Order.OrderHistoryViewModel>
+
+@{
+    ViewData["Title"] = "Order History";
+}
+
+<style>
+    .history-shell {
+        --history-bg-a: #fff8ef;
+        --history-bg-b: #eef7ff;
+        --history-ink: #1f2937;
+        --history-muted: #6b7280;
+        --history-line: #e5e7eb;
+        --history-card: #ffffff;
+        background: linear-gradient(140deg, var(--history-bg-a), var(--history-bg-b));
+        border: 1px solid #f1f5f9;
+        border-radius: 18px;
+        padding: 1.5rem;
+        color: var(--history-ink);
+    }
+
+    .history-title {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+    }
+
+    .history-subtitle {
+        margin-top: 0.35rem;
+        color: var(--history-muted);
+    }
+
+    .history-table-wrap {
+        margin-top: 1.25rem;
+        background: var(--history-card);
+        border: 1px solid var(--history-line);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .history-table {
+        margin: 0;
+    }
+
+    .history-table thead th {
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #475569;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--history-line);
+    }
+
+    .history-table td {
+        vertical-align: middle;
+    }
+
+    .history-order-number {
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .history-order-id {
+        font-size: 0.8rem;
+        color: var(--history-muted);
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.3rem 0.65rem;
+    }
+
+    .status-chip.pending {
+        color: #92400e;
+        background: #fef3c7;
+    }
+
+    .status-chip.paid {
+        color: #166534;
+        background: #dcfce7;
+    }
+
+    .status-chip.shipped {
+        color: #1d4ed8;
+        background: #dbeafe;
+    }
+
+    .status-chip.delivered {
+        color: #155e75;
+        background: #cffafe;
+    }
+
+    .status-chip.cancelled {
+        color: #991b1b;
+        background: #fee2e2;
+    }
+
+    .status-chip.default {
+        color: #334155;
+        background: #e2e8f0;
+    }
+
+    .empty-history {
+        margin-top: 1.25rem;
+        background: var(--history-card);
+        border: 1px dashed #cbd5e1;
+        border-radius: 14px;
+        padding: 2rem 1rem;
+        text-align: center;
+    }
+
+    .empty-history p {
+        margin: 0.25rem 0 1rem;
+        color: var(--history-muted);
+    }
+
+    .history-mobile-card {
+        display: none;
+        margin-top: 1rem;
+        background: var(--history-card);
+        border: 1px solid var(--history-line);
+        border-radius: 12px;
+        padding: 0.9rem;
+    }
+
+    .history-mobile-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .history-mobile-meta {
+        color: var(--history-muted);
+        font-size: 0.85rem;
+    }
+
+    @@media (max-width: 768px) {
+        .history-table-wrap {
+            display: none;
+        }
+
+        .history-mobile-card {
+            display: block;
+        }
+    }
+</style>
+
+<div class="history-shell">
+    <h1 class="history-title">Your Orders</h1>
+    <p class="history-subtitle">Track your purchases and view each order status.</p>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="empty-history">
+            <h5 class="mb-2">No orders yet</h5>
+            <p>Once you place an order, it will appear here.</p>
+            <a asp-controller="Product" asp-action="All" class="btn btn-primary">Start Shopping</a>
+        </div>
+    }
+    else
+    {
+        <div class="history-table-wrap table-responsive">
+            <table class="table history-table align-middle mb-0">
+                <thead>
+                <tr>
+                    <th>Order</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th class="text-end">Items</th>
+                    <th class="text-end">Total</th>
+                    <th class="text-end">Details</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var order in Model)
+                {
+                    var statusClass = order.Status?.ToLowerInvariant() switch
+                    {
+                        "pending payment" => "pending",
+                        "paid" => "paid",
+                        "shipped" => "shipped",
+                        "delivered" => "delivered",
+                        "cancelled" => "cancelled",
+                        _ => "default"
+                    };
+
+                    <tr>
+                        <td>
+                            <div class="history-order-number">@order.OrderNumber</div>
+                            <div class="history-order-id">ID #@order.OrderId</div>
+                        </td>
+                        <td>@order.OrderDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</td>
+                        <td><span class="status-chip @statusClass">@order.Status</span></td>
+                        <td class="text-end">@order.ItemCount</td>
+                        <td class="text-end fw-semibold">@order.Total.ToString("C")</td>
+                        <td class="text-end">
+                            <a asp-controller="Order"
+                               asp-action="Confirmation"
+                               asp-route-orderId="@order.OrderId"
+                               class="btn btn-sm btn-outline-dark">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        @foreach (var order in Model)
+        {
+            var statusClass = order.Status?.ToLowerInvariant() switch
+            {
+                "pending payment" => "pending",
+                "paid" => "paid",
+                "shipped" => "shipped",
+                "delivered" => "delivered",
+                "cancelled" => "cancelled",
+                _ => "default"
+            };
+
+            <div class="history-mobile-card">
+                <div class="history-mobile-top">
+                    <div>
+                        <div class="history-order-number">@order.OrderNumber</div>
+                        <div class="history-order-id">ID #@order.OrderId</div>
+                    </div>
+                    <span class="status-chip @statusClass">@order.Status</span>
+                </div>
+                <div class="history-mobile-meta">@order.OrderDate.ToLocalTime().ToString("dd MMM yyyy, HH:mm")</div>
+                <div class="d-flex justify-content-between mt-2">
+                    <span class="history-mobile-meta">Items: @order.ItemCount</span>
+                    <span class="fw-semibold">@order.Total.ToString("C")</span>
+                </div>
+                <a asp-controller="Order"
+                   asp-action="Confirmation"
+                   asp-route-orderId="@order.OrderId"
+                   class="btn btn-outline-dark btn-sm mt-3">
+                    View Order
+                </a>
+            </div>
+        }
+    }
+</div>
+﻿

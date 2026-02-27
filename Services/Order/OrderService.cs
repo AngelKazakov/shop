@@ -83,8 +83,8 @@ public class OrderService : IOrderService
             .ToList();
 
         int resolvedShippingMethodId = selectedShippingMethodId
-            ?? shippingMethods.FirstOrDefault()?.Id
-            ?? 0;
+                                       ?? shippingMethods.FirstOrDefault()?.Id
+                                       ?? 0;
 
         decimal shippingPrice = CalculateShippingPrice(subTotal, resolvedShippingMethodId, shippingMethods);
 
@@ -143,9 +143,10 @@ public class OrderService : IOrderService
             decimal subtotal = cartItems.Sum(i => i.UnitPrice * i.Quantity);
 
             ShippingMethod shippingMethod = await this.context.ShippingMethods
-                .AsNoTracking()
-                .FirstOrDefaultAsync(sm => sm.Id == model.SelectedShippingMethodId)
-                ?? throw new InvalidOperationException("Selected shipping method was not found.");
+                                                .AsNoTracking()
+                                                .FirstOrDefaultAsync(sm => sm.Id == model.SelectedShippingMethodId)
+                                            ?? throw new InvalidOperationException(
+                                                "Selected shipping method was not found.");
 
             decimal shippingPrice = CalculateShippingPrice(
                 subtotal,
@@ -264,6 +265,26 @@ public class OrderService : IOrderService
         model.Subtotal = model.Items.Sum(i => i.LineTotal);
         model.ShippingPrice = Math.Max(0m, model.Total - model.Subtotal);
         return model;
+    }
+
+    public async Task<ICollection<OrderHistoryViewModel>> GetOrderHistoryByUserIdAsync(string userId)
+    {
+        List<OrderHistoryViewModel> userOrders = await this.context.ShopOrders
+            .AsNoTracking()
+            .Where(o => o.UserId == userId)
+            .OrderByDescending(o => o.OrderDate)
+            .Select(o => new OrderHistoryViewModel
+            {
+                OrderId = o.Id,
+                OrderNumber = o.OrderNumber,
+                OrderDate = o.OrderDate,
+                Status = o.OrderStatus.Status,
+                Total = o.OrderTotal,
+                ItemCount = o.OrderLines.Sum(ol => ol.Quantity)
+            })
+            .ToListAsync();
+
+        return userOrders;
     }
 
     private static decimal CalculateShippingPrice(
