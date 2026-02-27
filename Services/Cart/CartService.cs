@@ -75,7 +75,7 @@ public class CartService : ICartService
             ProductItemId = ci.ProductItemId,
             ProductName = ci.ProductItem.Product.Name,
             Quantity = ci.Quantity,
-            UnitPrice = ci.ProductItem.Price,
+            UnitPrice = ci.ProductItem.DiscountedPrice > 0 ? ci.ProductItem.DiscountedPrice : ci.ProductItem.Price,
         }).ToList();
     }
 
@@ -134,7 +134,8 @@ public class CartService : ICartService
             .ThenInclude(pi => pi.Product)
             .FirstOrDefaultAsync(c => c.UserId == userId);
 
-        decimal totalAmount = cart.Items.Sum(i => i.Quantity * i.ProductItem.Price);
+        decimal totalAmount = cart.Items.Sum(i =>
+            i.Quantity * (i.ProductItem.DiscountedPrice > 0 ? i.ProductItem.DiscountedPrice : i.ProductItem.Price));
 
         return totalAmount;
     }
