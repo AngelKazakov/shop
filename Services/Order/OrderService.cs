@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using RandomShop.Data;
 using RandomShop.Data.Models;
@@ -6,6 +7,7 @@ using RandomShop.Models.Cart;
 using RandomShop.Models.Order;
 using RandomShop.Services.Address;
 using RandomShop.Services.Cart;
+using RandomShop.Services.Email;
 
 namespace RandomShop.Services.Order;
 
@@ -14,12 +16,17 @@ public class OrderService : IOrderService
     private readonly ShopContext context;
     private readonly ICartService cartService;
     private readonly IAddressService addressService;
+    private readonly IEmailSender emailSender;
+    private readonly UserManager<Data.Models.User> userManager;
 
-    public OrderService(ShopContext context, ICartService cartService, IAddressService addressService)
+    public OrderService(ShopContext context, ICartService cartService, IAddressService addressService,
+        IEmailSender emailSender, UserManager<Data.Models.User> userManager)
     {
         this.context = context;
         this.cartService = cartService;
         this.addressService = addressService;
+        this.emailSender = emailSender;
+        this.userManager = userManager;
     }
 
     public async Task<CartValidationResult> ValidateCartAsync(string userId)
@@ -218,6 +225,20 @@ public class OrderService : IOrderService
             await this.cartService.ClearCart(userId);
 
             await transaction.CommitAsync();
+
+            Data.Models.User? user = await userManager.FindByIdAsync(userId);
+
+            if (user == null || string.IsNullOrEmpty(user.Email))
+            {
+                throw new Exception("Could not find user email for this order.");
+            }
+
+            string actualUserEmail = user.Email;
+
+            string subject = "Order Confirmation - RandomShop";
+            string message = $"<h1>Thanks for your order!</h1><p>Order ID: {shopOrder.Id}</p>";
+
+            await emailSender.SendEmailAsync(actualUserEmail, subject, message);
             return shopOrder.Id;
         }
         catch

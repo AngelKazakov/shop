@@ -9,6 +9,7 @@ using RandomShop.Infrastructure;
 using RandomShop.Services.Address;
 using RandomShop.Services.Cart;
 using RandomShop.Services.Categories;
+using RandomShop.Services.Email;
 using RandomShop.Services.Images;
 using RandomShop.Services.Order;
 using RandomShop.Services.Products;
@@ -49,6 +50,7 @@ builder.Services.AddTransient<IGuestCartCookieService, GuestCartCookieService>()
 builder.Services.AddTransient<IGuestFavoritesCookieService, GuestFavoritesCookieService>();
 builder.Services.AddTransient<IOrderService, OrderService>();
 builder.Services.AddTransient<IAddressService, AddressService>();
+builder.Services.AddTransient<IEmailSender, MailSender>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
@@ -71,6 +73,7 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHttpsRedirection();
 }
+
 app.UseStaticFiles();
 
 app.UseRouting();
