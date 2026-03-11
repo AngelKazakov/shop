@@ -17,16 +17,18 @@ public class OrderService : IOrderService
     private readonly ICartService cartService;
     private readonly IAddressService addressService;
     private readonly IEmailSender emailSender;
+    private readonly IEmailTemplateService emailTemplateService;
     private readonly UserManager<Data.Models.User> userManager;
 
     public OrderService(ShopContext context, ICartService cartService, IAddressService addressService,
-        IEmailSender emailSender, UserManager<Data.Models.User> userManager)
+        IEmailSender emailSender, UserManager<Data.Models.User> userManager, IEmailTemplateService emailTemplateService)
     {
         this.context = context;
         this.cartService = cartService;
         this.addressService = addressService;
         this.emailSender = emailSender;
         this.userManager = userManager;
+        this.emailTemplateService = emailTemplateService;
     }
 
     public async Task<CartValidationResult> ValidateCartAsync(string userId)
@@ -226,19 +228,40 @@ public class OrderService : IOrderService
 
             await transaction.CommitAsync();
 
-            Data.Models.User? user = await userManager.FindByIdAsync(userId);
+            // --- START REFACTOR ---
 
-            if (user == null || string.IsNullOrEmpty(user.Email))
+            // 1. Get the user (Necessary to get the email address)
+            var user = await userManager.FindByIdAsync(userId);
+
+            if (user?.Email != null)
             {
-                throw new Exception("Could not find user email for this order.");
+                try
+                {
+                    // 2. Instead of a full re-query, tell EF to explicitly load the related data 
+                    // into the 'shopOrder' object you already have in memory.
+                    await this.context.Entry(shopOrder)
+                        .Collection(o => o.OrderLines)
+                        .Query()
+                        .Include(ol => ol.ProductItem)
+                        .ThenInclude(pi => pi.Product)
+                        .LoadAsync();
+
+                    // 3. Generate and Send
+                    string subject = $"Order Confirmation #{shopOrder.OrderNumber} - RandomShop";
+                    string htmlContent = this.emailTemplateService.BuildOrderConfirmationHtml(user, shopOrder);
+
+                    // We don't 'await' this if we want it to be fire-and-forget, 
+                    // but since you are in a Task, awaiting is safer for now.
+                    await emailSender.SendEmailAsync(user.Email, subject, htmlContent);
+                }
+                catch (Exception ex)
+                {
+                    // LOG the error here! (e.g., logger.LogError(ex, "Email failed"))
+                    // We do NOT throw here, because the order is already saved and committed.
+                    // We don't want to show the user an error page just because the email failed.
+                }
             }
 
-            string actualUserEmail = user.Email;
-
-            string subject = "Order Confirmation - RandomShop";
-            string message = $"<h1>Thanks for your order!</h1><p>Order ID: {shopOrder.Id}</p>";
-
-            await emailSender.SendEmailAsync(actualUserEmail, subject, message);
             return shopOrder.Id;
         }
         catch

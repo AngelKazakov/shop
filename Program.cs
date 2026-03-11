@@ -51,6 +51,7 @@ builder.Services.AddTransient<IGuestFavoritesCookieService, GuestFavoritesCookie
 builder.Services.AddTransient<IOrderService, OrderService>();
 builder.Services.AddTransient<IAddressService, AddressService>();
 builder.Services.AddTransient<IEmailSender, MailSender>();
+builder.Services.AddTransient<IEmailTemplateService, EmailTemplateService>();
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
