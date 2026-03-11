@@ -228,17 +228,12 @@ public class OrderService : IOrderService
 
             await transaction.CommitAsync();
 
-            // --- START REFACTOR ---
-
-            // 1. Get the user (Necessary to get the email address)
             var user = await userManager.FindByIdAsync(userId);
 
             if (user?.Email != null)
             {
                 try
                 {
-                    // 2. Instead of a full re-query, tell EF to explicitly load the related data 
-                    // into the 'shopOrder' object you already have in memory.
                     await this.context.Entry(shopOrder)
                         .Collection(o => o.OrderLines)
                         .Query()
@@ -246,19 +241,14 @@ public class OrderService : IOrderService
                         .ThenInclude(pi => pi.Product)
                         .LoadAsync();
 
-                    // 3. Generate and Send
                     string subject = $"Order Confirmation #{shopOrder.OrderNumber} - RandomShop";
                     string htmlContent = this.emailTemplateService.BuildOrderConfirmationHtml(user, shopOrder);
 
-                    // We don't 'await' this if we want it to be fire-and-forget, 
-                    // but since you are in a Task, awaiting is safer for now.
                     await emailSender.SendEmailAsync(user.Email, subject, htmlContent);
                 }
                 catch (Exception ex)
                 {
                     // LOG the error here! (e.g., logger.LogError(ex, "Email failed"))
-                    // We do NOT throw here, because the order is already saved and committed.
-                    // We don't want to show the user an error page just because the email failed.
                 }
             }
 

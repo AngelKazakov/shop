@@ -11,8 +11,6 @@ public class EmailTemplateService : IEmailTemplateService
 
         foreach (var item in order.OrderLines)
         {
-            // Navigation path: OrderLine -> ProductItem -> Product -> Name
-            // Ensure you have used .Include() in the service calling this to avoid nulls
             string productName = item.ProductItem?.Product?.Name ?? "Product";
 
             itemsHtml.Append($@"
@@ -23,7 +21,6 @@ public class EmailTemplateService : IEmailTemplateService
         </tr>");
         }
 
-        // Return the full HTML Template
         return $@"
     <div style='background-color: #f4f7f6; padding: 20px; font-family: Helvetica, Arial, sans-serif;'>
         <div style='max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);'>
