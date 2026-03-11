@@ -5,6 +5,7 @@ using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Models.Address;
 using RandomShop.Models.Cart;
+using RandomShop.Models.Email;
 using RandomShop.Models.Order;
 using RandomShop.Services.Address;
 using RandomShop.Services.Cart;
@@ -238,6 +239,8 @@ public class OrderService : IOrderService
             {
                 try
                 {
+                    // Email sending is a post-order side effect. A send failure must not undo
+                    // a successfully committed order.
                     await this.context.Entry(shopOrder)
                         .Collection(o => o.OrderLines)
                         .Query()
@@ -246,7 +249,8 @@ public class OrderService : IOrderService
                         .LoadAsync();
 
                     string subject = $"Order Confirmation #{shopOrder.OrderNumber} - RandomShop";
-                    string htmlContent = this.emailTemplateService.BuildOrderConfirmationHtml(user, shopOrder);
+                    OrderConfirmationEmailModel emailModel = BuildOrderConfirmationEmailModel(user, shopOrder);
+                    string htmlContent = this.emailTemplateService.BuildOrderConfirmationHtml(emailModel);
 
                     await emailSender.SendEmailAsync(user.Email, subject, htmlContent);
                     this.logger.LogInformation(
@@ -357,5 +361,30 @@ public class OrderService : IOrderService
     {
         var suffix = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
         return $"RS-{suffix}";
+    }
+
+    private static OrderConfirmationEmailModel BuildOrderConfirmationEmailModel(Data.Models.User user, ShopOrder order)
+    {
+        var items = (order.OrderLines ?? new List<OrderLine>())
+            .Select(item => new OrderConfirmationEmailItemModel
+            {
+                ProductName = item.ProductItem?.Product?.Name ?? "Product",
+                Quantity = item.Quantity,
+                UnitPrice = item.Price
+            })
+            .ToList();
+
+        decimal subtotal = items.Sum(item => item.UnitPrice * item.Quantity);
+        decimal shipping = Math.Max(0m, order.OrderTotal - subtotal);
+
+        return new OrderConfirmationEmailModel
+        {
+            CustomerName = user.UserName ?? "Customer",
+            OrderNumber = order.OrderNumber ?? order.Id.ToString(),
+            Items = items,
+            Subtotal = subtotal,
+            Shipping = shipping,
+            Total = order.OrderTotal
+        };
     }
 }

@@ -1,8 +1,8 @@
-﻿using RandomShop.Data.Models;
+using RandomShop.Models.Email;
 
 namespace RandomShop.Services.Email;
 
 public interface IEmailTemplateService
 {
-    public string BuildOrderConfirmationHtml(Data.Models.User user,ShopOrder order);
+    public string BuildOrderConfirmationHtml(OrderConfirmationEmailModel model);
 }

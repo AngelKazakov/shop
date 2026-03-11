@@ -1,30 +1,27 @@
 using System.Text;
 using System.Text.Encodings.Web;
-using RandomShop.Data.Models;
+using RandomShop.Models.Email;
 
 namespace RandomShop.Services.Email;
 
 public class EmailTemplateService : IEmailTemplateService
 {
-    public string BuildOrderConfirmationHtml(Data.Models.User user, ShopOrder order)
+    public string BuildOrderConfirmationHtml(OrderConfirmationEmailModel model)
     {
         var encoder = HtmlEncoder.Default;
         var itemsHtml = new StringBuilder();
-        var orderLines = order.OrderLines ?? new List<OrderLine>();
-        decimal subtotal = orderLines.Sum(item => item.Price * item.Quantity);
-        decimal shipping = Math.Max(0m, order.OrderTotal - subtotal);
-        string encodedUserName = encoder.Encode(user.UserName ?? "Customer");
-        string encodedOrderNumber = encoder.Encode(order.OrderNumber ?? order.Id.ToString());
+        string encodedUserName = encoder.Encode(model.CustomerName);
+        string encodedOrderNumber = encoder.Encode(model.OrderNumber);
 
-        foreach (var item in orderLines)
+        foreach (var item in model.Items)
         {
-            string productName = encoder.Encode(item.ProductItem?.Product?.Name ?? "Product");
+            string productName = encoder.Encode(item.ProductName);
 
             itemsHtml.Append($@"
         <tr>
             <td style='padding: 12px; border-bottom: 1px solid #eeeeee; font-size: 14px;'>{productName}</td>
             <td style='padding: 12px; border-bottom: 1px solid #eeeeee; text-align: center; font-size: 14px;'>{item.Quantity}</td>
-            <td style='padding: 12px; border-bottom: 1px solid #eeeeee; text-align: right; font-size: 14px;'>{item.Price:F2} лв.</td>
+            <td style='padding: 12px; border-bottom: 1px solid #eeeeee; text-align: right; font-size: 14px;'>{item.UnitPrice:F2} Р»РІ.</td>
         </tr>");
         }
 
@@ -53,13 +50,13 @@ public class EmailTemplateService : IEmailTemplateService
                 </table>
 
                 <div style='text-align: right; margin-top: 20px;'>
-                    <p style='margin: 5px 0; color: #666;'>Subtotal: {subtotal:F2} лв.</p>
-                    <p style='margin: 5px 0; color: #666;'>Shipping: {shipping:F2} лв.</p>
-                    <h2 style='margin: 10px 0; color: #1a2a3a;'>Total: {order.OrderTotal:F2} лв.</h2>
+                    <p style='margin: 5px 0; color: #666;'>Subtotal: {model.Subtotal:F2} Р»РІ.</p>
+                    <p style='margin: 5px 0; color: #666;'>Shipping: {model.Shipping:F2} Р»РІ.</p>
+                    <h2 style='margin: 10px 0; color: #1a2a3a;'>Total: {model.Total:F2} Р»РІ.</h2>
                 </div>
             </div>
             <div style='background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999;'>
-                <p>© 2026 Random Shop | Varna, Bulgaria</p>
+                <p>В© 2026 Random Shop | Varna, Bulgaria</p>
             </div>
         </div>
     </div>";
