@@ -21,7 +21,7 @@ public class EmailTemplateService : IEmailTemplateService
         <tr>
             <td style='padding: 12px; border-bottom: 1px solid #eeeeee; font-size: 14px;'>{productName}</td>
             <td style='padding: 12px; border-bottom: 1px solid #eeeeee; text-align: center; font-size: 14px;'>{item.Quantity}</td>
-            <td style='padding: 12px; border-bottom: 1px solid #eeeeee; text-align: right; font-size: 14px;'>{item.UnitPrice:F2} Р»РІ.</td>
+            <td style='padding: 12px; border-bottom: 1px solid #eeeeee; text-align: right; font-size: 14px;'>{item.UnitPrice:F2} lv.</td>
         </tr>");
         }
 
@@ -50,13 +50,13 @@ public class EmailTemplateService : IEmailTemplateService
                 </table>
 
                 <div style='text-align: right; margin-top: 20px;'>
-                    <p style='margin: 5px 0; color: #666;'>Subtotal: {model.Subtotal:F2} Р»РІ.</p>
-                    <p style='margin: 5px 0; color: #666;'>Shipping: {model.Shipping:F2} Р»РІ.</p>
-                    <h2 style='margin: 10px 0; color: #1a2a3a;'>Total: {model.Total:F2} Р»РІ.</h2>
+                    <p style='margin: 5px 0; color: #666;'>Subtotal: {model.Subtotal:F2} lv.</p>
+                    <p style='margin: 5px 0; color: #666;'>Shipping: {model.Shipping:F2} lv.</p>
+                    <h2 style='margin: 10px 0; color: #1a2a3a;'>Total: {model.Total:F2} lv.</h2>
                 </div>
             </div>
             <div style='background-color: #f9f9f9; padding: 20px; text-align: center; font-size: 12px; color: #999;'>
-                <p>В© 2026 Random Shop | Varna, Bulgaria</p>
+                <p>(c) 2026 Random Shop | Varna, Bulgaria</p>
             </div>
         </div>
     </div>";
