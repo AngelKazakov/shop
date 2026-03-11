@@ -1,4 +1,5 @@
-﻿using System.Text;
+using System.Text;
+using System.Text.Encodings.Web;
 using RandomShop.Data.Models;
 
 namespace RandomShop.Services.Email;
@@ -7,11 +8,17 @@ public class EmailTemplateService : IEmailTemplateService
 {
     public string BuildOrderConfirmationHtml(Data.Models.User user, ShopOrder order)
     {
+        var encoder = HtmlEncoder.Default;
         var itemsHtml = new StringBuilder();
+        var orderLines = order.OrderLines ?? new List<OrderLine>();
+        decimal subtotal = orderLines.Sum(item => item.Price * item.Quantity);
+        decimal shipping = Math.Max(0m, order.OrderTotal - subtotal);
+        string encodedUserName = encoder.Encode(user.UserName ?? "Customer");
+        string encodedOrderNumber = encoder.Encode(order.OrderNumber ?? order.Id.ToString());
 
-        foreach (var item in order.OrderLines)
+        foreach (var item in orderLines)
         {
-            string productName = item.ProductItem?.Product?.Name ?? "Product";
+            string productName = encoder.Encode(item.ProductItem?.Product?.Name ?? "Product");
 
             itemsHtml.Append($@"
         <tr>
@@ -29,8 +36,8 @@ public class EmailTemplateService : IEmailTemplateService
             </div>
             <div style='padding: 30px;'>
                 <h2 style='color: #1a2a3a; margin-top: 0;'>Order Confirmation</h2>
-                <p>Hi <strong>{user.UserName}</strong>,</p>
-                <p>Thank you for your purchase! Here is your receipt for <strong>Order #{order.OrderNumber}</strong>:</p>
+                <p>Hi <strong>{encodedUserName}</strong>,</p>
+                <p>Thank you for your purchase! Here is your receipt for <strong>Order #{encodedOrderNumber}</strong>:</p>
                 
                 <table style='width: 100%; border-collapse: collapse; margin-top: 20px;'>
                     <thead>
@@ -46,7 +53,8 @@ public class EmailTemplateService : IEmailTemplateService
                 </table>
 
                 <div style='text-align: right; margin-top: 20px;'>
-                    <p style='margin: 5px 0; color: #666;'>Subtotal: {order.OrderTotal:F2} лв.</p>
+                    <p style='margin: 5px 0; color: #666;'>Subtotal: {subtotal:F2} лв.</p>
+                    <p style='margin: 5px 0; color: #666;'>Shipping: {shipping:F2} лв.</p>
                     <h2 style='margin: 10px 0; color: #1a2a3a;'>Total: {order.OrderTotal:F2} лв.</h2>
                 </div>
             </div>
