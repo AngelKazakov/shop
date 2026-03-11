@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using RandomShop.Data;
 using RandomShop.Data.Models;
 using RandomShop.Models.Address;
@@ -19,9 +20,11 @@ public class OrderService : IOrderService
     private readonly IEmailSender emailSender;
     private readonly IEmailTemplateService emailTemplateService;
     private readonly UserManager<Data.Models.User> userManager;
+    private readonly ILogger<OrderService> logger;
 
     public OrderService(ShopContext context, ICartService cartService, IAddressService addressService,
-        IEmailSender emailSender, UserManager<Data.Models.User> userManager, IEmailTemplateService emailTemplateService)
+        IEmailSender emailSender, UserManager<Data.Models.User> userManager,
+        IEmailTemplateService emailTemplateService, ILogger<OrderService> logger)
     {
         this.context = context;
         this.cartService = cartService;
@@ -29,6 +32,7 @@ public class OrderService : IOrderService
         this.emailSender = emailSender;
         this.userManager = userManager;
         this.emailTemplateService = emailTemplateService;
+        this.logger = logger;
     }
 
     public async Task<CartValidationResult> ValidateCartAsync(string userId)
@@ -245,10 +249,22 @@ public class OrderService : IOrderService
                     string htmlContent = this.emailTemplateService.BuildOrderConfirmationHtml(user, shopOrder);
 
                     await emailSender.SendEmailAsync(user.Email, subject, htmlContent);
+                    this.logger.LogInformation(
+                        "Order confirmation email sent successfully. OrderId: {OrderId}, OrderNumber: {OrderNumber}, UserId: {UserId}, RecipientEmail: {RecipientEmail}",
+                        shopOrder.Id,
+                        shopOrder.OrderNumber,
+                        userId,
+                        user.Email);
                 }
                 catch (Exception ex)
                 {
-                    // LOG the error here! (e.g., logger.LogError(ex, "Email failed"))
+                    this.logger.LogError(
+                        ex,
+                        "Failed to send order confirmation email. OrderId: {OrderId}, OrderNumber: {OrderNumber}, UserId: {UserId}, RecipientEmail: {RecipientEmail}",
+                        shopOrder.Id,
+                        shopOrder.OrderNumber,
+                        userId,
+                        user.Email);
                 }
             }
 
