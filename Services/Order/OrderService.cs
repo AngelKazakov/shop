@@ -237,22 +237,31 @@ public class OrderService : IOrderService
 
             if (user?.Email != null)
             {
+                await this.context.Entry(shopOrder)
+                    .Collection(o => o.OrderLines)
+                    .Query()
+                    .Include(ol => ol.ProductItem)
+                    .ThenInclude(pi => pi.Product)
+                    .LoadAsync();
+
+                string subject = $"Order Confirmation #{shopOrder.OrderNumber} - RandomShop";
+                OrderConfirmationEmailModel emailModel = BuildOrderConfirmationEmailModel(user, shopOrder);
+                string htmlContent = this.emailTemplateService.BuildOrderConfirmationHtml(emailModel);
+
                 try
                 {
-                    // Email sending is a post-order side effect. A send failure must not undo
-                    // a successfully committed order.
-                    await this.context.Entry(shopOrder)
-                        .Collection(o => o.OrderLines)
-                        .Query()
-                        .Include(ol => ol.ProductItem)
-                        .ThenInclude(pi => pi.Product)
-                        .LoadAsync();
-
-                    string subject = $"Order Confirmation #{shopOrder.OrderNumber} - RandomShop";
-                    OrderConfirmationEmailModel emailModel = BuildOrderConfirmationEmailModel(user, shopOrder);
-                    string htmlContent = this.emailTemplateService.BuildOrderConfirmationHtml(emailModel);
-
                     await emailSender.SendEmailAsync(user.Email, subject, htmlContent);
+
+                    await SaveEmailLogAsync(new EmailLog
+                    {
+                        Recipient = user.Email,
+                        Subject = subject,
+                        Body = htmlContent,
+                        IsSuccess = true,
+                        ShopOrderId = shopOrder.Id,
+                        SendAt = DateTime.UtcNow,
+                    });
+
                     this.logger.LogInformation(
                         "Order confirmation email sent successfully. OrderId: {OrderId}, OrderNumber: {OrderNumber}, UserId: {UserId}, RecipientEmail: {RecipientEmail}",
                         shopOrder.Id,
@@ -269,6 +278,17 @@ public class OrderService : IOrderService
                         shopOrder.OrderNumber,
                         userId,
                         user.Email);
+
+                    await SaveEmailLogAsync(new EmailLog
+                    {
+                        Recipient = user.Email,
+                        Subject = subject,
+                        Body = htmlContent,
+                        IsSuccess = false,
+                        ErrorMessage = ex.Message,
+                        ShopOrderId = shopOrder.Id,
+                        SendAt = DateTime.UtcNow,
+                    });
                 }
             }
 
@@ -361,6 +381,24 @@ public class OrderService : IOrderService
     {
         var suffix = Guid.NewGuid().ToString("N")[..10].ToUpperInvariant();
         return $"RS-{suffix}";
+    }
+
+    private async Task SaveEmailLogAsync(EmailLog log)
+    {
+        try
+        {
+            await this.context.EmailLogs.AddAsync(log);
+            await this.context.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            this.logger.LogError(
+                ex,
+                "Failed to save email log. OrderId: {OrderId}, RecipientEmail: {RecipientEmail}, IsSuccess: {IsSuccess}",
+                log.ShopOrderId,
+                log.Recipient,
+                log.IsSuccess);
+        }
     }
 
     private static OrderConfirmationEmailModel BuildOrderConfirmationEmailModel(Data.Models.User user, ShopOrder order)
