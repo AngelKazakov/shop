@@ -53,5 +53,7 @@ namespace RandomShop.Data.Models
         public ICollection<UserPaymentMethod> UserPaymentMethods { get; set; } = new List<UserPaymentMethod>();
 
         public ICollection<OrderLine> OrderLines { get; set; } = new List<OrderLine>();
+
+        public ICollection<EmailLog> EmailLogs { get; set; } = new List<EmailLog>();
     }
 }

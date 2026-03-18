@@ -61,6 +61,8 @@ namespace RandomShop.Data
 
         public virtual DbSet<UserReviewLike> ReviewLikes { get; init; }
 
+        public virtual DbSet<EmailLog> EmailLogs { get; init; }
+
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -148,6 +150,12 @@ namespace RandomShop.Data
             builder.Entity<ShopOrder>()
                 .HasIndex(x => x.OrderNumber)
                 .IsUnique();
+
+            builder.Entity<EmailLog>()
+                .HasOne(x => x.ShopOrder)
+                .WithMany(x => x.EmailLogs)
+                .HasForeignKey(x => x.ShopOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
