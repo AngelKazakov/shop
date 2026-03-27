@@ -1,10 +1,8 @@
 using FluentValidation;
 using FluentValidation.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using RandomShop.Areas.Admin.Services.Product;
 using RandomShop.Data;
-using RandomShop.Data.Models;
 using RandomShop.Infrastructure;
 using RandomShop.Services.Address;
 using RandomShop.Services.Cart;
@@ -52,6 +50,10 @@ builder.Services.AddTransient<IOrderService, OrderService>();
 builder.Services.AddTransient<IAddressService, AddressService>();
 builder.Services.AddTransient<IEmailSender, MailSender>();
 builder.Services.AddTransient<IEmailTemplateService, EmailTemplateService>();
+
+//Admin Area
+builder.Services.AddTransient<IAdminProductService, AdminProductService>();
+
 builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
