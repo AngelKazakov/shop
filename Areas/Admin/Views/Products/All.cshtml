@@ -1,0 +1,624 @@
+@model IEnumerable<AdminProductListItemViewModel>
+
+@{
+    ViewData["Title"] = "Admin Products";
+    var products = Model.ToList();
+    var totalProducts = products.Count;
+    var totalInventory = products.Sum(p => p.Quantity);
+    var lowStockProducts = products.Count(p => p.Quantity <= 5);
+    var promotedProducts = products.Count(p => p.HasPromotion);
+}
+
+<style>
+    .admin-products-page {
+        --admin-bg: linear-gradient(135deg, #f6f7fb 0%, #eef4ff 100%);
+        --admin-surface: #ffffff;
+        --admin-border: #dbe3f0;
+        --admin-text: #1f2937;
+        --admin-muted: #6b7280;
+        --admin-accent: #0f766e;
+        --admin-accent-soft: #ccfbf1;
+        --admin-warning: #b45309;
+        --admin-warning-soft: #fef3c7;
+        --admin-danger: #b91c1c;
+        --admin-danger-soft: #fee2e2;
+        --admin-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+        color: var(--admin-text);
+    }
+
+    .admin-products-shell {
+        background: var(--admin-bg);
+        border: 1px solid var(--admin-border);
+        border-radius: 28px;
+        padding: 28px;
+        box-shadow: var(--admin-shadow);
+    }
+
+    .admin-hero {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: flex-start;
+        margin-bottom: 24px;
+    }
+
+    .admin-hero h1 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+    }
+
+    .admin-hero p {
+        margin: 0;
+        color: var(--admin-muted);
+        max-width: 700px;
+    }
+
+    .admin-hero-actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .admin-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .admin-stat-card {
+        background: var(--admin-surface);
+        border: 1px solid var(--admin-border);
+        border-radius: 20px;
+        padding: 18px 20px;
+    }
+
+    .admin-stat-card span {
+        display: block;
+        color: var(--admin-muted);
+        font-size: 0.88rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-bottom: 10px;
+    }
+
+    .admin-stat-card strong {
+        display: block;
+        font-size: 1.9rem;
+        line-height: 1;
+    }
+
+    .admin-filters {
+        background: rgba(255, 255, 255, 0.75);
+        backdrop-filter: blur(12px);
+        border: 1px solid var(--admin-border);
+        border-radius: 20px;
+        padding: 18px;
+        margin-bottom: 20px;
+    }
+
+    .admin-filter-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 14px;
+        align-items: end;
+    }
+
+    .admin-filter-group label {
+        display: block;
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        color: var(--admin-muted);
+        font-weight: 600;
+    }
+
+    .admin-filter-group input,
+    .admin-filter-group select {
+        width: 100%;
+        border: 1px solid var(--admin-border);
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: #fff;
+    }
+
+    .admin-table-wrap {
+        background: var(--admin-surface);
+        border: 1px solid var(--admin-border);
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    .admin-table-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        align-items: center;
+        padding: 18px 20px;
+        border-bottom: 1px solid var(--admin-border);
+    }
+
+    .admin-table-toolbar p {
+        margin: 0;
+        color: var(--admin-muted);
+    }
+
+    .admin-products-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .admin-products-table th,
+    .admin-products-table td {
+        padding: 16px 14px;
+        border-bottom: 1px solid #edf2f7;
+        vertical-align: middle;
+    }
+
+    .admin-products-table thead th {
+        font-size: 0.82rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--admin-muted);
+        background: #f8fafc;
+    }
+
+    .admin-products-table tbody tr:hover {
+        background: #f8fbff;
+    }
+
+    .product-name-cell {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .product-name-cell strong {
+        font-size: 1rem;
+    }
+
+    .product-meta {
+        color: var(--admin-muted);
+        font-size: 0.9rem;
+    }
+
+    .badge-soft {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.42rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+    }
+
+    .badge-promo {
+        background: var(--admin-accent-soft);
+        color: var(--admin-accent);
+    }
+
+    .badge-none {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .badge-stock-low {
+        background: var(--admin-danger-soft);
+        color: var(--admin-danger);
+    }
+
+    .badge-stock-ok {
+        background: var(--admin-warning-soft);
+        color: var(--admin-warning);
+    }
+
+    .badge-stock-good {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .admin-action-group {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .btn-admin {
+        border: none;
+        border-radius: 12px;
+        padding: 10px 14px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .btn-admin-primary {
+        background: #0f172a;
+        color: #fff;
+    }
+
+    .btn-admin-secondary {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .btn-admin-danger {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    .btn-admin:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        padding: 48px 24px;
+        text-align: center;
+    }
+
+    .empty-state h3 {
+        margin-bottom: 8px;
+    }
+
+    .empty-state p {
+        color: var(--admin-muted);
+        margin-bottom: 0;
+    }
+
+    @@media (max-width: 991.98px) {
+        .admin-summary-grid,
+        .admin-filter-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .admin-hero {
+            flex-direction: column;
+        }
+    }
+
+    @@media (max-width: 767.98px) {
+        .admin-products-shell {
+            padding: 18px;
+            border-radius: 20px;
+        }
+
+        .admin-summary-grid,
+        .admin-filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-table-wrap {
+            overflow-x: auto;
+        }
+
+        .admin-products-table {
+            min-width: 980px;
+        }
+    }
+</style>
+
+<div class="admin-products-page">
+    <div class="admin-products-shell">
+        <div class="admin-hero">
+            <div>
+                <h1>Product Control Center</h1>
+                <p>Review inventory, check promotions, filter stock levels, and jump directly into edit or product details from one admin screen.</p>
+            </div>
+
+            <div class="admin-hero-actions">
+                <a class="btn-admin btn-admin-primary" asp-area="" asp-controller="Product" asp-action="All">Storefront View</a>
+            </div>
+        </div>
+
+        <div class="admin-summary-grid">
+            <article class="admin-stat-card">
+                <span>Total Products</span>
+                <strong id="totalProductsStat">@totalProducts</strong>
+            </article>
+            <article class="admin-stat-card">
+                <span>Total Inventory</span>
+                <strong id="totalInventoryStat">@totalInventory</strong>
+            </article>
+            <article class="admin-stat-card">
+                <span>Low Stock</span>
+                <strong id="lowStockStat">@lowStockProducts</strong>
+            </article>
+            <article class="admin-stat-card">
+                <span>With Promotions</span>
+                <strong id="promotionStat">@promotedProducts</strong>
+            </article>
+        </div>
+
+        <section class="admin-filters">
+            <div class="admin-filter-grid">
+                <div class="admin-filter-group">
+                    <label for="productSearch">Search</label>
+                    <input id="productSearch" type="search" placeholder="Search by name, SKU, or category" />
+                </div>
+                <div class="admin-filter-group">
+                    <label for="stockFilter">Stock</label>
+                    <select id="stockFilter">
+                        <option value="all">All stock levels</option>
+                        <option value="low">Low stock (0-5)</option>
+                        <option value="available">Available (6+)</option>
+                        <option value="empty">Out of stock</option>
+                    </select>
+                </div>
+                <div class="admin-filter-group">
+                    <label for="promotionFilter">Promotion</label>
+                    <select id="promotionFilter">
+                        <option value="all">All products</option>
+                        <option value="promo">Promotion only</option>
+                        <option value="none">No promotion</option>
+                    </select>
+                </div>
+                <button id="clearFiltersBtn" type="button" class="btn-admin btn-admin-secondary">Reset Filters</button>
+            </div>
+        </section>
+
+        <section class="admin-table-wrap">
+            <div class="admin-table-toolbar">
+                <p><span id="visibleCount">@totalProducts</span> product(s) shown</p>
+                <div class="admin-action-group">
+                    <button id="selectAllBtn" type="button" class="btn-admin btn-admin-secondary">Select Visible</button>
+                    <button id="bulkDeleteBtn" type="button" class="btn-admin btn-admin-danger" disabled>Delete Selected</button>
+                </div>
+            </div>
+
+            @if (products.Any())
+            {
+                <table class="admin-products-table">
+                    <thead>
+                    <tr>
+                        <th><input id="masterCheckbox" type="checkbox" aria-label="Select all rows" /></th>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Price</th>
+                        <th>Stock</th>
+                        <th>Promotion</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody id="adminProductsTableBody">
+                    @foreach (var product in products.OrderByDescending(p => p.CreatedOn))
+                    {
+                        var effectivePrice = product.DiscountedPrice ?? product.Price;
+                        var stockBadgeClass = product.Quantity == 0
+                            ? "badge-stock-low"
+                            : product.Quantity <= 5
+                                ? "badge-stock-ok"
+                                : "badge-stock-good";
+                        var stockLabel = product.Quantity == 0
+                            ? "Out of stock"
+                            : product.Quantity <= 5
+                                ? "Low stock"
+                                : "In stock";
+
+                        <tr class="admin-product-row"
+                            data-product-id="@product.ProductId"
+                            data-name="@product.Name.ToLowerInvariant()"
+                            data-sku="@product.SKU.ToLowerInvariant()"
+                            data-category="@product.CategoryName.ToLowerInvariant()"
+                            data-stock="@product.Quantity"
+                            data-promo="@(product.HasPromotion.ToString().ToLowerInvariant())">
+                            <td>
+                                <input class="row-selector" type="checkbox" value="@product.ProductId" aria-label="Select @product.Name" />
+                            </td>
+                            <td>
+                                <div class="product-name-cell">
+                                    <strong>@product.Name</strong>
+                                    <span class="product-meta">SKU: @product.SKU</span>
+                                </div>
+                            </td>
+                            <td>@product.CategoryName</td>
+                            <td>
+                                <div class="product-name-cell">
+                                    <strong>$@effectivePrice.ToString("F2")</strong>
+                                    @if (product.DiscountedPrice.HasValue)
+                                    {
+                                        <span class="product-meta"><s>$@product.Price.ToString("F2")</s></span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-name-cell">
+                                    <strong>@product.Quantity</strong>
+                                    <span class="badge-soft @stockBadgeClass">@stockLabel</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge-soft @(product.HasPromotion ? "badge-promo" : "badge-none")">
+                                    @(product.HasPromotion ? "Active" : "None")
+                                </span>
+                            </td>
+                            <td>@product.CreatedOn.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <div class="admin-action-group">
+                                    <a class="btn-admin btn-admin-secondary" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@product.ProductId">Details</a>
+                                    <a class="btn-admin btn-admin-primary" asp-area="" asp-controller="Product" asp-action="Edit" asp-route-id="@product.ProductId">Edit</a>
+                                    <form asp-area="" asp-controller="Product" asp-action="Delete" asp-route-id="@product.ProductId" method="post" onsubmit="return confirm('Delete this product?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn-admin btn-admin-danger">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <h3>No products found</h3>
+                    <p>The admin list is connected, but there are no product records to display yet.</p>
+                </div>
+            }
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+            const searchInput = document.getElementById('productSearch');
+            const stockFilter = document.getElementById('stockFilter');
+            const promotionFilter = document.getElementById('promotionFilter');
+            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+            const tableBody = document.getElementById('adminProductsTableBody');
+            const visibleCount = document.getElementById('visibleCount');
+            const totalProductsStat = document.getElementById('totalProductsStat');
+            const totalInventoryStat = document.getElementById('totalInventoryStat');
+            const lowStockStat = document.getElementById('lowStockStat');
+            const promotionStat = document.getElementById('promotionStat');
+            const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const masterCheckbox = document.getElementById('masterCheckbox');
+
+            if (!tableBody) {
+                return;
+            }
+
+            const rows = Array.from(tableBody.querySelectorAll('.admin-product-row'));
+
+            function stockMatches(stock, filterValue) {
+                if (filterValue === 'low') return stock >= 0 && stock <= 5;
+                if (filterValue === 'available') return stock >= 6;
+                if (filterValue === 'empty') return stock === 0;
+                return true;
+            }
+
+            function promotionMatches(hasPromotion, filterValue) {
+                if (filterValue === 'promo') return hasPromotion;
+                if (filterValue === 'none') return !hasPromotion;
+                return true;
+            }
+
+            function getVisibleRows() {
+                return rows.filter(row => row.style.display !== 'none');
+            }
+
+            function updateSelectionState() {
+                const selectedVisible = getVisibleRows().filter(row => row.querySelector('.row-selector').checked);
+                const anySelected = rows.some(row => row.querySelector('.row-selector').checked);
+                bulkDeleteBtn.disabled = !anySelected;
+                masterCheckbox.checked = selectedVisible.length > 0 && selectedVisible.length === getVisibleRows().length;
+                masterCheckbox.indeterminate = selectedVisible.length > 0 && selectedVisible.length < getVisibleRows().length;
+            }
+
+            function updateStats() {
+                const visibleRows = getVisibleRows();
+                const inventory = visibleRows.reduce((sum, row) => sum + Number(row.dataset.stock), 0);
+                const lowStock = visibleRows.filter(row => Number(row.dataset.stock) <= 5).length;
+                const promotions = visibleRows.filter(row => row.dataset.promo === 'true').length;
+
+                visibleCount.textContent = visibleRows.length;
+                totalProductsStat.textContent = visibleRows.length;
+                totalInventoryStat.textContent = inventory;
+                lowStockStat.textContent = lowStock;
+                promotionStat.textContent = promotions;
+                updateSelectionState();
+            }
+
+            function applyFilters() {
+                const term = searchInput.value.trim().toLowerCase();
+                const stockValue = stockFilter.value;
+                const promotionValue = promotionFilter.value;
+
+                rows.forEach(row => {
+                    const haystack = `${row.dataset.name} ${row.dataset.sku} ${row.dataset.category}`;
+                    const stock = Number(row.dataset.stock);
+                    const hasPromotion = row.dataset.promo === 'true';
+                    const matchesSearch = !term || haystack.includes(term);
+                    const matchesStock = stockMatches(stock, stockValue);
+                    const matchesPromotion = promotionMatches(hasPromotion, promotionValue);
+
+                    row.style.display = matchesSearch && matchesStock && matchesPromotion ? '' : 'none';
+                });
+
+                updateStats();
+            }
+
+            function getSelectedIds() {
+                return rows
+                    .map(row => row.querySelector('.row-selector'))
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => Number(checkbox.value));
+            }
+
+            searchInput.addEventListener('input', applyFilters);
+            stockFilter.addEventListener('change', applyFilters);
+            promotionFilter.addEventListener('change', applyFilters);
+
+            clearFiltersBtn.addEventListener('click', function () {
+                searchInput.value = '';
+                stockFilter.value = 'all';
+                promotionFilter.value = 'all';
+                applyFilters();
+            });
+
+            rows.forEach(row => {
+                row.querySelector('.row-selector').addEventListener('change', updateSelectionState);
+            });
+
+            masterCheckbox.addEventListener('change', function () {
+                getVisibleRows().forEach(row => {
+                    row.querySelector('.row-selector').checked = masterCheckbox.checked;
+                });
+                updateSelectionState();
+            });
+
+            selectAllBtn.addEventListener('click', function () {
+                const visibleRows = getVisibleRows();
+                const shouldSelect = visibleRows.some(row => !row.querySelector('.row-selector').checked);
+
+                visibleRows.forEach(row => {
+                    row.querySelector('.row-selector').checked = shouldSelect;
+                });
+
+                updateSelectionState();
+            });
+
+            bulkDeleteBtn.addEventListener('click', async function () {
+                const selectedIds = getSelectedIds();
+
+                if (!selectedIds.length) {
+                    return;
+                }
+
+                const confirmed = confirm(`Delete ${selectedIds.length} selected product(s)?`);
+                if (!confirmed) {
+                    return;
+                }
+
+                const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
+                const headers = { 'Content-Type': 'application/json' };
+
+                if (tokenInput) {
+                    headers['RequestVerificationToken'] = tokenInput.value;
+                }
+
+                const response = await fetch('@Url.Action("DeleteSelected", "Product", new { area = "" })', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify(selectedIds)
+                });
+
+                if (response.ok) {
+                    window.location.reload();
+                    return;
+                }
+
+                alert('Bulk delete failed. Check the controller action or anti-forgery configuration.');
+            });
+
+            applyFilters();
+        })();
+    </script>
+
+    @Html.AntiForgeryToken()
+}

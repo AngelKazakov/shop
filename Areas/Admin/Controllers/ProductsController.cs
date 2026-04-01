@@ -8,7 +8,7 @@ using System.Diagnostics;
 namespace RandomShop.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = "Admin")]
+    //[Authorize(Roles = "Admin")]
     public class ProductsController : Controller
     {
         private readonly IAdminProductService adminProductService;
@@ -20,11 +20,13 @@ namespace RandomShop.Areas.Admin.Controllers
             this.logger = logger;
         }
 
+        [HttpGet]
         public async Task<IActionResult> All()
         {
             try
             {
-                IEnumerable<AdminProductListItemViewModel> products = await this.adminProductService.GetAllProductsAsync();
+                IEnumerable<AdminProductListItemViewModel> products =
+                    await this.adminProductService.GetAllProductsAsync();
 
                 return View(products);
             }
