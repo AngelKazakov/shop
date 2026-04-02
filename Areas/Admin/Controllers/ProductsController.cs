@@ -21,7 +21,7 @@ namespace RandomShop.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> All()
+        public async Task<IActionResult> Index()
         {
             try
             {

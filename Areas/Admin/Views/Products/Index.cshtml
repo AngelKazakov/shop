@@ -305,11 +305,13 @@
         <div class="admin-hero">
             <div>
                 <h1>Product Control Center</h1>
-                <p>Review inventory, check promotions, filter stock levels, and jump directly into edit or product details from one admin screen.</p>
+                <p>Review inventory, check promotions, filter stock levels, and jump directly into edit or product
+                    details from one admin screen.</p>
             </div>
 
             <div class="admin-hero-actions">
-                <a class="btn-admin btn-admin-primary" asp-area="" asp-controller="Product" asp-action="All">Storefront View</a>
+                <a class="btn-admin btn-admin-primary" asp-area="Admin" asp-controller="Products" asp-action="Index">Storefront
+                    View</a>
             </div>
         </div>
 
@@ -336,7 +338,7 @@
             <div class="admin-filter-grid">
                 <div class="admin-filter-group">
                     <label for="productSearch">Search</label>
-                    <input id="productSearch" type="search" placeholder="Search by name, SKU, or category" />
+                    <input id="productSearch" type="search" placeholder="Search by name, SKU, or category"/>
                 </div>
                 <div class="admin-filter-group">
                     <label for="stockFilter">Stock</label>
@@ -363,8 +365,11 @@
             <div class="admin-table-toolbar">
                 <p><span id="visibleCount">@totalProducts</span> product(s) shown</p>
                 <div class="admin-action-group">
-                    <button id="selectAllBtn" type="button" class="btn-admin btn-admin-secondary">Select Visible</button>
-                    <button id="bulkDeleteBtn" type="button" class="btn-admin btn-admin-danger" disabled>Delete Selected</button>
+                    <button id="selectAllBtn" type="button" class="btn-admin btn-admin-secondary">Select Visible
+                    </button>
+                    <button id="bulkDeleteBtn" type="button" class="btn-admin btn-admin-danger" disabled>Delete
+                        Selected
+                    </button>
                 </div>
             </div>
 
@@ -373,7 +378,7 @@
                 <table class="admin-products-table">
                     <thead>
                     <tr>
-                        <th><input id="masterCheckbox" type="checkbox" aria-label="Select all rows" /></th>
+                        <th><input id="masterCheckbox" type="checkbox" aria-label="Select all rows"/></th>
                         <th>Product</th>
                         <th>Category</th>
                         <th>Price</th>
@@ -399,14 +404,15 @@
                                 : "In stock";
 
                         <tr class="admin-product-row"
-                            data-product-id="@product.ProductId"
+                            data-product-id="@product.ProductItemId"
                             data-name="@product.Name.ToLowerInvariant()"
                             data-sku="@product.SKU.ToLowerInvariant()"
                             data-category="@product.CategoryName.ToLowerInvariant()"
                             data-stock="@product.Quantity"
                             data-promo="@(product.HasPromotion.ToString().ToLowerInvariant())">
                             <td>
-                                <input class="row-selector" type="checkbox" value="@product.ProductId" aria-label="Select @product.Name" />
+                                <input class="row-selector" type="checkbox" value="@product.ProductItemId"
+                                       aria-label="Select @product.Name"/>
                             </td>
                             <td>
                                 <div class="product-name-cell">
@@ -438,9 +444,13 @@
                             <td>@product.CreatedOn.ToString("dd MMM yyyy")</td>
                             <td>
                                 <div class="admin-action-group">
-                                    <a class="btn-admin btn-admin-secondary" asp-area="" asp-controller="Product" asp-action="Details" asp-route-id="@product.ProductId">Details</a>
-                                    <a class="btn-admin btn-admin-primary" asp-area="" asp-controller="Product" asp-action="Edit" asp-route-id="@product.ProductId">Edit</a>
-                                    <form asp-area="" asp-controller="Product" asp-action="Delete" asp-route-id="@product.ProductId" method="post" onsubmit="return confirm('Delete this product?');">
+                                    <a class="btn-admin btn-admin-secondary" asp-area="Admin" asp-controller="Products"
+                                       asp-action="Details" asp-route-id="@product.ProductItemId">Details</a>
+                                    <a class="btn-admin btn-admin-primary" asp-area="Admin" asp-controller="Products"
+                                       asp-action="Edit" asp-route-id="@product.ProductItemId">Edit</a>
+                                    <form asp-area="Admin" asp-controller="Products" asp-action="Delete"
+                                          asp-route-id="@product.ProductItemId" method="post"
+                                          onsubmit="return confirm('Delete this product?');">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn-admin btn-admin-danger">Delete</button>
                                     </form>
@@ -596,13 +606,13 @@
                 }
 
                 const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-                const headers = { 'Content-Type': 'application/json' };
+                const headers = {'Content-Type': 'application/json'};
 
                 if (tokenInput) {
                     headers['RequestVerificationToken'] = tokenInput.value;
                 }
 
-                const response = await fetch('@Url.Action("DeleteSelected", "Product", new { area = "" })', {
+                const response = await fetch('@Url.Action("DeleteSelected", "Products", new { area = "Admin" })', {
                     method: 'POST',
                     headers: headers,
                     body: JSON.stringify(selectedIds)
