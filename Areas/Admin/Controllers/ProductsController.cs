@@ -21,14 +21,14 @@ namespace RandomShop.Areas.Admin.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index([FromQuery] AdminProductListQueryModel query)
         {
             try
             {
-                IEnumerable<AdminProductListItemViewModel> products =
-                    await this.adminProductService.GetAllProductsAsync();
+                AdminProductListQueryModel result =
+                    await this.adminProductService.GetPagedAsync(query);
 
-                return View(products);
+                return View(result);
             }
             catch (Exception ex)
             {

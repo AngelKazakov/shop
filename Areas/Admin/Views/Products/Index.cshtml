@@ -1,9 +1,10 @@
-@model IEnumerable<AdminProductListItemViewModel>
+@model AdminProductListQueryModel
 
 @{
     ViewData["Title"] = "Admin Products";
-    var products = Model.ToList();
-    var totalProducts = products.Count;
+    var products = Model.Items.ToList();
+    var filteredProducts = Model.TotalItems;
+    var visibleProducts = products.Count;
     var totalInventory = products.Sum(p => p.Quantity);
     var lowStockProducts = products.Count(p => p.Quantity <= 5);
     var promotedProducts = products.Count(p => p.HasPromotion);
@@ -100,7 +101,7 @@
 
     .admin-filter-grid {
         display: grid;
-        grid-template-columns: 2fr 1fr 1fr auto;
+        grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto auto;
         gap: 14px;
         align-items: end;
     }
@@ -254,6 +255,26 @@
         cursor: not-allowed;
     }
 
+    .admin-pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px;
+        border-top: 1px solid var(--admin-border);
+    }
+
+    .admin-pagination p {
+        margin: 0;
+        color: var(--admin-muted);
+    }
+
+    .admin-pagination-links {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
     .empty-state {
         padding: 48px 24px;
         text-align: center;
@@ -297,6 +318,11 @@
         .admin-products-table {
             min-width: 980px;
         }
+
+        .admin-pagination {
+            flex-direction: column;
+            align-items: stretch;
+        }
     }
 </style>
 
@@ -317,59 +343,81 @@
 
         <div class="admin-summary-grid">
             <article class="admin-stat-card">
-                <span>Total Products</span>
-                <strong id="totalProductsStat">@totalProducts</strong>
+                <span>Filtered Products</span>
+                <strong>@filteredProducts</strong>
             </article>
             <article class="admin-stat-card">
-                <span>Total Inventory</span>
-                <strong id="totalInventoryStat">@totalInventory</strong>
+                <span>Page Inventory</span>
+                <strong>@totalInventory</strong>
             </article>
             <article class="admin-stat-card">
-                <span>Low Stock</span>
-                <strong id="lowStockStat">@lowStockProducts</strong>
+                <span>Low Stock On Page</span>
+                <strong>@lowStockProducts</strong>
             </article>
             <article class="admin-stat-card">
-                <span>With Promotions</span>
-                <strong id="promotionStat">@promotedProducts</strong>
+                <span>Promotions On Page</span>
+                <strong>@promotedProducts</strong>
             </article>
         </div>
 
         <section class="admin-filters">
-            <div class="admin-filter-grid">
-                <div class="admin-filter-group">
-                    <label for="productSearch">Search</label>
-                    <input id="productSearch" type="search" placeholder="Search by name, SKU, or category"/>
+            <form method="get" asp-area="Admin" asp-controller="Products" asp-action="Index">
+                <div class="admin-filter-grid">
+                    <div class="admin-filter-group">
+                        <label asp-for="SearchTerm">Search</label>
+                        <input asp-for="SearchTerm" type="search" placeholder="Search by name, SKU, or category" />
+                    </div>
+                    <div class="admin-filter-group">
+                        <label asp-for="StockFilter">Stock</label>
+                        <select asp-for="StockFilter">
+                            <option value="all">All stock levels</option>
+                            <option value="low">Low stock (0-5)</option>
+                            <option value="available">Available (6+)</option>
+                            <option value="empty">Out of stock</option>
+                        </select>
+                    </div>
+                    <div class="admin-filter-group">
+                        <label asp-for="PromotionFilter">Promotion</label>
+                        <select asp-for="PromotionFilter">
+                            <option value="all">All products</option>
+                            <option value="promo">Promotion only</option>
+                            <option value="none">No promotion</option>
+                        </select>
+                    </div>
+                    <div class="admin-filter-group">
+                        <label asp-for="SortBy">Sort</label>
+                        <select asp-for="SortBy">
+                            <option value="Newest">Newest</option>
+                            <option value="Oldest">Oldest</option>
+                            <option value="Name">Name A-Z</option>
+                            <option value="Name_Desc">Name Z-A</option>
+                            <option value="Price_Low">Price low-high</option>
+                            <option value="Price_High">Price high-low</option>
+                            <option value="Stock_Low">Stock low-high</option>
+                            <option value="Stock_High">Stock high-low</option>
+                        </select>
+                    </div>
+                    <div class="admin-filter-group">
+                        <label asp-for="PageSize">Page Size</label>
+                        <select asp-for="PageSize">
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-admin btn-admin-primary">Apply</button>
+                    <a class="btn-admin btn-admin-secondary" asp-area="Admin" asp-controller="Products" asp-action="Index">Reset Filters</a>
                 </div>
-                <div class="admin-filter-group">
-                    <label for="stockFilter">Stock</label>
-                    <select id="stockFilter">
-                        <option value="all">All stock levels</option>
-                        <option value="low">Low stock (0-5)</option>
-                        <option value="available">Available (6+)</option>
-                        <option value="empty">Out of stock</option>
-                    </select>
-                </div>
-                <div class="admin-filter-group">
-                    <label for="promotionFilter">Promotion</label>
-                    <select id="promotionFilter">
-                        <option value="all">All products</option>
-                        <option value="promo">Promotion only</option>
-                        <option value="none">No promotion</option>
-                    </select>
-                </div>
-                <button id="clearFiltersBtn" type="button" class="btn-admin btn-admin-secondary">Reset Filters</button>
-            </div>
+            </form>
         </section>
 
         <section class="admin-table-wrap">
             <div class="admin-table-toolbar">
-                <p><span id="visibleCount">@totalProducts</span> product(s) shown</p>
+                <p>@visibleProducts product(s) shown on page @Model.Page of @(Math.Max(Model.TotalPages, 1))</p>
                 <div class="admin-action-group">
-                    <button id="selectAllBtn" type="button" class="btn-admin btn-admin-secondary">Select Visible
-                    </button>
-                    <button id="bulkDeleteBtn" type="button" class="btn-admin btn-admin-danger" disabled>Delete
-                        Selected
-                    </button>
+                    <button id="selectAllBtn" type="button" class="btn-admin btn-admin-secondary">Select Visible</button>
+                    <button id="bulkDeleteBtn" type="button" class="btn-admin btn-admin-danger" disabled>Delete Selected</button>
                 </div>
             </div>
 
@@ -378,7 +426,7 @@
                 <table class="admin-products-table">
                     <thead>
                     <tr>
-                        <th><input id="masterCheckbox" type="checkbox" aria-label="Select all rows"/></th>
+                        <th><input id="masterCheckbox" type="checkbox" aria-label="Select all rows" /></th>
                         <th>Product</th>
                         <th>Category</th>
                         <th>Price</th>
@@ -389,7 +437,7 @@
                     </tr>
                     </thead>
                     <tbody id="adminProductsTableBody">
-                    @foreach (var product in products.OrderByDescending(p => p.CreatedOn))
+                    @foreach (var product in products)
                     {
                         var effectivePrice = product.DiscountedPrice ?? product.Price;
                         var stockBadgeClass = product.Quantity == 0
@@ -403,16 +451,10 @@
                                 ? "Low stock"
                                 : "In stock";
 
-                        <tr class="admin-product-row"
-                            data-product-id="@product.ProductItemId"
-                            data-name="@product.Name.ToLowerInvariant()"
-                            data-sku="@product.SKU.ToLowerInvariant()"
-                            data-category="@product.CategoryName.ToLowerInvariant()"
-                            data-stock="@product.Quantity"
-                            data-promo="@(product.HasPromotion.ToString().ToLowerInvariant())">
+                        <tr class="admin-product-row" data-product-id="@product.ProductItemId">
                             <td>
                                 <input class="row-selector" type="checkbox" value="@product.ProductItemId"
-                                       aria-label="Select @product.Name"/>
+                                       aria-label="Select @product.Name" />
                             </td>
                             <td>
                                 <div class="product-name-cell">
@@ -460,12 +502,32 @@
                     }
                     </tbody>
                 </table>
+
+                @if (Model.TotalPages > 1)
+                {
+                    <div class="admin-pagination">
+                        <p>Showing page @Model.Page of @Model.TotalPages for @Model.TotalItems matching product(s).</p>
+                        <div class="admin-pagination-links">
+                            @if (Model.Page > 1)
+                            {
+                                <a class="btn-admin btn-admin-secondary"
+                                   href="@Url.Action("Index", "Products", new { area = "Admin", SearchTerm = Model.SearchTerm, StockFilter = Model.StockFilter, PromotionFilter = Model.PromotionFilter, SortBy = Model.SortBy, Page = Model.Page - 1, PageSize = Model.PageSize, CategoryId = Model.CategoryId, PromotionId = Model.PromotionId, InStockOnly = Model.InStockOnly })">Previous</a>
+                            }
+
+                            @if (Model.Page < Model.TotalPages)
+                            {
+                                <a class="btn-admin btn-admin-secondary"
+                                   href="@Url.Action("Index", "Products", new { area = "Admin", SearchTerm = Model.SearchTerm, StockFilter = Model.StockFilter, PromotionFilter = Model.PromotionFilter, SortBy = Model.SortBy, Page = Model.Page + 1, PageSize = Model.PageSize, CategoryId = Model.CategoryId, PromotionId = Model.PromotionId, InStockOnly = Model.InStockOnly })">Next</a>
+                            }
+                        </div>
+                    </div>
+                }
             }
             else
             {
                 <div class="empty-state">
                     <h3>No products found</h3>
-                    <p>The admin list is connected, but there are no product records to display yet.</p>
+                    <p>Try adjusting the filters or clearing the current search.</p>
                 </div>
             }
         </section>
@@ -475,41 +537,19 @@
 @section Scripts {
     <script>
         (function () {
-            const searchInput = document.getElementById('productSearch');
-            const stockFilter = document.getElementById('stockFilter');
-            const promotionFilter = document.getElementById('promotionFilter');
-            const clearFiltersBtn = document.getElementById('clearFiltersBtn');
             const tableBody = document.getElementById('adminProductsTableBody');
-            const visibleCount = document.getElementById('visibleCount');
-            const totalProductsStat = document.getElementById('totalProductsStat');
-            const totalInventoryStat = document.getElementById('totalInventoryStat');
-            const lowStockStat = document.getElementById('lowStockStat');
-            const promotionStat = document.getElementById('promotionStat');
             const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
             const selectAllBtn = document.getElementById('selectAllBtn');
             const masterCheckbox = document.getElementById('masterCheckbox');
 
-            if (!tableBody) {
+            if (!tableBody || !bulkDeleteBtn || !selectAllBtn || !masterCheckbox) {
                 return;
             }
 
             const rows = Array.from(tableBody.querySelectorAll('.admin-product-row'));
 
-            function stockMatches(stock, filterValue) {
-                if (filterValue === 'low') return stock >= 0 && stock <= 5;
-                if (filterValue === 'available') return stock >= 6;
-                if (filterValue === 'empty') return stock === 0;
-                return true;
-            }
-
-            function promotionMatches(hasPromotion, filterValue) {
-                if (filterValue === 'promo') return hasPromotion;
-                if (filterValue === 'none') return !hasPromotion;
-                return true;
-            }
-
             function getVisibleRows() {
-                return rows.filter(row => row.style.display !== 'none');
+                return rows;
             }
 
             function updateSelectionState() {
@@ -520,56 +560,12 @@
                 masterCheckbox.indeterminate = selectedVisible.length > 0 && selectedVisible.length < getVisibleRows().length;
             }
 
-            function updateStats() {
-                const visibleRows = getVisibleRows();
-                const inventory = visibleRows.reduce((sum, row) => sum + Number(row.dataset.stock), 0);
-                const lowStock = visibleRows.filter(row => Number(row.dataset.stock) <= 5).length;
-                const promotions = visibleRows.filter(row => row.dataset.promo === 'true').length;
-
-                visibleCount.textContent = visibleRows.length;
-                totalProductsStat.textContent = visibleRows.length;
-                totalInventoryStat.textContent = inventory;
-                lowStockStat.textContent = lowStock;
-                promotionStat.textContent = promotions;
-                updateSelectionState();
-            }
-
-            function applyFilters() {
-                const term = searchInput.value.trim().toLowerCase();
-                const stockValue = stockFilter.value;
-                const promotionValue = promotionFilter.value;
-
-                rows.forEach(row => {
-                    const haystack = `${row.dataset.name} ${row.dataset.sku} ${row.dataset.category}`;
-                    const stock = Number(row.dataset.stock);
-                    const hasPromotion = row.dataset.promo === 'true';
-                    const matchesSearch = !term || haystack.includes(term);
-                    const matchesStock = stockMatches(stock, stockValue);
-                    const matchesPromotion = promotionMatches(hasPromotion, promotionValue);
-
-                    row.style.display = matchesSearch && matchesStock && matchesPromotion ? '' : 'none';
-                });
-
-                updateStats();
-            }
-
             function getSelectedIds() {
                 return rows
                     .map(row => row.querySelector('.row-selector'))
                     .filter(checkbox => checkbox.checked)
                     .map(checkbox => Number(checkbox.value));
             }
-
-            searchInput.addEventListener('input', applyFilters);
-            stockFilter.addEventListener('change', applyFilters);
-            promotionFilter.addEventListener('change', applyFilters);
-
-            clearFiltersBtn.addEventListener('click', function () {
-                searchInput.value = '';
-                stockFilter.value = 'all';
-                promotionFilter.value = 'all';
-                applyFilters();
-            });
 
             rows.forEach(row => {
                 row.querySelector('.row-selector').addEventListener('change', updateSelectionState);
@@ -606,7 +602,7 @@
                 }
 
                 const tokenInput = document.querySelector('input[name="__RequestVerificationToken"]');
-                const headers = {'Content-Type': 'application/json'};
+                const headers = { 'Content-Type': 'application/json' };
 
                 if (tokenInput) {
                     headers['RequestVerificationToken'] = tokenInput.value;
@@ -626,7 +622,7 @@
                 alert('Bulk delete failed. Check the controller action or anti-forgery configuration.');
             });
 
-            applyFilters();
+            updateSelectionState();
         })();
     </script>
 
