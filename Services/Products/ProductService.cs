@@ -98,7 +98,7 @@ namespace RandomShop.Services.Products
                 await UpdateProductDetails(modelForedit, model);
 
                 //Handle images (new and deletion)
-                HandleImages(model, modelForedit);
+                await HandleImages(model, modelForedit);
 
                 //Update category
                 await UpdateProductCategory(modelForedit.Product, model.CategoryId);
@@ -187,6 +187,7 @@ namespace RandomShop.Services.Products
                     .Where(x => x.Id == productId)
                     .Select(x => new ProductDetailsDto
                     {
+                        ProductId = x.ProductId,
                         Price = x.Price,
                         Name = x.Product.Name,
                         Description = x.Product.Description,
@@ -226,8 +227,7 @@ namespace RandomShop.Services.Products
                 Categories = await this.categoryService.GetAllCategories(),
                 CategoryId = productDetails.CategoryId ??
                              throw new InvalidOperationException("Category ID cannot be null."),
-                // Images = await imageService.ReadImagesAsByteArrayAsync(productId),
-                ExistingImages = await imageService.CreateProductImageViewModelAsync(productId),
+                ExistingImages = await imageService.CreateProductImageViewModelAsync(productDetails.ProductId),
                 PromotionId = productDetails.PromotionId ?? 0,
                 Promotions = await this.promotionService.GetAllPromotions(),
                 ExistingVariationOptions = CreateVariationsDictionary(productDetails.ExistingVariationOptions),
@@ -475,15 +475,39 @@ namespace RandomShop.Services.Products
                 return false;
             }
 
-            this.context.Products.RemoveRange(products);
+            Dictionary<int, string> tempImagePaths = new Dictionary<int, string>();
 
-            foreach (var product in products)
+            await using var transaction = await this.context.Database.BeginTransactionAsync();
+
+            try
             {
-                DeleteImageDirectoryByProductId(product.Id);
-            }
+                foreach (Product product in products)
+                {
+                    tempImagePaths[product.Id] = await this.imageService.MoveImagesToTempDirectoryAsync(product.Id);
+                }
 
-            await this.context.SaveChangesAsync();
-            return true;
+                this.context.Products.RemoveRange(products);
+                await this.context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                foreach (string tempImagePath in tempImagePaths.Values)
+                {
+                    await this.imageService.PermanentlyDeleteTempImageDirectoryAsync(tempImagePath);
+                }
+
+                return true;
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+
+                foreach (KeyValuePair<int, string> tempImagePath in tempImagePaths)
+                {
+                    await this.imageService.RestoreImagesFromTempDirectoryAsync(tempImagePath.Value, tempImagePath.Key);
+                }
+
+                throw;
+            }
         }
 
         public async Task<bool> BulkDeleteProducts(List<int> productIds)
@@ -695,14 +719,16 @@ namespace RandomShop.Services.Products
                 .ToList();
         }
 
-        private async void HandleImages(ProductEditFormModel model, ProductItem productItem)
+        private Task HandleImages(ProductEditFormModel model, ProductItem productItem)
         {
             List<int> imagesIdsForDeletion = ParseImagesForDeletion(model.ImagesForDelete);
-            imageService.DeleteProductImages(imagesIdsForDeletion, productItem.Id);
+            this.imageService.DeleteProductImages(imagesIdsForDeletion, productItem.ProductId);
 
             ICollection<ProductImage>
-                newImages = imageService.CreateProductImages(model.NewAddedImages, productItem.Id);
-            productItem.ProductItemImages.AddRange(newImages);
+                newImages = this.imageService.CreateProductImages(model.NewAddedImages, productItem.ProductId);
+            productItem.Product.ProductImages.AddRange(newImages);
+
+            return Task.CompletedTask;
         }
 
         private Dictionary<string, List<string>> CreateVariationsDictionary(IEnumerable<VariationViewModel> variations)

@@ -451,9 +451,9 @@
                                 ? "Low stock"
                                 : "In stock";
 
-                        <tr class="admin-product-row" data-product-id="@product.ProductItemId">
+                        <tr class="admin-product-row" data-product-id="@product.ProductId">
                             <td>
-                                <input class="row-selector" type="checkbox" value="@product.ProductItemId"
+                                <input class="row-selector" type="checkbox" value="@product.ProductId"
                                        aria-label="Select @product.Name" />
                             </td>
                             <td>
@@ -491,7 +491,7 @@
                                     <a class="btn-admin btn-admin-primary" asp-area="Admin" asp-controller="Products"
                                        asp-action="Edit" asp-route-id="@product.ProductItemId">Edit</a>
                                     <form asp-area="Admin" asp-controller="Products" asp-action="Delete"
-                                          asp-route-id="@product.ProductItemId" method="post"
+                                          asp-route-id="@product.ProductId" method="post"
                                           onsubmit="return confirm('Delete this product?');">
                                         @Html.AntiForgeryToken()
                                         <button type="submit" class="btn-admin btn-admin-danger">Delete</button>

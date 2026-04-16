@@ -4,6 +4,8 @@ namespace RandomShop.Models.Product
 {
     public class ProductDetailsDto
     {
+        public int ProductId { get; set; }
+
         public decimal Price { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
