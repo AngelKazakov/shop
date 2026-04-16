@@ -7,4 +7,6 @@ public interface IAdminProductService
     public Task<IEnumerable<AdminProductListItemViewModel>> GetAllProductsAsync();
 
     public Task<AdminProductListQueryModel> GetPagedAsync(AdminProductListQueryModel query);
+
+    public Task<AdminProductDetailsViewModel?> GetDetailsAsync(int? id);
 }

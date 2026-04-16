@@ -2,16 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using RandomShop.Areas.Admin.Models;
 using RandomShop.Data;
 using RandomShop.Data.Models;
+using RandomShop.Services.Images;
 
 namespace RandomShop.Areas.Admin.Services.Product;
 
 public class AdminProductService : IAdminProductService
 {
     private readonly ShopContext context;
+    private readonly IImageService imageService;
 
-    public AdminProductService(ShopContext context)
+    public AdminProductService(ShopContext context, IImageService imageService)
     {
         this.context = context;
+        this.imageService = imageService;
     }
 
     public async Task<IEnumerable<AdminProductListItemViewModel>> GetAllProductsAsync()
@@ -100,8 +103,9 @@ public class AdminProductService : IAdminProductService
             "oldest" => productQuery.OrderBy(pi => pi.CreatedOnDate),
             "name" => productQuery.OrderBy(pi => pi.Product.Name),
             "name_desc" => productQuery.OrderByDescending(pi => pi.Product.Name),
-            "price_low" => productQuery.OrderBy(pi => pi.DiscountedPrice),
-            "price_high" => productQuery.OrderByDescending(pi => pi.DiscountedPrice),
+            "price_low" => productQuery.OrderBy(pi => pi.DiscountedPrice > 0 ? pi.DiscountedPrice : pi.Price),
+            "price_high" =>
+                productQuery.OrderByDescending(pi => pi.DiscountedPrice > 0 ? pi.DiscountedPrice : pi.Price),
             "stock_low" => productQuery.OrderBy(pi => pi.QuantityInStock),
             "stock_high" => productQuery.OrderByDescending(pi => pi.QuantityInStock),
             _ => productQuery.OrderByDescending(pi => pi.CreatedOnDate)
@@ -135,5 +139,49 @@ public class AdminProductService : IAdminProductService
             .ToListAsync();
 
         return query;
+    }
+
+    public async Task<AdminProductDetailsViewModel?> GetDetailsAsync(int? id)
+    {
+        if (!id.HasValue || id.Value <= 0)
+        {
+            return null;
+        }
+
+        int productItemId = id.Value;
+
+        AdminProductDetailsViewModel? modelDetails = await this.context.ProductItems
+            .AsNoTracking()
+            .Where(pi => pi.Id == productItemId)
+            .Select(pi => new AdminProductDetailsViewModel
+            {
+                ProductItemId = pi.Id,
+                ProductId = pi.ProductId,
+                Name = pi.Product.Name,
+                Description = pi.Product.Description,
+                SKU = pi.SKU,
+                Price = pi.Price,
+                DiscountedPrice = pi.DiscountedPrice,
+                QuantityInStock = pi.QuantityInStock,
+                CategoryName = pi.Product.ProductCategories
+                    .OrderBy(pc => pc.Category.Name)
+                    .Select(pc => pc.Category.Name)
+                    .FirstOrDefault() ?? string.Empty,
+                PromotionName = pi.Product.ProductPromotions
+                    .OrderBy(pp => pp.Promotion.Name)
+                    .Select(pp => pp.Promotion.Name)
+                    .FirstOrDefault(),
+                CreatedOnDate = pi.CreatedOnDate
+            })
+            .FirstOrDefaultAsync();
+
+        if (modelDetails == null)
+        {
+            return null;
+        }
+
+        modelDetails.Images = await this.imageService.CreateProductImageViewModelAsync(modelDetails.ProductId);
+
+        return modelDetails;
     }
 }

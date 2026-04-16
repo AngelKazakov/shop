@@ -40,5 +40,30 @@ namespace RandomShop.Areas.Admin.Controllers
                 });
             }
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Details(int? id)
+        {
+            try
+            {
+                AdminProductDetailsViewModel? model = await this.adminProductService.GetDetailsAsync(id);
+
+                if (model == null)
+                {
+                    return NotFound();
+                }
+
+                return View(model);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Failed to load admin product details for product item id {ProductItemId}.", id);
+
+                return View("~/Views/Shared/Error.cshtml", new ErrorViewModel
+                {
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+                });
+            }
+        }
     }
 }
