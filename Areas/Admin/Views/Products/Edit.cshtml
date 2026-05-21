@@ -1,0 +1,731 @@
+@model AdminEditProductFormModel
+
+@{
+    ViewData["Title"] = $"Edit Product - {Model.Name}";
+    var effectivePrice = Model.DiscountedPrice > 0 ? Model.DiscountedPrice : Model.Price;
+    var hasDiscount = Model.DiscountedPrice > 0 && Model.DiscountedPrice < Model.Price;
+    var hasPromotion = Model.PromotionId.HasValue && Model.PromotionId.Value > 0;
+    var stockLabel = Model.QuantityInStock switch
+    {
+        0 => "Out of stock",
+        <= 5 => "Low stock",
+        _ => "In stock"
+    };
+    var stockClass = Model.QuantityInStock switch
+    {
+        0 => "state-danger",
+        <= 5 => "state-warning",
+        _ => "state-success"
+    };
+}
+
+<style>
+    .admin-edit-page {
+        --page-bg: #f5f7fb;
+        --surface: #ffffff;
+        --surface-muted: #f8fafc;
+        --border: #dbe3f0;
+        --border-strong: #cbd5e1;
+        --text: #172033;
+        --muted: #64748b;
+        --accent: #0f766e;
+        --accent-dark: #115e59;
+        --accent-soft: #ccfbf1;
+        --danger: #b91c1c;
+        --danger-soft: #fee2e2;
+        --warning: #b45309;
+        --warning-soft: #fef3c7;
+        --success: #166534;
+        --success-soft: #dcfce7;
+        --shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+        color: var(--text);
+    }
+
+    .admin-edit-shell {
+        background: var(--page-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 26px;
+        box-shadow: var(--shadow);
+    }
+
+    .admin-edit-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: start;
+        margin-bottom: 22px;
+    }
+
+    .admin-edit-title h1 {
+        margin: 0 0 8px;
+        font-size: 2rem;
+        line-height: 1.15;
+    }
+
+    .admin-edit-title p {
+        max-width: 720px;
+        margin: 0;
+        color: var(--muted);
+    }
+
+    .admin-edit-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .admin-edit-button,
+    .admin-edit-link {
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 10px 14px;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 700;
+        text-decoration: none;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .admin-edit-button.primary {
+        background: var(--accent);
+        color: #fff;
+    }
+
+    .admin-edit-button.primary:hover {
+        background: var(--accent-dark);
+    }
+
+    .admin-edit-link.secondary {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .admin-edit-link.secondary:hover {
+        background: #cbd5e1;
+        color: #0f172a;
+    }
+
+    .admin-status-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .admin-status-item {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        min-height: 88px;
+    }
+
+    .admin-status-item span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .admin-status-item strong {
+        display: block;
+        font-size: 1.2rem;
+        line-height: 1.2;
+    }
+
+    .admin-edit-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+        gap: 18px;
+    }
+
+    .admin-edit-section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 18px;
+    }
+
+    .admin-edit-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .admin-edit-section-header h2 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .admin-edit-section-header span {
+        color: var(--muted);
+        font-size: 0.9rem;
+    }
+
+    .admin-field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .admin-field-grid.single {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-field {
+        min-width: 0;
+    }
+
+    .admin-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .admin-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .admin-field input,
+    .admin-field textarea,
+    .admin-field select {
+        width: 100%;
+        border: 1px solid var(--border-strong);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        padding: 11px 12px;
+        min-height: 44px;
+        outline: none;
+    }
+
+    .admin-field textarea {
+        min-height: 150px;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    .admin-field input:focus,
+    .admin-field textarea:focus,
+    .admin-field select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+
+    .admin-validation {
+        display: block;
+        min-height: 18px;
+        margin-top: 5px;
+        color: var(--danger);
+        font-size: 0.85rem;
+    }
+
+    .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .state-success {
+        background: var(--success-soft);
+        color: var(--success);
+    }
+
+    .state-warning {
+        background: var(--warning-soft);
+        color: var(--warning);
+    }
+
+    .state-danger {
+        background: var(--danger-soft);
+        color: var(--danger);
+    }
+
+    .state-neutral {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .admin-variation-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .admin-variation-table th,
+    .admin-variation-table td {
+        border-bottom: 1px solid var(--border);
+        padding: 12px;
+        vertical-align: middle;
+    }
+
+    .admin-variation-table th {
+        background: var(--surface-muted);
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        text-align: left;
+    }
+
+    .admin-variation-table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .admin-empty-state {
+        border: 1px dashed var(--border-strong);
+        border-radius: 8px;
+        padding: 18px;
+        color: var(--muted);
+        background: var(--surface-muted);
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .admin-image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 12px;
+    }
+
+    .admin-image-card {
+        position: relative;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        background: var(--surface-muted);
+        aspect-ratio: 1 / 1;
+    }
+
+    .admin-image-card img,
+    .admin-preview-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .admin-image-remove {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 30px;
+        height: 30px;
+        border: 0;
+        border-radius: 999px;
+        background: rgba(185, 28, 28, 0.92);
+        color: #fff;
+        font-weight: 900;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .admin-image-card.is-removed {
+        opacity: 0.36;
+    }
+
+    .admin-image-card.is-removed::after {
+        content: "Marked for removal";
+        position: absolute;
+        inset: auto 8px 8px;
+        background: rgba(15, 23, 42, 0.82);
+        color: #fff;
+        border-radius: 6px;
+        padding: 6px;
+        font-size: 0.75rem;
+        text-align: center;
+        font-weight: 800;
+    }
+
+    .admin-upload-box {
+        border: 1px dashed var(--border-strong);
+        border-radius: 8px;
+        background: var(--surface-muted);
+        padding: 16px;
+    }
+
+    .admin-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .admin-preview-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1 / 1;
+        background: #fff;
+    }
+
+    .admin-side-note {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px;
+        color: var(--muted);
+        line-height: 1.55;
+    }
+
+    @@media (max-width: 1100px) {
+        .admin-edit-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-status-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 720px) {
+        .admin-edit-shell {
+            padding: 16px;
+        }
+
+        .admin-edit-header {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-edit-actions {
+            justify-content: stretch;
+        }
+
+        .admin-edit-button,
+        .admin-edit-link {
+            width: 100%;
+        }
+
+        .admin-status-grid,
+        .admin-field-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="admin-edit-page">
+    <div class="admin-edit-shell">
+        <div class="admin-edit-header">
+            <div class="admin-edit-title">
+                <h1>Edit @Model.Name</h1>
+                <p>Update product details, inventory, category, promotion, variation selections, and product images.</p>
+            </div>
+            <div class="admin-edit-actions">
+                <a asp-area="Admin"
+                   asp-controller="Products"
+                   asp-action="Details"
+                   asp-route-id="@Model.ProductItemId"
+                   class="admin-edit-link secondary">Back to Details</a>
+                <button class="admin-edit-button primary" type="submit" form="admin-edit-product-form">Save Changes</button>
+            </div>
+        </div>
+
+        <div class="admin-status-grid">
+            <div class="admin-status-item">
+                <span>Product Item</span>
+                <strong>#@Model.ProductItemId</strong>
+            </div>
+            <div class="admin-status-item">
+                <span>Effective Price</span>
+                <strong>@effectivePrice.ToString("C")</strong>
+            </div>
+            <div class="admin-status-item">
+                <span>Inventory</span>
+                <strong>@Model.QuantityInStock</strong>
+            </div>
+            <div class="admin-status-item">
+                <span>Status</span>
+                <strong><span class="admin-badge @stockClass">@stockLabel</span></strong>
+            </div>
+        </div>
+
+        <form id="admin-edit-product-form" asp-area="Admin" asp-controller="Products" asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input asp-for="ProductItemId" type="hidden" />
+            <input asp-for="ProductId" type="hidden" />
+
+            <div class="admin-edit-grid">
+                <div>
+                    <section class="admin-edit-section">
+                        <div class="admin-edit-section-header">
+                            <h2>Product Information</h2>
+                            @if (hasDiscount)
+                            {
+                                <span class="admin-badge state-success">Discount active</span>
+                            }
+                            else
+                            {
+                                <span class="admin-badge state-neutral">Standard price</span>
+                            }
+                        </div>
+
+                        <div class="admin-field-grid">
+                            <div class="admin-field full">
+                                <label asp-for="Name">Product Name</label>
+                                <input asp-for="Name" autocomplete="off" />
+                                <span asp-validation-for="Name" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field full">
+                                <label asp-for="Description">Description</label>
+                                <textarea asp-for="Description"></textarea>
+                                <span asp-validation-for="Description" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="SKU">SKU</label>
+                                <input asp-for="SKU" autocomplete="off" />
+                                <span asp-validation-for="SKU" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="QuantityInStock">Quantity In Stock</label>
+                                <input asp-for="QuantityInStock" type="number" min="0" step="1" />
+                                <span asp-validation-for="QuantityInStock" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="Price">Price</label>
+                                <input asp-for="Price" type="number" min="0" step="0.01" />
+                                <span asp-validation-for="Price" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="DiscountedPrice">Discounted Price</label>
+                                <input asp-for="DiscountedPrice" type="number" min="0" step="0.01" />
+                                <span asp-validation-for="DiscountedPrice" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="CategoryId">Category</label>
+                                <select asp-for="CategoryId">
+                                    <option value="">Select category</option>
+                                    @foreach (var category in Model.Categories)
+                                    {
+                                        <option value="@category.Id">@category.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="CategoryId" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="PromotionId">Promotion</label>
+                                <select asp-for="PromotionId">
+                                    <option value="">No promotion</option>
+                                    @foreach (var promotion in Model.Promotions)
+                                    {
+                                        <option value="@promotion.Id">@promotion.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="PromotionId" class="admin-validation"></span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="admin-edit-section">
+                        <div class="admin-edit-section-header">
+                            <h2>Variation Options</h2>
+                            <span>@Model.AllVariationOptions.Count option groups</span>
+                        </div>
+
+                        @if (Model.AllVariationOptions.Any())
+                        {
+                            <table class="admin-variation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Variation</th>
+                                        <th>Selected Option</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var variation in Model.AllVariationOptions)
+                                    {
+                                        Model.SelectedVariationOptions.TryGetValue(variation.VariationId, out int? selectedOptionId);
+
+                                        <tr>
+                                            <td>
+                                                <strong>@variation.VariationName</strong>
+                                            </td>
+                                            <td>
+                                                <select name="SelectedVariationOptions[@variation.VariationId]">
+                                                    <option value="">Select option</option>
+                                                    @foreach (var option in variation.VariationOptions)
+                                                    {
+                                                        if (selectedOptionId == option.VariationOptionId)
+                                                        {
+                                                            <option value="@option.VariationOptionId" selected="selected">@option.Value</option>
+                                                        }
+                                                        else
+                                                        {
+                                                            <option value="@option.VariationOptionId">@option.Value</option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="admin-empty-state">No variations are configured for this product category.</div>
+                        }
+                    </section>
+                </div>
+
+                <aside>
+                    <section class="admin-edit-section">
+                        <div class="admin-edit-section-header">
+                            <h2>Images</h2>
+                            <span>@Model.ExistingImages.Count current</span>
+                        </div>
+
+                        <div id="removed-images-container"></div>
+
+                        @if (Model.ExistingImages.Any())
+                        {
+                            <div class="admin-image-grid" id="existing-images-grid">
+                                @foreach (var image in Model.ExistingImages)
+                                {
+                                    <div class="admin-image-card" data-image-id="@image.ProductImageId">
+                                        <img src="data:image/png;base64,@Convert.ToBase64String(image.bytes)" alt="@Model.Name image" />
+                                        @if (image.ProductImageId > 0)
+                                        {
+                                            <button class="admin-image-remove"
+                                                    type="button"
+                                                    aria-label="Remove image"
+                                                    data-remove-image="@image.ProductImageId">x</button>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="admin-empty-state">No images are attached to this product.</div>
+                        }
+                    </section>
+
+                    <section class="admin-edit-section">
+                        <div class="admin-edit-section-header">
+                            <h2>Add Images</h2>
+                            <span>Optional</span>
+                        </div>
+
+                        <div class="admin-upload-box">
+                            <div class="admin-field single">
+                                <label asp-for="NewImages">Upload New Images</label>
+                                <input asp-for="NewImages" type="file" multiple accept="image/*" id="new-images-input" />
+                                <span asp-validation-for="NewImages" class="admin-validation"></span>
+                            </div>
+                            <div id="new-images-preview" class="admin-preview-grid"></div>
+                        </div>
+                    </section>
+
+                    <section class="admin-edit-section">
+                        <div class="admin-edit-section-header">
+                            <h2>Summary</h2>
+                            @if (hasPromotion)
+                            {
+                                <span class="admin-badge state-success">Promotion selected</span>
+                            }
+                            else
+                            {
+                                <span class="admin-badge state-neutral">No promotion</span>
+                            }
+                        </div>
+                        <div class="admin-side-note">
+                            Product item #@Model.ProductItemId belongs to product #@Model.ProductId. Category and promotion are product-level values. SKU, stock, price, discount, and variation choices are item-level edit data.
+                        </div>
+                    </section>
+                </aside>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (() => {
+        const removedContainer = document.getElementById('removed-images-container');
+        const imageButtons = document.querySelectorAll('[data-remove-image]');
+        const previewInput = document.getElementById('new-images-input');
+        const previewGrid = document.getElementById('new-images-preview');
+        const removedImageIds = new Set();
+
+        imageButtons.forEach((button) => {
+            button.addEventListener('click', () => {
+                const imageId = button.getAttribute('data-remove-image');
+                const imageCard = button.closest('.admin-image-card');
+
+                if (!imageId || !removedContainer || !imageCard) {
+                    return;
+                }
+
+                if (removedImageIds.has(imageId)) {
+                    removedImageIds.delete(imageId);
+                    imageCard.classList.remove('is-removed');
+                    button.textContent = 'x';
+                } else {
+                    removedImageIds.add(imageId);
+                    imageCard.classList.add('is-removed');
+                    button.textContent = '+';
+                }
+
+                removedContainer.innerHTML = '';
+                removedImageIds.forEach((id) => {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'RemovedImageIds';
+                    input.value = id;
+                    removedContainer.appendChild(input);
+                });
+            });
+        });
+
+        if (previewInput && previewGrid) {
+            previewInput.addEventListener('change', () => {
+                previewGrid.innerHTML = '';
+
+                Array.from(previewInput.files || []).forEach((file) => {
+                    if (!file.type.startsWith('image/')) {
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.addEventListener('load', () => {
+                        const previewCard = document.createElement('div');
+                        previewCard.className = 'admin-preview-card';
+
+                        const image = document.createElement('img');
+                        image.src = reader.result;
+                        image.alt = file.name;
+
+                        previewCard.appendChild(image);
+                        previewGrid.appendChild(previewCard);
+                    });
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+    })();
+</script>

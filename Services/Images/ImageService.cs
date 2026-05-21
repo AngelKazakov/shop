@@ -90,6 +90,20 @@ namespace RandomShop.Services.Images
                 });
             }
 
+            if (productImageViewModels.Any() || !Directory.Exists(productDirectory))
+            {
+                return productImageViewModels;
+            }
+
+            foreach (FileInfo imageFile in new DirectoryInfo(productDirectory).GetFiles().OrderBy(file => file.Name))
+            {
+                productImageViewModels.Add(new ProductImageViewModel
+                {
+                    ProductImageId = 0,
+                    bytes = await File.ReadAllBytesAsync(imageFile.FullName)
+                });
+            }
+
             return productImageViewModels;
         }
 

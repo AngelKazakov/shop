@@ -57,13 +57,27 @@ namespace RandomShop.Areas.Admin.Controllers
             }
             catch (Exception ex)
             {
-                this.logger.LogError(ex, "Failed to load admin product details for product item id {ProductItemId}.", id);
+                this.logger.LogError(ex, "Failed to load admin product details for product item id {ProductItemId}.",
+                    id);
 
                 return View("~/Views/Shared/Error.cshtml", new ErrorViewModel
                 {
                     RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
                 });
             }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            AdminEditProductFormModel? model = await this.adminProductService.GetEditFormAsync(id);
+
+            if (model == null)
+            {
+                return NotFound();
+            }
+
+            return View(model);
         }
     }
 }

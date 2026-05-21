@@ -184,4 +184,121 @@ public class AdminProductService : IAdminProductService
 
         return modelDetails;
     }
+
+    public async Task<AdminEditProductFormModel?> GetEditFormAsync(int? productItemId)
+    {
+        if (!productItemId.HasValue || productItemId.Value <= 0)
+        {
+            return null;
+        }
+
+        int id = productItemId.Value;
+
+        AdminEditProductFormModel? foundProduct = await this.context.ProductItems
+            .AsNoTracking()
+            .Where(pi => pi.Id == id)
+            .Select(pi => new AdminEditProductFormModel
+            {
+                ProductItemId = pi.Id,
+                ProductId = pi.ProductId,
+                Name = pi.Product.Name,
+                Description = pi.Product.Description,
+                SKU = pi.SKU,
+                QuantityInStock = pi.QuantityInStock,
+                Price = pi.Price,
+                DiscountedPrice = pi.DiscountedPrice,
+                CategoryId = pi.Product.ProductCategories
+                    .Select(pc => pc.CategoryId)
+                    .FirstOrDefault(),
+                PromotionId = pi.Product.ProductPromotions
+                    .Select(pp => pp.PromotionId)
+                    .FirstOrDefault(),
+                SelectedVariationOptionIds = pi.ProductConfigurations
+                    .Select(pc => pc.VariationOptionId)
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
+
+        if (foundProduct == null)
+        {
+            return null;
+        }
+
+        var selectedVariationOptions = await this.context.ProductConfigurations
+            .AsNoTracking()
+            .Where(pc => pc.ProductItemId == id)
+            .Select(pc => new
+            {
+                pc.VariationOption.VariationId,
+                VariationName = pc.VariationOption.Variation.Name,
+                pc.VariationOptionId,
+                OptionValue = pc.VariationOption.Value
+            })
+            .ToListAsync();
+
+        foundProduct.SelectedVariationOptions = selectedVariationOptions
+            .GroupBy(vo => vo.VariationId)
+            .ToDictionary(group => group.Key, group => (int?)group.First().VariationOptionId);
+
+        foundProduct.ExistingVariationOptions = selectedVariationOptions
+            .GroupBy(vo => vo.VariationName)
+            .ToDictionary(group => group.Key, group => group.Select(vo => vo.OptionValue).ToList());
+
+        foundProduct.Categories = await this.context.Categories
+            .AsNoTracking()
+            .OrderBy(c => c.Name)
+            .Select(c => new RandomShop.Models.Category.CategoryViewModel
+            {
+                Id = c.Id,
+                Name = c.Name
+            })
+            .ToListAsync();
+
+        foundProduct.Promotions = await this.context.Promotions
+            .AsNoTracking()
+            .OrderBy(p => p.Name)
+            .Select(p => new RandomShop.Models.Promotion.PromotionViewModel
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                DiscountRate = p.DiscountRate,
+                StartDate = p.StartDate,
+                EndDate = p.EndDate
+            })
+            .ToListAsync();
+
+        List<int> selectedVariationIds = selectedVariationOptions
+            .Select(vo => vo.VariationId)
+            .Distinct()
+            .ToList();
+
+        foundProduct.AllVariationOptions = await this.context.Variations
+            .AsNoTracking()
+            .Where(v => v.CategoryId == foundProduct.CategoryId || selectedVariationIds.Contains(v.Id))
+            .OrderBy(v => v.Name)
+            .Select(v => new RandomShop.Models.Variation.VariationOptionViewModel
+            {
+                VariationId = v.Id,
+                VariationName = v.Name,
+                VariationOptions = v.VariationOptions
+                    .OrderBy(vo => vo.Value)
+                    .Select(vo => new RandomShop.Models.Variation.VariationOptionFormViewModel
+                    {
+                        VariationOptionId = vo.Id,
+                        Value = vo.Value
+                    })
+                    .ToList()
+            })
+            .ToListAsync();
+
+        foundProduct.ExistingImages = await this.imageService.CreateProductImageViewModelAsync(foundProduct.ProductId);
+
+        return foundProduct;
+    }
+
+    public async Task<int> UpdateAsync(AdminProductDetailsViewModel model)
+    {
+        throw new NotImplementedException();
+    }
 }
