@@ -194,9 +194,30 @@ public class AdminProductService : IAdminProductService
 
         int id = productItemId.Value;
 
-        AdminEditProductFormModel? foundProduct = await this.context.ProductItems
+        AdminEditProductFormModel? model = await this.GetBaseEditFormAsync(id);
+
+        if (model == null)
+        {
+            return null;
+        }
+
+        await this.PopulateSelectedVariationDataAsync(model);
+        await this.PopulateEditLookupsAsync(model);
+        await this.PopulateExistingImagesAsync(model);
+
+        return model;
+    }
+
+    public async Task<int> UpdateAsync(AdminProductDetailsViewModel model)
+    {
+        throw new NotImplementedException();
+    }
+
+    private async Task<AdminEditProductFormModel?> GetBaseEditFormAsync(int productItemId)
+    {
+        return await this.context.ProductItems
             .AsNoTracking()
-            .Where(pi => pi.Id == id)
+            .Where(pi => pi.Id == productItemId)
             .Select(pi => new AdminEditProductFormModel
             {
                 ProductItemId = pi.Id,
@@ -211,22 +232,20 @@ public class AdminProductService : IAdminProductService
                     .Select(pc => pc.CategoryId)
                     .FirstOrDefault(),
                 PromotionId = pi.Product.ProductPromotions
-                    .Select(pp => pp.PromotionId)
+                    .Select(pp => (int?)pp.PromotionId)
                     .FirstOrDefault(),
                 SelectedVariationOptionIds = pi.ProductConfigurations
                     .Select(pc => pc.VariationOptionId)
                     .ToList()
             })
             .FirstOrDefaultAsync();
+    }
 
-        if (foundProduct == null)
-        {
-            return null;
-        }
-
+    private async Task PopulateSelectedVariationDataAsync(AdminEditProductFormModel model)
+    {
         var selectedVariationOptions = await this.context.ProductConfigurations
             .AsNoTracking()
-            .Where(pc => pc.ProductItemId == id)
+            .Where(pc => pc.ProductItemId == model.ProductItemId)
             .Select(pc => new
             {
                 pc.VariationOption.VariationId,
@@ -236,15 +255,18 @@ public class AdminProductService : IAdminProductService
             })
             .ToListAsync();
 
-        foundProduct.SelectedVariationOptions = selectedVariationOptions
+        model.SelectedVariationOptions = selectedVariationOptions
             .GroupBy(vo => vo.VariationId)
             .ToDictionary(group => group.Key, group => (int?)group.First().VariationOptionId);
 
-        foundProduct.ExistingVariationOptions = selectedVariationOptions
+        model.ExistingVariationOptions = selectedVariationOptions
             .GroupBy(vo => vo.VariationName)
             .ToDictionary(group => group.Key, group => group.Select(vo => vo.OptionValue).ToList());
+    }
 
-        foundProduct.Categories = await this.context.Categories
+    private async Task PopulateEditLookupsAsync(AdminEditProductFormModel model)
+    {
+        model.Categories = await this.context.Categories
             .AsNoTracking()
             .OrderBy(c => c.Name)
             .Select(c => new RandomShop.Models.Category.CategoryViewModel
@@ -254,7 +276,7 @@ public class AdminProductService : IAdminProductService
             })
             .ToListAsync();
 
-        foundProduct.Promotions = await this.context.Promotions
+        model.Promotions = await this.context.Promotions
             .AsNoTracking()
             .OrderBy(p => p.Name)
             .Select(p => new RandomShop.Models.Promotion.PromotionViewModel
@@ -268,14 +290,11 @@ public class AdminProductService : IAdminProductService
             })
             .ToListAsync();
 
-        List<int> selectedVariationIds = selectedVariationOptions
-            .Select(vo => vo.VariationId)
-            .Distinct()
-            .ToList();
+        List<int> selectedVariationIds = model.SelectedVariationOptions.Keys.ToList();
 
-        foundProduct.AllVariationOptions = await this.context.Variations
+        model.AllVariationOptions = await this.context.Variations
             .AsNoTracking()
-            .Where(v => v.CategoryId == foundProduct.CategoryId || selectedVariationIds.Contains(v.Id))
+            .Where(v => v.CategoryId == model.CategoryId || selectedVariationIds.Contains(v.Id))
             .OrderBy(v => v.Name)
             .Select(v => new RandomShop.Models.Variation.VariationOptionViewModel
             {
@@ -291,14 +310,11 @@ public class AdminProductService : IAdminProductService
                     .ToList()
             })
             .ToListAsync();
-
-        foundProduct.ExistingImages = await this.imageService.CreateProductImageViewModelAsync(foundProduct.ProductId);
-
-        return foundProduct;
     }
 
-    public async Task<int> UpdateAsync(AdminProductDetailsViewModel model)
+    private async Task PopulateExistingImagesAsync(AdminEditProductFormModel model)
     {
-        throw new NotImplementedException();
+        model.ExistingImages =
+            await this.imageService.CreateProductImageViewModelAsync(model.ProductId);
     }
 }
