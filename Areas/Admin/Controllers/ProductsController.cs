@@ -79,5 +79,29 @@ namespace RandomShop.Areas.Admin.Controllers
 
             return View(model);
         }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(AdminEditProductFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                await this.adminProductService.RebuildEditFormAsync(model);
+                return View(model);
+            }
+
+            bool isProductUpdated = await this.adminProductService.UpdateAsync(model);
+
+            if (!isProductUpdated)
+            {
+                this.logger.LogError("Failed to update product item with id {ProductItemId}.", model.ProductItemId);
+
+                return View("~/Views/Shared/Error.cshtml", new ErrorViewModel
+                {
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+                });
+            }
+
+            return RedirectToAction(nameof(Details), new { id = model.ProductItemId });
+        }
     }
 }

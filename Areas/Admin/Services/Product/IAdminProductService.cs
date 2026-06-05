@@ -11,6 +11,8 @@ public interface IAdminProductService
     public Task<AdminProductDetailsViewModel?> GetDetailsAsync(int? id);
 
     public Task<AdminEditProductFormModel?> GetEditFormAsync(int? productItemId);
-    
-    public Task<int> UpdateAsync(AdminProductDetailsViewModel model);
+
+    public Task<bool> UpdateAsync(AdminEditProductFormModel model);
+
+    Task RebuildEditFormAsync(AdminEditProductFormModel model);
 }

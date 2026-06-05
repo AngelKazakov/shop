@@ -208,9 +208,90 @@ public class AdminProductService : IAdminProductService
         return model;
     }
 
-    public async Task<int> UpdateAsync(AdminProductDetailsViewModel model)
+    public async Task<bool> UpdateAsync(AdminEditProductFormModel model)
     {
-        throw new NotImplementedException();
+        ProductItem? productToUpdate = await this.context.ProductItems
+            .Include(pi => pi.Product)
+            .ThenInclude(p => p.ProductCategories)
+            .Include(pi => pi.Product)
+            .ThenInclude(p => p.ProductPromotions)
+            .Include(pi => pi.ProductConfigurations)
+            .FirstOrDefaultAsync(pi => pi.Id == model.ProductItemId);
+
+        if (productToUpdate == null)
+        {
+            return false;
+        }
+
+        this.UpdateBasicProductData(productToUpdate, model);
+        this.UpdateCategory(productToUpdate.Product, model.CategoryId);
+        this.UpdatePromotion(productToUpdate.Product, model.PromotionId);
+        this.UpdateProductVariationOptions(productToUpdate, model.SelectedVariationOptionIds);
+
+        await this.context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task RebuildEditFormAsync(AdminEditProductFormModel model)
+    {
+        await this.PopulateEditLookupsAsync(model);
+        await this.PopulateExistingImagesAsync(model);
+    }
+
+    private void UpdateBasicProductData(ProductItem productItem, AdminEditProductFormModel model)
+    {
+        productItem.Product.Name = model.Name;
+        productItem.Product.Description = model.Description;
+
+        productItem.SKU = model.SKU;
+        productItem.QuantityInStock = model.QuantityInStock;
+        productItem.Price = model.Price;
+        productItem.DiscountedPrice = model.DiscountedPrice;
+    }
+
+    private void UpdateCategory(Data.Models.Product product, int categoryId)
+    {
+        product.ProductCategories.Clear();
+
+        product.ProductCategories.Add(new ProductCategory()
+        {
+            CategoryId = categoryId,
+            ProductId = product.Id
+        });
+    }
+
+    private void UpdatePromotion(Data.Models.Product product, int? promotionId)
+    {
+        product.ProductPromotions.Clear();
+
+        if (promotionId.HasValue && promotionId.Value > 0)
+        {
+            product.ProductPromotions.Add(new ProductPromotion()
+            {
+                PromotionId = promotionId.Value,
+                ProductId = product.Id
+            });
+        }
+    }
+
+    private void UpdateProductVariationOptions(ProductItem productItem, List<int> selectedVariationOptionIds)
+    {
+        productItem.ProductConfigurations.Clear();
+
+        if (selectedVariationOptionIds.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var variationOptionId in selectedVariationOptionIds.Distinct())
+        {
+            productItem.ProductConfigurations.Add(new ProductConfiguration
+            {
+                ProductItemId = productItem.Id,
+                VariationOptionId = variationOptionId
+            });
+        }
     }
 
     private async Task<AdminEditProductFormModel?> GetBaseEditFormAsync(int productItemId)
