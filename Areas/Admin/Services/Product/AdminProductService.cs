@@ -223,7 +223,7 @@ public class AdminProductService : IAdminProductService
             return false;
         }
 
-        this.UpdateBasicProductData(productToUpdate, model);
+        await this.UpdateBasicProductData(productToUpdate, model);
         this.UpdateCategory(productToUpdate.Product, model.CategoryId);
         this.UpdatePromotion(productToUpdate.Product, model.PromotionId);
         this.UpdateProductVariationOptions(productToUpdate, model.SelectedVariationOptionIds);
@@ -239,7 +239,7 @@ public class AdminProductService : IAdminProductService
         await this.PopulateExistingImagesAsync(model);
     }
 
-    private void UpdateBasicProductData(ProductItem productItem, AdminEditProductFormModel model)
+    private async Task UpdateBasicProductData(ProductItem productItem, AdminEditProductFormModel model)
     {
         productItem.Product.Name = model.Name;
         productItem.Product.Description = model.Description;
@@ -247,7 +247,9 @@ public class AdminProductService : IAdminProductService
         productItem.SKU = model.SKU;
         productItem.QuantityInStock = model.QuantityInStock;
         productItem.Price = model.Price;
-        productItem.DiscountedPrice = model.DiscountedPrice;
+        productItem.DiscountedPrice = model.PromotionId.HasValue && model.PromotionId.Value > 0
+            ? await this.ApplyPromotionAsync(model.PromotionId.Value, model.Price)
+            : 0;
     }
 
     private void UpdateCategory(Data.Models.Product product, int categoryId)
@@ -259,6 +261,25 @@ public class AdminProductService : IAdminProductService
             CategoryId = categoryId,
             ProductId = product.Id
         });
+    }
+
+    private async Task<decimal> ApplyPromotionAsync(int promotionId, decimal productPrice)
+    {
+        int? promotionDiscountRate = await this.context.Promotions
+            .AsNoTracking()
+            .Where(p => p.Id == promotionId)
+            .Select(p => (int?)p.DiscountRate)
+            .FirstOrDefaultAsync();
+
+        if (!promotionDiscountRate.HasValue || promotionDiscountRate.Value <= 0)
+        {
+            return 0;
+        }
+
+        decimal discountRate = promotionDiscountRate.Value / 100m;
+        decimal discountedPrice = productPrice * (1 - discountRate);
+
+        return Math.Round(discountedPrice, 2);
     }
 
     private void UpdatePromotion(Data.Models.Product product, int? promotionId)
