@@ -226,7 +226,7 @@ public class AdminProductService : IAdminProductService
         await this.UpdateBasicProductData(productToUpdate, model);
         this.UpdateCategory(productToUpdate.Product, model.CategoryId);
         this.UpdatePromotion(productToUpdate.Product, model.PromotionId);
-        this.UpdateProductVariationOptions(productToUpdate, model.SelectedVariationOptionIds);
+        this.UpdateProductVariationOptions(productToUpdate, model);
 
         await this.context.SaveChangesAsync();
 
@@ -296,17 +296,43 @@ public class AdminProductService : IAdminProductService
         }
     }
 
-    private void UpdateProductVariationOptions(ProductItem productItem, List<int> selectedVariationOptionIds)
+    private void UpdateProductVariationOptions(ProductItem productItem, AdminEditProductFormModel model)
     {
-        productItem.ProductConfigurations.Clear();
+        List<int> selectedVariationOptionIds = model.SelectedVariationOptions
+            .Values
+            .Where(id => id.HasValue && id.Value > 0)
+            .Select(id => id.GetValueOrDefault())
+            .Distinct()
+            .ToList();
 
-        if (selectedVariationOptionIds.Count == 0)
+        if (selectedVariationOptionIds.Count == 0 && model.SelectedVariationOptionIds.Count > 0)
         {
-            return;
+            selectedVariationOptionIds = model.SelectedVariationOptionIds
+                .Where(id => id > 0)
+                .Distinct()
+                .ToList();
         }
 
-        foreach (var variationOptionId in selectedVariationOptionIds.Distinct())
+        HashSet<int> selectedVariationOptionIdSet = selectedVariationOptionIds.ToHashSet();
+        List<ProductConfiguration> existingProductConfigurations = productItem.ProductConfigurations.ToList();
+
+        List<ProductConfiguration> productConfigurationsToRemove = existingProductConfigurations
+            .Where(pc => !selectedVariationOptionIdSet.Contains(pc.VariationOptionId))
+            .ToList();
+
+        this.context.ProductConfigurations.RemoveRange(productConfigurationsToRemove);
+
+        HashSet<int> existingVariationOptionIds = existingProductConfigurations
+            .Select(pc => pc.VariationOptionId)
+            .ToHashSet();
+
+        foreach (int variationOptionId in selectedVariationOptionIdSet)
         {
+            if (existingVariationOptionIds.Contains(variationOptionId))
+            {
+                continue;
+            }
+
             productItem.ProductConfigurations.Add(new ProductConfiguration
             {
                 ProductItemId = productItem.Id,
