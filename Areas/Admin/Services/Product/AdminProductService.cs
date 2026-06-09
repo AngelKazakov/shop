@@ -216,6 +216,8 @@ public class AdminProductService : IAdminProductService
             .Include(pi => pi.Product)
             .ThenInclude(p => p.ProductPromotions)
             .Include(pi => pi.ProductConfigurations)
+            .Include(pi => pi.Product)
+            .ThenInclude(p => p.ProductImages)
             .FirstOrDefaultAsync(pi => pi.Id == model.ProductItemId);
 
         if (productToUpdate == null)
@@ -227,6 +229,9 @@ public class AdminProductService : IAdminProductService
         this.UpdateCategory(productToUpdate.Product, model.CategoryId);
         this.UpdatePromotion(productToUpdate.Product, model.PromotionId);
         this.UpdateProductVariationOptions(productToUpdate, model);
+
+        this.DeleteRemovedImages(model);
+        this.AddNewImages(productToUpdate.Product, model);
 
         await this.context.SaveChangesAsync();
 
@@ -338,6 +343,31 @@ public class AdminProductService : IAdminProductService
                 ProductItemId = productItem.Id,
                 VariationOptionId = variationOptionId
             });
+        }
+    }
+
+    private void DeleteRemovedImages(AdminEditProductFormModel model)
+    {
+        if (model.RemovedImageIds == null || model.RemovedImageIds.Count == 0)
+        {
+            return;
+        }
+
+        this.imageService.DeleteProductImages(model.RemovedImageIds, model.ProductId);
+    }
+
+    private void AddNewImages(Data.Models.Product product, AdminEditProductFormModel model)
+    {
+        if (model.NewImages == null || model.NewImages.Count == 0)
+        {
+            return;
+        }
+
+        ICollection<ProductImage> newProductImages = this.imageService.CreateProductImages(model.NewImages, product.Id);
+
+        foreach (ProductImage image in newProductImages)
+        {
+            product.ProductImages.Add(image);
         }
     }
 
