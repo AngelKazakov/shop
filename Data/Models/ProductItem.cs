@@ -29,6 +29,10 @@ namespace RandomShop.Data.Models
 
         [Required]
         public DateTime CreatedOnDate { get; set; }
+        
+        public bool isDeleted { get; set; }
+        
+        public DateTime? DeletedOnDate { get; set; }
 
         public ICollection<ProductImage> ProductItemImages { get; set; } = new List<ProductImage>();
 
