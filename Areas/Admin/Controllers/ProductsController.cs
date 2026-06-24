@@ -103,5 +103,60 @@ namespace RandomShop.Areas.Admin.Controllers
 
             return RedirectToAction(nameof(Details), new { id = model.ProductItemId });
         }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            bool isProductDeleted = await this.adminProductService.DeleteAsync(id);
+
+            if (!isProductDeleted)
+            {
+                this.logger.LogError("Failed to delete product item with id {ProductItemId}.", id);
+
+                return View("~/Views/Shared/Error.cshtml", new ErrorViewModel
+                {
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+                });
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteSelected([FromBody] List<int>? productItemIds)
+        {
+            if (productItemIds == null || productItemIds.Count == 0)
+            {
+                return BadRequest(new { message = "No product items were selected for deletion." });
+            }
+
+            AdminProductDeleteResult result = await this.adminProductService.DeleteSelectedAsync(productItemIds);
+
+            if (result.Errors.Count > 0)
+            {
+                return BadRequest(new
+                {
+                    message = string.Join(" ", result.Errors),
+                    requestCount = result.RequestedCount,
+                    deletedCount = result.DeletedCount,
+                    skippedCount = result.SkippedCount,
+                });
+            }
+
+            return Ok(new
+            {
+                message = result.SkippedCount == 0
+                    ? $"{result.DeletedCount} product(s) deleted successfully."
+                    : $"{result.DeletedCount} product(s) deleted and {result.SkippedCount} skipped.",
+
+                requestCount = result.RequestedCount,
+                deletedCount = result.DeletedCount,
+                skippedCount = result.SkippedCount,
+                deletedIds = result.DeletedIds,
+                skippedIds = result.SkippedIds
+            });
+        }
     }
 }

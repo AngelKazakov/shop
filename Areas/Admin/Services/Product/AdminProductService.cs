@@ -244,6 +244,77 @@ public class AdminProductService : IAdminProductService
         await this.PopulateExistingImagesAsync(model);
     }
 
+    public async Task<bool> DeleteAsync(int productItemId)
+    {
+        ProductItem? productForDeletion = await this.context.ProductItems
+            .Include(x => x.Product)
+            .FirstOrDefaultAsync(pi => pi.Id == productItemId);
+
+        if (productForDeletion == null)
+        {
+            return false;
+        }
+
+        productForDeletion.isDeleted = true;
+        productForDeletion.DeletedOnDate = DateTime.UtcNow;
+
+        bool hasOtherActiveItems = await this.context.ProductItems
+            .AnyAsync(pi =>
+                pi.ProductId == productForDeletion.ProductId &&
+                pi.Id != productForDeletion.Id &&
+                !pi.isDeleted);
+
+        if (!hasOtherActiveItems)
+        {
+            productForDeletion.Product.IsDeleted = true;
+            productForDeletion.Product.DeletedOnDate = DateTime.UtcNow;
+        }
+
+        this.context.ProductItems.Update(productForDeletion);
+        await this.context.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<AdminProductDeleteResult> DeleteSelectedAsync(ICollection<int>? productItemIds)
+    {
+        var result = new AdminProductDeleteResult();
+
+        if (productItemIds == null || productItemIds.Count == 0)
+        {
+            result.Errors.Add("No product items were selected for deletion.");
+            return result;
+        }
+
+        List<int> distinctIds = productItemIds.Where(id => id > 0).Distinct().ToList();
+
+        result.RequestedCount = distinctIds.Count;
+
+        if (distinctIds.Count == 0)
+        {
+            result.Errors.Add("No valid product item IDs were selected.");
+            return result;
+        }
+
+        foreach (var productItemId in distinctIds)
+        {
+            bool deleted = await this.DeleteAsync(productItemId);
+
+            if (deleted)
+            {
+                result.DeletedCount++;
+                result.DeletedIds.Add(productItemId);
+            }
+            else
+            {
+                result.SkippedCount++;
+                result.SkippedIds.Add(productItemId);
+            }
+        }
+
+        return result;
+    }
+
     private async Task UpdateBasicProductData(ProductItem productItem, AdminEditProductFormModel model)
     {
         productItem.Product.Name = model.Name;

@@ -15,4 +15,8 @@ public interface IAdminProductService
     public Task<bool> UpdateAsync(AdminEditProductFormModel model);
 
     Task RebuildEditFormAsync(AdminEditProductFormModel model);
+
+    public Task<bool> DeleteAsync(int productItemId);
+
+    public Task<AdminProductDeleteResult> DeleteSelectedAsync(ICollection<int>? productItemIds);
 }
