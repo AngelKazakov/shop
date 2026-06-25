@@ -81,7 +81,12 @@ public class GuestFavoritesCookieService : IGuestFavoritesCookieService
         List<int> userFavorites = await this.context.UserFavoriteProducts.Where(x => x.UserId == userId)
             .Select(x => x.ProductId).ToListAsync();
 
-        List<int> newFavorites = guestFavorites.Where(x => !userFavorites.Contains(x)).ToList();
+        List<int> activeProductIds = await this.context.Products
+            .Where(p => guestFavorites.Contains(p.Id) && !p.IsDeleted && p.ProductItems.Any(pi => !pi.isDeleted))
+            .Select(p => p.Id)
+            .ToListAsync();
+
+        List<int> newFavorites = activeProductIds.Where(x => !userFavorites.Contains(x)).ToList();
 
         if (newFavorites.Any())
         {

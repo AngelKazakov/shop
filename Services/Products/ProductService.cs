@@ -184,7 +184,7 @@ namespace RandomShop.Services.Products
         {
             ProductDetailsDto? productDetails = await
                 this.context.ProductItems.AsNoTracking()
-                    .Where(x => x.Id == productId)
+                    .Where(x => x.Id == productId && !x.isDeleted && !x.Product.IsDeleted)
                     .Select(x => new ProductDetailsDto
                     {
                         ProductId = x.ProductId,
@@ -244,6 +244,8 @@ namespace RandomShop.Services.Products
             try
             {
                 List<ProductListViewModel>? filteredProductsByName = await this.context.ProductItems.Where(x =>
+                        !x.isDeleted &&
+                        !x.Product.IsDeleted &&
                         x.QuantityInStock > 0 &&
                         EF.Functions.Like(x.Product.Name.ToLower(), $"%{lowerProductName}%"))
                     .Select(x => new ProductListViewModel()
@@ -268,7 +270,7 @@ namespace RandomShop.Services.Products
             try
             {
                 List<ProductListViewModel>? latestProducts = await this.context.ProductItems
-                    .Where(x => x.QuantityInStock > 0)
+                    .Where(x => !x.isDeleted && !x.Product.IsDeleted && x.QuantityInStock > 0)
                     .OrderByDescending(x => x.CreatedOnDate)
                     .Take(3)
                     .Select(x => new ProductListViewModel()
@@ -307,7 +309,7 @@ namespace RandomShop.Services.Products
         private IQueryable<ProductListViewModel> GetProductListProjection(string? userId = null)
         {
             IQueryable<ProductListViewModel>? productItems = this.context.ProductItems.AsNoTracking()
-                .Where(x => x.QuantityInStock > 0)
+                .Where(x => !x.isDeleted && !x.Product.IsDeleted && x.QuantityInStock > 0)
                 .Select(x => new ProductListViewModel()
                 {
                     Id = x.Product.Id,
@@ -357,7 +359,7 @@ namespace RandomShop.Services.Products
         {
             List<Product>? products = await this.context.ProductItems
                 .AsNoTracking()
-                .Where(x => x.Price >= minPrice && x.Price <= maxPrice)
+                .Where(x => !x.isDeleted && !x.Product.IsDeleted && x.Price >= minPrice && x.Price <= maxPrice)
                 .Include(x => x.Product)
                 .ThenInclude(x => x.ProductItems)
                 .ThenInclude(x => x.ProductItemImages)
@@ -419,6 +421,7 @@ namespace RandomShop.Services.Products
 
             List<ProductListViewModel>? sortedProducts = await this.context.ProductItems
                 .AsNoTracking()
+                .Where(x => !x.isDeleted && !x.Product.IsDeleted)
                 .Include(x => x.Product)
                 .Include(x => x.ProductItemImages)
                 .OrderBy(criteria)
@@ -855,6 +858,7 @@ namespace RandomShop.Services.Products
         private IQueryable<ProductItem> GetProductItemQuery()
         {
             return this.context.ProductItems
+                .Where(x => !x.isDeleted && !x.Product.IsDeleted)
                 .Include(x => x.Product)
                 .ThenInclude(p => p.UserFavoriteProducts)
                 .Include(x => x.Product.ProductCategories)

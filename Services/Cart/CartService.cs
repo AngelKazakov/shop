@@ -36,6 +36,14 @@ public class CartService : ICartService
 
     public async Task AddToCart(string userId, int productItemId, int quantity = 1)
     {
+        bool productItemExists = await this.context.ProductItems
+            .AnyAsync(pi => pi.Id == productItemId && !pi.isDeleted && !pi.Product.IsDeleted);
+
+        if (!productItemExists)
+        {
+            return;
+        }
+
         ShoppingCart cart = await GetOrCreateCartAsync(userId);
 
         ShoppingCartItem? cartItem = cart.Items.FirstOrDefault(x => x.ProductItemId == productItemId);
@@ -70,10 +78,12 @@ public class CartService : ICartService
         if (cart == null)
             return new List<CartItemViewModel>();
 
-        return cart.Items.Select(ci => new CartItemViewModel
+        return cart.Items
+            .Where(ci => ci.ProductItem != null && !ci.ProductItem.isDeleted && !ci.ProductItem.Product.IsDeleted)
+            .Select(ci => new CartItemViewModel
         {
             ProductItemId = ci.ProductItemId,
-            ProductName = ci.ProductItem.Product.Name,
+            ProductName = ci.ProductItem!.Product.Name,
             Quantity = ci.Quantity,
             UnitPrice = ci.ProductItem.DiscountedPrice > 0 ? ci.ProductItem.DiscountedPrice : ci.ProductItem.Price,
         }).ToList();
@@ -134,8 +144,15 @@ public class CartService : ICartService
             .ThenInclude(pi => pi.Product)
             .FirstOrDefaultAsync(c => c.UserId == userId);
 
-        decimal totalAmount = cart.Items.Sum(i =>
-            i.Quantity * (i.ProductItem.DiscountedPrice > 0 ? i.ProductItem.DiscountedPrice : i.ProductItem.Price));
+        if (cart == null)
+        {
+            return 0;
+        }
+
+        decimal totalAmount = cart.Items
+            .Where(i => i.ProductItem != null && !i.ProductItem.isDeleted && !i.ProductItem.Product.IsDeleted)
+            .Sum(i =>
+            i.Quantity * (i.ProductItem!.DiscountedPrice > 0 ? i.ProductItem.DiscountedPrice : i.ProductItem.Price));
 
         return totalAmount;
     }
@@ -144,12 +161,16 @@ public class CartService : ICartService
     {
         ShoppingCart? cart = await context.ShoppingCarts
             .Include(c => c.Items)
+            .ThenInclude(i => i.ProductItem)
+            .ThenInclude(pi => pi.Product)
             .FirstOrDefaultAsync(c => c.UserId == userId);
 
         if (cart == null || !cart.Items.Any())
             return 0;
 
-        return cart.Items.Sum(i => i.Quantity);
+        return cart.Items
+            .Where(i => i.ProductItem != null && !i.ProductItem.isDeleted && !i.ProductItem.Product.IsDeleted)
+            .Sum(i => i.Quantity);
     }
 
     public async Task<bool> ValidateCart(string userId)
@@ -160,11 +181,16 @@ public class CartService : ICartService
             .ThenInclude(pi => pi.Product)
             .FirstOrDefaultAsync(c => c.UserId == userId);
 
+        if (cart == null)
+        {
+            return false;
+        }
+
         List<int> productItemIds = cart.Items.Select(i => i.ProductItemId).ToList();
 
         Dictionary<int, ProductItem> productItems = await context.ProductItems
-            .Where(pi => productItemIds.Contains(pi.Id))
-            .ToDictionaryAsync(pi => pi.ProductId, pi => pi);
+            .Where(pi => productItemIds.Contains(pi.Id) && !pi.isDeleted && !pi.Product.IsDeleted)
+            .ToDictionaryAsync(pi => pi.Id, pi => pi);
 
         foreach (var item in cart.Items)
         {

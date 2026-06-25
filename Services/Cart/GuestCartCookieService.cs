@@ -80,7 +80,7 @@ public class GuestCartCookieService : IGuestCartCookieService
         List<int> productItemIds = guestItems.Select(x => x.ProductItemId).ToList();
 
         List<ProductItem> productItems = await this.context.ProductItems.Include(pi => pi.Product)
-            .Where(pi => productItemIds.Contains(pi.Id))
+            .Where(pi => productItemIds.Contains(pi.Id) && !pi.isDeleted && !pi.Product.IsDeleted)
             .ToListAsync();
 
         List<CartItemViewModel> productItemsViewModels = productItems.Select(x => new CartItemViewModel()
@@ -145,6 +145,14 @@ public class GuestCartCookieService : IGuestCartCookieService
 
         foreach (CartCookieItem guestCartItem in guestCartItems)
         {
+            bool productItemExists = await this.context.ProductItems
+                .AnyAsync(pi => pi.Id == guestCartItem.ProductItemId && !pi.isDeleted && !pi.Product.IsDeleted);
+
+            if (!productItemExists)
+            {
+                continue;
+            }
+
             ShoppingCartItem? existing =
                 userCart.Items.FirstOrDefault(x => x.ProductItemId == guestCartItem.ProductItemId);
 

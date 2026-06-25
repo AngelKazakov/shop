@@ -16,6 +16,14 @@ namespace RandomShop.Services.User
 
         public async Task<bool> AddProductToFavorite(string userId, int productId)
         {
+            bool productExists = await this.context.Products
+                .AnyAsync(p => p.Id == productId && !p.IsDeleted && p.ProductItems.Any(pi => !pi.isDeleted));
+
+            if (!productExists)
+            {
+                return false;
+            }
+
             return await CreateUserFavoriteProduct(userId, productId);
         }
 
@@ -38,17 +46,19 @@ namespace RandomShop.Services.User
 
         public async Task<ICollection<ProductListViewModel>> GetFavoriteProducts(string userId)
         {
-            var favoriteProducts = await this.context.UserFavoriteProducts.Where(x => x.UserId == userId)
+            var favoriteProducts = await this.context.UserFavoriteProducts
+                .Where(x => x.UserId == userId && !x.Product.IsDeleted)
                 .Select(x => new
                 {
                     Product = x.Product,
-                    FirstItem = x.Product.ProductItems.FirstOrDefault(),
+                    FirstItem = x.Product.ProductItems.FirstOrDefault(pi => !pi.isDeleted),
                 })
+                .Where(x => x.FirstItem != null)
                 .Select(x => new ProductListViewModel()
                 {
                     Id = x.Product.Id,
                     Name = x.Product.Name,
-                    Price = x.FirstItem.DiscountedPrice > 0 ? x.FirstItem.DiscountedPrice : x.FirstItem.Price,
+                    Price = x.FirstItem!.DiscountedPrice > 0 ? x.FirstItem.DiscountedPrice : x.FirstItem.Price,
                     IsFavorite = true,
                 })
                 .ToListAsync();

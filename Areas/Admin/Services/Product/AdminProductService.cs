@@ -21,6 +21,7 @@ public class AdminProductService : IAdminProductService
     {
         List<AdminProductListItemViewModel> products = await this.context.ProductItems
             .AsNoTracking()
+            .Where(pi => !pi.isDeleted && !pi.Product.IsDeleted)
             .Select(pi => new AdminProductListItemViewModel
             {
                 ProductItemId = pi.Id,
@@ -52,7 +53,8 @@ public class AdminProductService : IAdminProductService
         query.PromotionFilter = string.IsNullOrWhiteSpace(query.PromotionFilter) ? "all" : query.PromotionFilter;
 
         IQueryable<ProductItem> productQuery = this.context.ProductItems
-            .AsNoTracking();
+            .AsNoTracking()
+            .Where(pi => !pi.isDeleted && !pi.Product.IsDeleted);
 
         if (!string.IsNullOrWhiteSpace(query.SearchTerm))
         {
@@ -152,7 +154,7 @@ public class AdminProductService : IAdminProductService
 
         AdminProductDetailsViewModel? modelDetails = await this.context.ProductItems
             .AsNoTracking()
-            .Where(pi => pi.Id == productItemId)
+            .Where(pi => pi.Id == productItemId && !pi.isDeleted && !pi.Product.IsDeleted)
             .Select(pi => new AdminProductDetailsViewModel
             {
                 ProductItemId = pi.Id,
@@ -218,7 +220,7 @@ public class AdminProductService : IAdminProductService
             .Include(pi => pi.ProductConfigurations)
             .Include(pi => pi.Product)
             .ThenInclude(p => p.ProductImages)
-            .FirstOrDefaultAsync(pi => pi.Id == model.ProductItemId);
+            .FirstOrDefaultAsync(pi => pi.Id == model.ProductItemId && !pi.isDeleted && !pi.Product.IsDeleted);
 
         if (productToUpdate == null)
         {
@@ -446,7 +448,7 @@ public class AdminProductService : IAdminProductService
     {
         return await this.context.ProductItems
             .AsNoTracking()
-            .Where(pi => pi.Id == productItemId)
+            .Where(pi => pi.Id == productItemId && !pi.isDeleted && !pi.Product.IsDeleted)
             .Select(pi => new AdminEditProductFormModel
             {
                 ProductItemId = pi.Id,
