@@ -1,0 +1,671 @@
+@model AdminCreateProductFormModel
+
+@{
+    ViewData["Title"] = "Create Product";
+    var selectedPromotion = Model.Promotions.FirstOrDefault(p => p.Id == Model.PromotionId);
+    var projectedPrice = selectedPromotion != null
+        ? Math.Round(Model.Price * (1 - (selectedPromotion.DiscountRate / 100m)), 2)
+        : 0m;
+    var variationGroupCount = Model.VariationOptions.Count;
+}
+
+<style>
+    .admin-create-page {
+        --page-bg: #f5f7fb;
+        --surface: #ffffff;
+        --surface-muted: #f8fafc;
+        --border: #dbe3f0;
+        --border-strong: #cbd5e1;
+        --text: #172033;
+        --muted: #64748b;
+        --accent: #0f766e;
+        --accent-dark: #115e59;
+        --accent-soft: #ccfbf1;
+        --danger: #b91c1c;
+        --warning: #b45309;
+        --warning-soft: #fef3c7;
+        --success: #166534;
+        --success-soft: #dcfce7;
+        --shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+        color: var(--text);
+    }
+
+    .admin-create-shell {
+        background: var(--page-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 26px;
+        box-shadow: var(--shadow);
+    }
+
+    .admin-create-header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        align-items: start;
+        margin-bottom: 22px;
+    }
+
+    .admin-create-title h1 {
+        margin: 0 0 8px;
+        font-size: 2rem;
+        line-height: 1.15;
+    }
+
+    .admin-create-title p {
+        max-width: 760px;
+        margin: 0;
+        color: var(--muted);
+    }
+
+    .admin-create-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .admin-create-button,
+    .admin-create-link {
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 10px 14px;
+        min-height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        font-weight: 700;
+        text-decoration: none;
+        line-height: 1;
+        cursor: pointer;
+    }
+
+    .admin-create-button.primary {
+        background: var(--accent);
+        color: #fff;
+    }
+
+    .admin-create-button.primary:hover {
+        background: var(--accent-dark);
+    }
+
+    .admin-create-link.secondary {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+
+    .admin-create-link.secondary:hover {
+        background: #cbd5e1;
+        color: #0f172a;
+    }
+
+    .admin-status-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+    }
+
+    .admin-status-item {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px 16px;
+        min-height: 88px;
+    }
+
+    .admin-status-item span {
+        display: block;
+        color: var(--muted);
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .admin-status-item strong {
+        display: block;
+        font-size: 1.2rem;
+        line-height: 1.2;
+    }
+
+    .admin-create-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.85fr);
+        gap: 18px;
+    }
+
+    .admin-create-section {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 18px;
+    }
+
+    .admin-create-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .admin-create-section-header h2 {
+        margin: 0;
+        font-size: 1.05rem;
+    }
+
+    .admin-create-section-header span {
+        color: var(--muted);
+        font-size: 0.9rem;
+    }
+
+    .admin-field-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .admin-field {
+        min-width: 0;
+    }
+
+    .admin-field.full {
+        grid-column: 1 / -1;
+    }
+
+    .admin-field label {
+        display: block;
+        margin-bottom: 7px;
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+    }
+
+    .admin-field input,
+    .admin-field textarea,
+    .admin-field select {
+        width: 100%;
+        border: 1px solid var(--border-strong);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--text);
+        padding: 11px 12px;
+        min-height: 44px;
+        outline: none;
+    }
+
+    .admin-field textarea {
+        min-height: 150px;
+        resize: vertical;
+        line-height: 1.5;
+    }
+
+    .admin-field input:focus,
+    .admin-field textarea:focus,
+    .admin-field select:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+
+    .admin-validation {
+        display: block;
+        min-height: 18px;
+        margin-top: 5px;
+        color: var(--danger);
+        font-size: 0.85rem;
+    }
+
+    .admin-help {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: 0.82rem;
+        line-height: 1.45;
+    }
+
+    .admin-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 0.8rem;
+        font-weight: 800;
+        white-space: nowrap;
+    }
+
+    .state-success {
+        background: var(--success-soft);
+        color: var(--success);
+    }
+
+    .state-warning {
+        background: var(--warning-soft);
+        color: var(--warning);
+    }
+
+    .state-neutral {
+        background: #e5e7eb;
+        color: #4b5563;
+    }
+
+    .admin-variation-table {
+        width: 100%;
+        border-collapse: collapse;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .admin-variation-table th,
+    .admin-variation-table td {
+        border-bottom: 1px solid var(--border);
+        padding: 12px;
+        vertical-align: middle;
+    }
+
+    .admin-variation-table th {
+        background: var(--surface-muted);
+        color: var(--muted);
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        text-align: left;
+    }
+
+    .admin-variation-table tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .admin-empty-state {
+        border: 1px dashed var(--border-strong);
+        border-radius: 8px;
+        padding: 18px;
+        color: var(--muted);
+        background: var(--surface-muted);
+        text-align: center;
+        font-weight: 700;
+    }
+
+    .admin-upload-box {
+        border: 1px dashed var(--border-strong);
+        border-radius: 8px;
+        background: var(--surface-muted);
+        padding: 16px;
+    }
+
+    .admin-preview-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+    }
+
+    .admin-preview-card {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        aspect-ratio: 1 / 1;
+        background: #fff;
+    }
+
+    .admin-preview-card img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+
+    .admin-side-note {
+        background: var(--surface-muted);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px;
+        color: var(--muted);
+        line-height: 1.55;
+    }
+
+    @@media (max-width: 1100px) {
+        .admin-create-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-status-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @@media (max-width: 720px) {
+        .admin-create-shell {
+            padding: 16px;
+        }
+
+        .admin-create-header {
+            grid-template-columns: 1fr;
+        }
+
+        .admin-create-actions {
+            justify-content: stretch;
+        }
+
+        .admin-create-button,
+        .admin-create-link {
+            width: 100%;
+        }
+
+        .admin-status-grid,
+        .admin-field-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="admin-create-page">
+    <div class="admin-create-shell">
+        <div class="admin-create-header">
+            <div class="admin-create-title">
+                <h1>Create Product</h1>
+                <p>Prepare the product record, initial inventory, pricing, promotion, variation selections, and image uploads before wiring the final admin POST flow.</p>
+            </div>
+            <div class="admin-create-actions">
+                <a asp-area="Admin"
+                   asp-controller="Products"
+                   asp-action="Index"
+                   class="admin-create-link secondary">Back to Products</a>
+                <button class="admin-create-button primary" type="submit" form="admin-create-product-form">Create Product</button>
+            </div>
+        </div>
+
+        <div class="admin-status-grid">
+            <div class="admin-status-item">
+                <span>Categories</span>
+                <strong>@Model.Categories.Count</strong>
+            </div>
+            <div class="admin-status-item">
+                <span>Promotions</span>
+                <strong>@Model.Promotions.Count</strong>
+            </div>
+            <div class="admin-status-item">
+                <span>Variation Groups</span>
+                <strong>@variationGroupCount</strong>
+            </div>
+            <div class="admin-status-item">
+                <span>Projected Promo Price</span>
+                <strong>@(projectedPrice > 0 ? projectedPrice.ToString("C") : "None")</strong>
+            </div>
+        </div>
+
+        <form id="admin-create-product-form" asp-area="Admin" asp-controller="Products" asp-action="Create" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+
+            <div class="admin-create-grid">
+                <div>
+                    <section class="admin-create-section">
+                        <div class="admin-create-section-header">
+                            <h2>Product Information</h2>
+                            <span class="admin-badge state-neutral">Draft</span>
+                        </div>
+
+                        <div class="admin-field-grid">
+                            <div class="admin-field full">
+                                <label asp-for="Name">Product Name</label>
+                                <input asp-for="Name" autocomplete="off" />
+                                <span asp-validation-for="Name" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field full">
+                                <label asp-for="Description">Description</label>
+                                <textarea asp-for="Description"></textarea>
+                                <span asp-validation-for="Description" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="SKU">SKU</label>
+                                <input asp-for="SKU" autocomplete="off" />
+                                <span asp-validation-for="SKU" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="QuantityInStock">Quantity In Stock</label>
+                                <input asp-for="QuantityInStock" type="number" min="0" step="1" />
+                                <span asp-validation-for="QuantityInStock" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="Price">Base Price</label>
+                                <input asp-for="Price" type="number" min="0" step="0.01" />
+                                <span asp-validation-for="Price" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field">
+                                <label asp-for="PromotionId">Promotion</label>
+                                <select asp-for="PromotionId" id="promotion-select">
+                                    <option value="">No promotion</option>
+                                    @foreach (var promotion in Model.Promotions)
+                                    {
+                                        <option value="@promotion.Id" data-rate="@promotion.DiscountRate">@promotion.Name (@promotion.DiscountRate%)</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="PromotionId" class="admin-validation"></span>
+                            </div>
+
+                            <div class="admin-field full">
+                                <label asp-for="CategoryId">Category</label>
+                                <select asp-for="CategoryId">
+                                    <option value="">Select category</option>
+                                    @foreach (var category in Model.Categories)
+                                    {
+                                        <option value="@category.Id">@category.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="CategoryId" class="admin-validation"></span>
+                                <span class="admin-help">The current GET action loads the variation groups supplied by the server. Category-specific refresh can be added when you are ready to continue with the POST and dynamic behavior.</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="admin-create-section">
+                        <div class="admin-create-section-header">
+                            <h2>Variation Options</h2>
+                            <span>@variationGroupCount group(s)</span>
+                        </div>
+
+                        <div id="selected-variation-inputs"></div>
+
+                        @if (Model.VariationOptions.Any())
+                        {
+                            <table class="admin-variation-table">
+                                <thead>
+                                    <tr>
+                                        <th>Variation</th>
+                                        <th>Selected Option</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var variation in Model.VariationOptions)
+                                    {
+                                        var selectId = $"variation-{variation.VariationId}";
+
+                                        <tr>
+                                            <td>
+                                                <strong>@variation.VariationName</strong>
+                                            </td>
+                                            <td>
+                                                <select class="variation-select" id="@selectId" data-variation-id="@variation.VariationId">
+                                                    <option value="">Select option</option>
+                                                    @foreach (var option in variation.VariationOptions)
+                                                    {
+                                                        var isSelected = Model.SelectedVariationOptionIds.Contains(option.VariationOptionId);
+                                                        if (isSelected)
+                                                        {
+                                                            <option value="@option.VariationOptionId" selected="selected">@option.Value</option>
+                                                        }
+                                                        else
+                                                        {
+                                                            <option value="@option.VariationOptionId">@option.Value</option>
+                                                        }
+                                                    }
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                        else
+                        {
+                            <div class="admin-empty-state">No variations are currently available for this create form.</div>
+                        }
+                    </section>
+                </div>
+
+                <aside>
+                    <section class="admin-create-section">
+                        <div class="admin-create-section-header">
+                            <h2>Images</h2>
+                            <span>Optional</span>
+                        </div>
+
+                        <div class="admin-upload-box">
+                            <div class="admin-field">
+                                <label asp-for="Images">Upload Product Images</label>
+                                <input asp-for="Images" type="file" multiple accept="image/*" id="product-images-input" />
+                                <span asp-validation-for="Images" class="admin-validation"></span>
+                            </div>
+                            <div id="product-images-preview" class="admin-preview-grid"></div>
+                        </div>
+                    </section>
+
+                    <section class="admin-create-section">
+                        <div class="admin-create-section-header">
+                            <h2>Summary</h2>
+                            @if (selectedPromotion != null)
+                            {
+                                <span class="admin-badge state-success">@selectedPromotion.DiscountRate% promo</span>
+                            }
+                            else
+                            {
+                                <span class="admin-badge state-neutral">No promotion</span>
+                            }
+                        </div>
+                        <div class="admin-side-note">
+                            This screen is now wired for the admin GET flow and visual review. The form targets `Create` and already emits variation option ids in a POST-friendly shape, so the next step is implementing the POST action and save logic.
+                        </div>
+                    </section>
+
+                    <section class="admin-create-section">
+                        <div class="admin-create-section-header">
+                            <h2>Pricing Preview</h2>
+                            <span id="promotion-preview-label">Live estimate</span>
+                        </div>
+                        <div class="admin-side-note">
+                            <div>Base price: <strong id="base-price-preview">@Model.Price.ToString("C")</strong></div>
+                            <div>Promotion result: <strong id="promo-price-preview">@(projectedPrice > 0 ? projectedPrice.ToString("C") : "No promotion selected")</strong></div>
+                        </div>
+                    </section>
+                </aside>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (() => {
+            const previewInput = document.getElementById('product-images-input');
+            const previewGrid = document.getElementById('product-images-preview');
+            const variationInputsContainer = document.getElementById('selected-variation-inputs');
+            const variationSelects = document.querySelectorAll('.variation-select');
+            const promotionSelect = document.getElementById('promotion-select');
+            const priceInput = document.getElementById('Price');
+            const basePricePreview = document.getElementById('base-price-preview');
+            const promoPricePreview = document.getElementById('promo-price-preview');
+
+            const syncVariationHiddenInputs = () => {
+                if (!variationInputsContainer) {
+                    return;
+                }
+
+                variationInputsContainer.innerHTML = '';
+
+                variationSelects.forEach((select) => {
+                    if (!select.value) {
+                        return;
+                    }
+
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'SelectedVariationOptionIds';
+                    input.value = select.value;
+                    variationInputsContainer.appendChild(input);
+                });
+            };
+
+            const updatePricingPreview = () => {
+                if (!priceInput || !basePricePreview || !promoPricePreview) {
+                    return;
+                }
+
+                const basePrice = Number.parseFloat(priceInput.value || '0');
+                basePricePreview.textContent = new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(basePrice);
+
+                const selectedOption = promotionSelect?.selectedOptions?.[0];
+                const discountRate = selectedOption ? Number.parseFloat(selectedOption.getAttribute('data-rate') || '0') : 0;
+
+                if (!discountRate || basePrice <= 0) {
+                    promoPricePreview.textContent = 'No promotion selected';
+                    return;
+                }
+
+                const discountedPrice = basePrice * (1 - (discountRate / 100));
+                promoPricePreview.textContent = new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: 'USD'
+                }).format(discountedPrice);
+            };
+
+            variationSelects.forEach((select) => {
+                select.addEventListener('change', syncVariationHiddenInputs);
+            });
+
+            if (previewInput && previewGrid) {
+                previewInput.addEventListener('change', () => {
+                    previewGrid.innerHTML = '';
+
+                    Array.from(previewInput.files || []).forEach((file) => {
+                        if (!file.type.startsWith('image/')) {
+                            return;
+                        }
+
+                        const reader = new FileReader();
+                        reader.addEventListener('load', () => {
+                            const previewCard = document.createElement('div');
+                            previewCard.className = 'admin-preview-card';
+
+                            const image = document.createElement('img');
+                            image.src = reader.result;
+                            image.alt = file.name;
+
+                            previewCard.appendChild(image);
+                            previewGrid.appendChild(previewCard);
+                        });
+                        reader.readAsDataURL(file);
+                    });
+                });
+            }
+
+            promotionSelect?.addEventListener('change', updatePricingPreview);
+            priceInput?.addEventListener('input', updatePricingPreview);
+
+            syncVariationHiddenInputs();
+            updatePricingPreview();
+        })();
+    </script>
+}

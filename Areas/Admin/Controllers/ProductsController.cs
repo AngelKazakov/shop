@@ -42,6 +42,14 @@ namespace RandomShop.Areas.Admin.Controllers
         }
 
         [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            AdminCreateProductFormModel model = await this.adminProductService.BuildCreateFormAsync();
+
+            return View(model);
+        }
+
+        [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {
             try

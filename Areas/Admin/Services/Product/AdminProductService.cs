@@ -2,6 +2,9 @@ using Microsoft.EntityFrameworkCore;
 using RandomShop.Areas.Admin.Models;
 using RandomShop.Data;
 using RandomShop.Data.Models;
+using RandomShop.Models.Category;
+using RandomShop.Models.Promotion;
+using RandomShop.Models.Variation;
 using RandomShop.Services.Images;
 
 namespace RandomShop.Areas.Admin.Services.Product;
@@ -315,6 +318,54 @@ public class AdminProductService : IAdminProductService
         }
 
         return result;
+    }
+
+    public async Task<AdminCreateProductFormModel> BuildCreateFormAsync(int? categoryId = null)
+    {
+        //TODO: Load dropdowns categories and variations with options.
+
+        var model = new AdminCreateProductFormModel();
+
+        var categoriesViewModel = this.context.Categories.AsNoTracking().Select(c => new CategoryViewModel()
+        {
+            Id = c.Id,
+            Name = c.Name
+        });
+
+        model.Categories = await categoriesViewModel.ToListAsync();
+
+        var promotionsViewModel = this.context.Promotions.AsNoTracking().Select(p => new PromotionViewModel()
+        {
+            Id = p.Id,
+            Name = p.Name,
+            Description = p.Description,
+            DiscountRate = p.DiscountRate,
+            StartDate = p.StartDate,
+            EndDate = p.EndDate
+        });
+
+        model.Promotions = await promotionsViewModel.ToListAsync();
+
+        var variationsAndOptions
+            = this.context.Variations.AsNoTracking()
+                .Where(v => !categoryId.HasValue || v.CategoryId == categoryId.Value)
+                .Select(v => new VariationOptionViewModel()
+                {
+                    VariationId = v.Id,
+                    VariationName = v.Name,
+                    VariationOptions = v.VariationOptions
+                        .OrderBy(vo => vo.Value)
+                        .Select(vo => new VariationOptionFormViewModel()
+                        {
+                            VariationOptionId = vo.Id,
+                            Value = vo.Value
+                        })
+                        .ToList()
+                });
+
+        model.VariationOptions = await variationsAndOptions.ToListAsync();
+
+        return model;
     }
 
     private async Task UpdateBasicProductData(ProductItem productItem, AdminEditProductFormModel model)
