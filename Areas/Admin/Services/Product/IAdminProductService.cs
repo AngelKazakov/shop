@@ -21,4 +21,6 @@ public interface IAdminProductService
     public Task<AdminProductDeleteResult> DeleteSelectedAsync(ICollection<int>? productItemIds);
 
     public Task<AdminCreateProductFormModel> BuildCreateFormAsync(int? categoryId = null);
+    
+    public Task<int> CreateAsync(AdminCreateProductFormModel model);
 }

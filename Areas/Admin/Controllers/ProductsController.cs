@@ -49,6 +49,31 @@ namespace RandomShop.Areas.Admin.Controllers
             return View(model);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Create(AdminCreateProductFormModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                model = await this.adminProductService.BuildCreateFormAsync(model.CategoryId);
+                return View(model);
+            }
+
+            //TODO: Implement CreateAsync method in IAdminProductService and AdminProductService to create a new product and return the new product id
+            int newProductId = await this.adminProductService.CreateAsync(model);
+
+            if (newProductId <= 0)
+            {
+                this.logger.LogError("Failed to create a new product.");
+
+                return View("~/Views/Shared/Error.cshtml", new ErrorViewModel
+                {
+                    RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+                });
+            }
+
+            return RedirectToAction(nameof(Details), new { id = newProductId });
+        }
+
         [HttpGet]
         public async Task<IActionResult> Details(int? id)
         {

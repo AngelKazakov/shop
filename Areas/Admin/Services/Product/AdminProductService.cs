@@ -368,6 +368,52 @@ public class AdminProductService : IAdminProductService
         return model;
     }
 
+    public async Task<int> CreateAsync(AdminCreateProductFormModel model)
+    {
+        //TODO: Impelement logic to create a new product and return the new product id.
+
+        Data.Models.Product newProduct = new Data.Models.Product()
+        {
+            Name = model.Name,
+            Description = model.Description,
+            CreatedOnDate = DateTime.Now
+        };
+
+        await this.context.Products.AddAsync(newProduct);
+
+        ProductItem newProductItem = new ProductItem()
+        {
+            Price = model.Price,
+            SKU = model.SKU,
+            QuantityInStock = model.QuantityInStock,
+            Product = newProduct,
+            CreatedOnDate = DateTime.Now,
+        };
+
+        newProductItem.DiscountedPrice = await ApplyPromotionAsync(model.PromotionId ?? 0, model.Price);
+
+        //Create Product configurations for selected variation options
+        foreach (var variationOptionId in model.SelectedVariationOptionIds)
+        {
+            newProductItem.ProductConfigurations.Add(new ProductConfiguration()
+            {
+                VariationOptionId = variationOptionId,
+                ProductItem = newProductItem
+            });
+        }
+
+        ICollection<ProductImage> newProductImages = this.imageService.CreateProductImages(model.Images, newProduct.Id);
+
+        newProduct.ProductImages = newProductImages;
+
+        //:TODO Call this.contex and add newProductItem, add images also and variation options, then save changes and return the new product item id.
+        await this.context.ProductItems.AddAsync(newProductItem);
+
+        await this.context.SaveChangesAsync();
+
+        return newProductItem.Id;
+    }
+
     private async Task UpdateBasicProductData(ProductItem productItem, AdminEditProductFormModel model)
     {
         productItem.Product.Name = model.Name;
