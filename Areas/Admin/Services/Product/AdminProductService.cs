@@ -370,7 +370,7 @@ public class AdminProductService : IAdminProductService
 
     public async Task<int> CreateAsync(AdminCreateProductFormModel model)
     {
-        //TODO: Impelement logic to create a new product and return the new product id.
+        await using var transaction = await this.context.Database.BeginTransactionAsync();
 
         Data.Models.Product newProduct = new Data.Models.Product()
         {
@@ -380,6 +380,8 @@ public class AdminProductService : IAdminProductService
         };
 
         await this.context.Products.AddAsync(newProduct);
+        // Image directory names require the database-generated product ID.
+        await this.context.SaveChangesAsync();
 
         ProductItem newProductItem = new ProductItem()
         {
@@ -391,6 +393,15 @@ public class AdminProductService : IAdminProductService
         };
 
         newProductItem.DiscountedPrice = await ApplyPromotionAsync(model.PromotionId ?? 0, model.Price);
+
+        if (model.PromotionId is > 0)
+        {
+            newProduct.ProductPromotions.Add(new ProductPromotion()
+            {
+                Product = newProduct,
+                PromotionId = model.PromotionId.Value
+            });
+        }
 
         //Create Product configurations for selected variation options
         foreach (var variationOptionId in model.SelectedVariationOptionIds)
@@ -406,10 +417,10 @@ public class AdminProductService : IAdminProductService
 
         newProduct.ProductImages = newProductImages;
 
-        //:TODO Call this.contex and add newProductItem, add images also and variation options, then save changes and return the new product item id.
         await this.context.ProductItems.AddAsync(newProductItem);
 
         await this.context.SaveChangesAsync();
+        await transaction.CommitAsync();
 
         return newProductItem.Id;
     }
