@@ -123,31 +123,54 @@ namespace RandomShop.Services.Images
 
             List<ProductImage> productImages = new List<ProductImage>();
 
-            foreach (var image in images)
+            var createdPaths = new List<string>();
+            try
             {
-                if (image != null && image.Length > 0)
+                foreach (var image in images)
                 {
-                    // Generate a unique file name for the image
-                    string uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName).ToLower()}";
-                    string fullPath = Path.Combine(productDirectory, uniqueFileName);
-
-                    // Save the file to the directory
-                    using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                    if (image != null && image.Length > 0)
                     {
-                        image.CopyTo(fileStream);
+                        // Generate a unique file name for the image
+                        string uniqueFileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName).ToLower()}";
+                        string fullPath = Path.Combine(productDirectory, uniqueFileName);
+
+                        createdPaths.Add(fullPath);
+
+                        // Save the file to the directory
+                        using (var fileStream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            image.CopyTo(fileStream);
+                        }
+
+                        // Add the image metadata to the collection
+                        ProductImage productImage = new ProductImage
+                        {
+                            Name = image.FileName,
+                            UniqueName = uniqueFileName,
+                            ProductId = productId,
+                            FullPath = fullPath,
+                        };
+
+                        productImages.Add(productImage);
                     }
-
-                    // Add the image metadata to the collection
-                    ProductImage productImage = new ProductImage
-                    {
-                        Name = image.FileName,
-                        UniqueName = uniqueFileName,
-                        ProductId = productId,
-                        FullPath = fullPath,
-                    };
-
-                    productImages.Add(productImage);
                 }
+
+            }
+            catch
+            {
+                foreach (string path in createdPaths)
+                {
+                    try
+                    {
+                        File.Delete(path);
+                    }
+                    catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
+                    {
+                        System.Diagnostics.Trace.TraceError($"Failed to clean up product image '{path}': {cleanupError}");
+                    }
+                }
+
+                throw;
             }
 
             return productImages;

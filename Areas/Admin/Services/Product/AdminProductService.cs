@@ -372,6 +372,88 @@ public class AdminProductService : IAdminProductService
     {
         await using var transaction = await this.context.Database.BeginTransactionAsync();
 
+        Data.Models.Product newProduct = await this.CreateProduct(model);
+
+        // Image directory names require the database-generated product ID.
+        await this.context.SaveChangesAsync();
+
+        ProductItem newProductItem = await this.CreateProductItem(model, newProduct);
+
+        await this.AddCategory(newProduct, model.CategoryId);
+
+        newProductItem.DiscountedPrice = model.PromotionId.HasValue && model.PromotionId.Value > 0
+            ? await this.ApplyPromotionAsync(model.PromotionId.Value, model.Price)
+            : 0;
+
+        await this.AddPromotion(newProduct, model.PromotionId);
+
+        await this.AddVariationConfigurations(newProductItem, model.SelectedVariationOptionIds);
+
+        ICollection<ProductImage> newProductImages = this.imageService.CreateProductImages(model.Images, newProduct.Id);
+
+        newProduct.ProductImages = newProductImages;
+
+        try
+        {
+            await this.context.SaveChangesAsync();
+            await transaction.CommitAsync();
+        }
+        catch
+        {
+            foreach (ProductImage image in newProductImages)
+            {
+                try
+                {
+                    File.Delete(image.FullPath);
+                }
+                catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
+                {
+                    System.Diagnostics.Trace.TraceError($"Failed to clean up product image '{image.FullPath}': {cleanupError}");
+                }
+            }
+
+            throw;
+        }
+
+        return newProductItem.Id;
+    }
+
+    private async Task AddCategory(Data.Models.Product product, int categoryId)
+    {
+        await this.context.ProductCategories.AddAsync(new ProductCategory()
+        {
+            CategoryId = categoryId,
+            ProductId = product.Id
+        });
+    }
+
+    private async Task AddVariationConfigurations(ProductItem productItem, List<int> selectedVariationOptionIds)
+    {
+        foreach (var variationOptionId in selectedVariationOptionIds.Distinct())
+        {
+            await this.context.ProductConfigurations.AddAsync(new ProductConfiguration()
+            {
+                VariationOptionId = variationOptionId,
+                ProductItem = productItem
+            });
+
+        }
+    }
+
+    private async Task AddPromotion(Data.Models.Product product, int? promotionId)
+    {
+        if (promotionId.HasValue && promotionId.Value > 0)
+        {
+            await this.context.ProductPromotions.AddAsync(new ProductPromotion()
+            {
+                PromotionId = promotionId.Value,
+                ProductId = product.Id
+            });
+        }
+    }
+
+    private async Task<Data.Models.Product> CreateProduct(AdminCreateProductFormModel model)
+    {
         Data.Models.Product newProduct = new Data.Models.Product()
         {
             Name = model.Name,
@@ -380,9 +462,12 @@ public class AdminProductService : IAdminProductService
         };
 
         await this.context.Products.AddAsync(newProduct);
-        // Image directory names require the database-generated product ID.
-        await this.context.SaveChangesAsync();
 
+        return newProduct;
+    }
+
+    private async Task<ProductItem> CreateProductItem(AdminCreateProductFormModel model, Data.Models.Product newProduct)
+    {
         ProductItem newProductItem = new ProductItem()
         {
             Price = model.Price,
@@ -392,37 +477,9 @@ public class AdminProductService : IAdminProductService
             CreatedOnDate = DateTime.Now,
         };
 
-        newProductItem.DiscountedPrice = await ApplyPromotionAsync(model.PromotionId ?? 0, model.Price);
-
-        if (model.PromotionId is > 0)
-        {
-            newProduct.ProductPromotions.Add(new ProductPromotion()
-            {
-                Product = newProduct,
-                PromotionId = model.PromotionId.Value
-            });
-        }
-
-        //Create Product configurations for selected variation options
-        foreach (var variationOptionId in model.SelectedVariationOptionIds)
-        {
-            newProductItem.ProductConfigurations.Add(new ProductConfiguration()
-            {
-                VariationOptionId = variationOptionId,
-                ProductItem = newProductItem
-            });
-        }
-
-        ICollection<ProductImage> newProductImages = this.imageService.CreateProductImages(model.Images, newProduct.Id);
-
-        newProduct.ProductImages = newProductImages;
-
         await this.context.ProductItems.AddAsync(newProductItem);
 
-        await this.context.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        return newProductItem.Id;
+        return newProductItem;
     }
 
     private async Task UpdateBasicProductData(ProductItem productItem, AdminEditProductFormModel model)
