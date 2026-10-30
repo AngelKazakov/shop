@@ -374,16 +374,11 @@ public class AdminProductService : IAdminProductService
 
         Data.Models.Product newProduct = await this.CreateProduct(model);
 
-        // Image directory names require the database-generated product ID.
         await this.context.SaveChangesAsync();
 
         ProductItem newProductItem = await this.CreateProductItem(model, newProduct);
 
         await this.AddCategory(newProduct, model.CategoryId);
-
-        newProductItem.DiscountedPrice = model.PromotionId.HasValue && model.PromotionId.Value > 0
-            ? await this.ApplyPromotionAsync(model.PromotionId.Value, model.Price)
-            : 0;
 
         await this.AddPromotion(newProduct, model.PromotionId);
 
@@ -408,7 +403,8 @@ public class AdminProductService : IAdminProductService
                 }
                 catch (Exception cleanupError) when (cleanupError is IOException or UnauthorizedAccessException)
                 {
-                    System.Diagnostics.Trace.TraceError($"Failed to clean up product image '{image.FullPath}': {cleanupError}");
+                    System.Diagnostics.Trace.TraceError(
+                        $"Failed to clean up product image '{image.FullPath}': {cleanupError}");
                 }
             }
 
@@ -436,7 +432,6 @@ public class AdminProductService : IAdminProductService
                 VariationOptionId = variationOptionId,
                 ProductItem = productItem
             });
-
         }
     }
 
@@ -471,6 +466,9 @@ public class AdminProductService : IAdminProductService
         ProductItem newProductItem = new ProductItem()
         {
             Price = model.Price,
+            DiscountedPrice = model.PromotionId.HasValue && model.PromotionId.Value > 0
+                ? await this.ApplyPromotionAsync(model.PromotionId.Value, model.Price)
+                : 0,
             SKU = model.SKU,
             QuantityInStock = model.QuantityInStock,
             Product = newProduct,
